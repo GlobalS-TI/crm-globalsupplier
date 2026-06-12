@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { OpportunityRepository } from '@/lib/repositories/supabase/OpportunityRepository'
 import { OpportunityService } from '@/lib/services/OpportunityService'
 import { createOpportunitySchema, updateOpportunitySchema, stageTransitionSchema } from '@/lib/validations/opportunity'
+import type { OpportunityStage } from '@/lib/validations/opportunity'
 
 function makeService() {
   return new OpportunityService(new OpportunityRepository())
@@ -62,6 +63,24 @@ export async function moveToStage(id: string, _prev: ActionState, form: FormData
     revalidatePath(`/oportunidades/${id}`)
     revalidatePath('/oportunidades')
     return null
+  } catch (e) {
+    return { error: (e as Error).message }
+  }
+}
+
+export async function kanbanMoveToStage(
+  id: string,
+  stage: OpportunityStage,
+  montoFinal?: number,
+): Promise<{ error?: string }> {
+  try {
+    await makeService().moveToStage(id, {
+      etapa: stage,
+      ...(montoFinal !== undefined && { monto_final: montoFinal }),
+    })
+    revalidatePath('/oportunidades')
+    revalidatePath(`/oportunidades/${id}`)
+    return {}
   } catch (e) {
     return { error: (e as Error).message }
   }

@@ -1,5 +1,9 @@
+'use client'
+
 import Link from 'next/link'
 import type { Route } from 'next'
+import { useDraggable } from '@dnd-kit/core'
+import { CSS } from '@dnd-kit/utilities'
 import { Card, CardContent } from '@/components/ui/card'
 import { StaleBadge } from '@/components/crm/StaleBadge'
 import type { OpportunityWithRelations } from '@/lib/repositories/interfaces/IOpportunityRepository'
@@ -8,30 +12,43 @@ const fmt = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN',
 
 interface OpportunityKanbanCardProps {
   opportunity: OpportunityWithRelations
+  draggable?:  boolean
 }
 
-export function OpportunityKanbanCard({ opportunity: opp }: OpportunityKanbanCardProps) {
+export function OpportunityKanbanCard({ opportunity: opp, draggable = true }: OpportunityKanbanCardProps) {
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id:       opp.id,
+    disabled: !draggable,
+    data:     { stage: opp.etapa },
+  })
+
+  const style = transform
+    ? { transform: CSS.Translate.toString(transform), opacity: isDragging ? 0.4 : 1 }
+    : undefined
+
   return (
-    <Link href={`/oportunidades/${opp.id}` as Route}>
-      <Card className="cursor-pointer hover:shadow-md transition-shadow">
-        <CardContent className="p-3 space-y-1.5">
-          <div className="flex items-start justify-between gap-2">
-            <p className="text-sm font-medium leading-tight line-clamp-2">{opp.nombre}</p>
-            {opp.stale && <StaleBadge />}
-          </div>
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="touch-none">
+      <Link href={`/oportunidades/${opp.id}` as Route} draggable={false}>
+        <Card className={`cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow ${!draggable ? 'cursor-default' : ''}`}>
+          <CardContent className="p-3 space-y-1.5">
+            <div className="flex items-start justify-between gap-2">
+              <p className="text-sm font-medium leading-tight line-clamp-2 select-none">{opp.nombre}</p>
+              {opp.stale && <StaleBadge />}
+            </div>
 
-          {opp.company && (
-            <p className="text-xs text-muted-foreground truncate">{opp.company.nombre}</p>
-          )}
-
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
-            <span>{opp.owner.full_name.split(' ')[0]}</span>
-            {opp.monto_estimado > 0 && (
-              <span className="font-medium text-foreground">{fmt.format(opp.monto_estimado)}</span>
+            {opp.company && (
+              <p className="text-xs text-muted-foreground truncate select-none">{opp.company.nombre}</p>
             )}
-          </div>
-        </CardContent>
-      </Card>
-    </Link>
+
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span className="select-none">{opp.owner.full_name.split(' ')[0]}</span>
+              {opp.monto_estimado > 0 && (
+                <span className="font-medium text-foreground select-none">{fmt.format(opp.monto_estimado)}</span>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </Link>
+    </div>
   )
 }
