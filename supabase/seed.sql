@@ -9,59 +9,70 @@ do $$
 declare
   pwd text := crypt('LocalDev1234!', gen_salt('bf', 10));
 begin
+  -- GoTrue requires empty string (not NULL) for token columns
   insert into auth.users (
     id, instance_id, aud, role, email, encrypted_password,
     email_confirmed_at, created_at, updated_at,
-    raw_user_meta_data, raw_app_meta_data, is_sso_user
+    raw_user_meta_data, raw_app_meta_data, is_sso_user,
+    confirmation_token, recovery_token, email_change_token_new,
+    email_change_token_current, email_change, reauthentication_token,
+    phone_change, phone_change_token
   ) values
     ( '00000001-0000-0000-0000-000000000000',
       '00000000-0000-0000-0000-000000000000',
       'authenticated', 'authenticated',
       'director@globalsupplier.dev', pwd, now(), now(), now(),
       '{"full_name":"Carlos Mendoza","role":"director_general"}',
-      '{"provider":"email","providers":["email"]}', false ),
+      '{"provider":"email","providers":["email"]}', false,
+      '', '', '', '', '', '', '', '' ),
 
     ( '00000002-0000-0000-0000-000000000000',
       '00000000-0000-0000-0000-000000000000',
       'authenticated', 'authenticated',
       'comercial@globalsupplier.dev', pwd, now(), now(), now(),
       '{"full_name":"Ana García","role":"direccion_comercial"}',
-      '{"provider":"email","providers":["email"]}', false ),
+      '{"provider":"email","providers":["email"]}', false,
+      '', '', '', '', '', '', '', '' ),
 
     ( '00000003-0000-0000-0000-000000000000',
       '00000000-0000-0000-0000-000000000000',
       'authenticated', 'authenticated',
       'r.herrera@globalsupplier.dev', pwd, now(), now(), now(),
       '{"full_name":"Roberto Herrera","role":"vendedor"}',
-      '{"provider":"email","providers":["email"]}', false ),
+      '{"provider":"email","providers":["email"]}', false,
+      '', '', '', '', '', '', '', '' ),
 
     ( '00000004-0000-0000-0000-000000000000',
       '00000000-0000-0000-0000-000000000000',
       'authenticated', 'authenticated',
       'l.sanchez@globalsupplier.dev', pwd, now(), now(), now(),
       '{"full_name":"Laura Sánchez","role":"vendedor"}',
-      '{"provider":"email","providers":["email"]}', false ),
+      '{"provider":"email","providers":["email"]}', false,
+      '', '', '', '', '', '', '', '' ),
 
     ( '00000005-0000-0000-0000-000000000000',
       '00000000-0000-0000-0000-000000000000',
       'authenticated', 'authenticated',
       'm.torres@globalsupplier.dev', pwd, now(), now(), now(),
       '{"full_name":"Miguel Torres","role":"vendedor"}',
-      '{"provider":"email","providers":["email"]}', false ),
+      '{"provider":"email","providers":["email"]}', false,
+      '', '', '', '', '', '', '', '' ),
 
     ( '00000006-0000-0000-0000-000000000000',
       '00000000-0000-0000-0000-000000000000',
       'authenticated', 'authenticated',
       'marketing@globalsupplier.dev', pwd, now(), now(), now(),
       '{"full_name":"Daniela López","role":"marketing"}',
-      '{"provider":"email","providers":["email"]}', false ),
+      '{"provider":"email","providers":["email"]}', false,
+      '', '', '', '', '', '', '', '' ),
 
     ( '00000007-0000-0000-0000-000000000000',
       '00000000-0000-0000-0000-000000000000',
       'authenticated', 'authenticated',
       'admin@globalsupplier.dev', pwd, now(), now(), now(),
       '{"full_name":"Fernando Reyes","role":"administracion"}',
-      '{"provider":"email","providers":["email"]}', false );
+      '{"provider":"email","providers":["email"]}', false,
+      '', '', '', '', '', '', '', '' );
 end $$;
 
 -- ================================================================
