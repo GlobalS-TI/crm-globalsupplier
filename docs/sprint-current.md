@@ -1,8 +1,7 @@
-# Sprint 2 — Oportunidades + Pipeline
+# Sprint 3 — Actividades + Seguimientos
 
 ## Checklist
-- [x] CRUD de Oportunidades con todas las reglas de negocio
-- [x] Vista Kanban del pipeline por etapas
-- [x] Vista de lista con filtros por vendedor, unidad de negocio, etapa
-- [x] Lógica de `stale` (trigger Postgres)
-- [x] Indicador visual de oportunidades vencidas (+7 días sin actividad)
+- [x] CRUD de Actividades ligadas a Oportunidades
+- [x] Timeline de actividades por oportunidad
+- [x] Vista de actividades pendientes por usuario
+- [x] Notificaciones básicas vía Resend (oportunidades stale)

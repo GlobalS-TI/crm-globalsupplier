@@ -72,7 +72,7 @@ importers:
         specifier: ^7.53.0
         version: 7.78.0(react@19.2.7)
       resend:
-        specifier: ^4.0.0
+        specifier: ^4.8.0
         version: 4.8.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       tailwind-merge:
         specifier: ^2.5.2
