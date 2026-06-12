@@ -1,3 +1,5 @@
+'use client'
+
 import {
   Phone, Mail, Users, Monitor, FileText, RotateCcw, MoreHorizontal, CheckCircle2, Clock, XCircle,
 } from 'lucide-react'
