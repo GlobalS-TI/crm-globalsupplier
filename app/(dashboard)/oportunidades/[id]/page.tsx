@@ -12,6 +12,7 @@ import { QuickStageButton } from '@/components/crm/QuickStageButton'
 import { ActivityTimeline } from '@/components/crm/ActivityTimeline'
 import { ActivityForm } from '@/components/crm/ActivityForm'
 import { StaleBadge } from '@/components/crm/StaleBadge'
+import { DeleteButton } from '@/components/crm/DeleteButton'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { updateOpportunity, moveToStage, deleteOpportunity } from '../actions'
@@ -126,15 +127,11 @@ export default async function OportunidadDetailPage({
       {/* Delete */}
       <div className="space-y-2">
         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Zona peligrosa</p>
-        <form action={deleteOpportunity.bind(null, id)}>
-          <button
-            type="submit"
-            className="text-sm text-destructive hover:underline"
-            onClick={e => { if (!confirm('¿Eliminar esta oportunidad?')) e.preventDefault() }}
-          >
-            Eliminar oportunidad
-          </button>
-        </form>
+        <DeleteButton
+          action={deleteOpportunity.bind(null, id)}
+          label="Eliminar oportunidad"
+          confirmMessage={`¿Eliminar "${opp.nombre}"? Esta acción no se puede deshacer.`}
+        />
       </div>
     </div>
   )
