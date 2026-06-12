@@ -1,7 +1,7 @@
-# Sprint 3 — Actividades + Seguimientos
+# Sprint 4 — Dashboard ejecutivo
 
 ## Checklist
-- [x] CRUD de Actividades ligadas a Oportunidades
-- [x] Timeline de actividades por oportunidad
-- [x] Vista de actividades pendientes por usuario
-- [x] Notificaciones básicas vía Resend (oportunidades stale)
+- [x] KPIs del mes (ventas, pipeline total, oportunidades)
+- [x] Gráficas: ventas por unidad de negocio, pipeline por vendedor
+- [x] Forecast de ventas
+- [x] Actividades vencidas / pendientes globales

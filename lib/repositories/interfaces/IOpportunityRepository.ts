@@ -21,6 +21,37 @@ export type DashboardStats = {
   overdueActivities:  number
 }
 
+export type SalesByUnit = {
+  unit:   BusinessUnit
+  amount: number
+}
+
+export type PipelineByOwner = {
+  ownerName: string
+  amount:    number
+  count:     number
+}
+
+export type ForecastByStage = {
+  stage:    OpportunityStage
+  amount:   number
+  weighted: number
+  count:    number
+}
+
+export type ExecutiveDashboard = {
+  kpis: {
+    wonThisMonth:     number
+    wonLastMonth:     number
+    pipelineTotal:    number
+    opportunitiesOpen: number
+    newThisMonth:     number
+  }
+  salesByUnit:     SalesByUnit[]
+  pipelineByOwner: PipelineByOwner[]
+  forecastByStage: ForecastByStage[]
+}
+
 export type OpportunityFilters = {
   ownerId?:      string
   businessUnit?: BusinessUnit
@@ -33,6 +64,7 @@ export interface IOpportunityRepository {
   findAll(filters?: OpportunityFilters): Promise<OpportunityWithRelations[]>
   findStale(): Promise<OpportunityWithRelations[]>
   getDashboardStats(): Promise<DashboardStats>
+  getExecutiveDashboard(): Promise<ExecutiveDashboard>
   create(data: CreateOpportunityInput): Promise<OpportunityRow>
   update(id: string, data: UpdateOpportunityInput): Promise<OpportunityRow>
   delete(id: string): Promise<void>

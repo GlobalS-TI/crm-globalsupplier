@@ -1,4 +1,4 @@
-import type { IActivityRepository, ActivityRow, ActivityWithOpportunity } from '@/lib/repositories/interfaces/IActivityRepository'
+import type { IActivityRepository, ActivityRow, ActivityWithOpportunity, GlobalPendingActivity } from '@/lib/repositories/interfaces/IActivityRepository'
 import type { CreateActivityInput, UpdateActivityInput } from '@/lib/validations/activity'
 import { createActivitySchema, updateActivitySchema } from '@/lib/validations/activity'
 
@@ -11,6 +11,10 @@ export class ActivityService {
 
   async getPendingByUser(userId: string): Promise<ActivityWithOpportunity[]> {
     return this.repo.findPendingByUser(userId)
+  }
+
+  async getGlobalPending(): Promise<GlobalPendingActivity[]> {
+    return this.repo.findGlobalPending()
   }
 
   async create(raw: CreateActivityInput, ownerId: string): Promise<ActivityRow> {

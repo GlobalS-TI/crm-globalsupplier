@@ -1,4 +1,4 @@
-import type { IOpportunityRepository, OpportunityWithRelations, DashboardStats, OpportunityFilters } from '@/lib/repositories/interfaces/IOpportunityRepository'
+import type { IOpportunityRepository, OpportunityWithRelations, DashboardStats, OpportunityFilters, ExecutiveDashboard } from '@/lib/repositories/interfaces/IOpportunityRepository'
 import type { CreateOpportunityInput, UpdateOpportunityInput, StageTransitionInput } from '@/lib/validations/opportunity'
 import { createOpportunitySchema, updateOpportunitySchema, stageTransitionSchema } from '@/lib/validations/opportunity'
 
@@ -23,6 +23,10 @@ export class OpportunityService {
 
   async getDashboardStats(): Promise<DashboardStats> {
     return this.repo.getDashboardStats()
+  }
+
+  async getExecutiveDashboard(): Promise<ExecutiveDashboard> {
+    return this.repo.getExecutiveDashboard()
   }
 
   async create(raw: CreateOpportunityInput): Promise<OpportunityWithRelations> {

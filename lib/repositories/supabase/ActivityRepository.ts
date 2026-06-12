@@ -3,6 +3,7 @@ import type {
   IActivityRepository,
   ActivityRow,
   ActivityWithOpportunity,
+  GlobalPendingActivity,
 } from '@/lib/repositories/interfaces/IActivityRepository'
 import type { CreateActivityInput, UpdateActivityInput } from '@/lib/validations/activity'
 import type { Database } from '@/lib/types/database'
@@ -43,6 +44,17 @@ export class ActivityRepository implements IActivityRepository {
       .order('fecha', { ascending: true })
     if (error) throw error
     return (data ?? []) as ActivityWithOpportunity[]
+  }
+
+  async findGlobalPending(): Promise<GlobalPendingActivity[]> {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+      .from('activities')
+      .select('*, opportunity:opportunities(id, nombre), owner:profiles!owner_id(full_name)')
+      .eq('estatus', 'pendiente')
+      .order('fecha', { ascending: true })
+    if (error) throw error
+    return (data ?? []) as GlobalPendingActivity[]
   }
 
   async create(data: CreateActivityInput & { owner_id: string }): Promise<ActivityRow> {
