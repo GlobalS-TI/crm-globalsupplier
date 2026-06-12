@@ -1,7 +1,54 @@
-export default function DashboardPage() {
+import { OpportunityRepository } from '@/lib/repositories/supabase/OpportunityRepository'
+import { OpportunityService } from '@/lib/services/OpportunityService'
+import { StatCard } from '@/components/crm/dashboard/StatCard'
+
+const fmt = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 })
+
+export const metadata = { title: 'Dashboard — CRM Global Supplier' }
+export const dynamic = 'force-dynamic'
+
+export default async function DashboardPage() {
+  const service = new OpportunityService(new OpportunityRepository())
+  const stats   = await service.getDashboardStats()
+
   return (
-    <main className="p-8">
-      <p className="text-muted-foreground">Dashboard — Sprint 1</p>
-    </main>
+    <div className="p-8 space-y-6">
+      <h1 className="text-2xl font-bold">Dashboard</h1>
+
+      <section>
+        <h2 className="text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wide">Pipeline</h2>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard title="Oportunidades abiertas" value={stats.openCount} />
+          <StatCard title="Ganadas"                 value={stats.wonCount} />
+          <StatCard title="Perdidas"                value={stats.lostCount} />
+          <StatCard
+            title="Sin actividad"
+            value={stats.staleCount}
+            className={stats.staleCount > 0 ? 'border-destructive' : undefined}
+          />
+        </div>
+      </section>
+
+      <section>
+        <h2 className="text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wide">Valor</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <StatCard title="Pipeline total"          value={fmt.format(stats.totalPipeline)} />
+          <StatCard title="Ganado este mes"         value={fmt.format(stats.wonThisMonth)} />
+          <StatCard title="Pronóstico ponderado"    value={fmt.format(stats.weightedForecast)} />
+        </div>
+      </section>
+
+      <section>
+        <h2 className="text-sm font-medium text-muted-foreground mb-3 uppercase tracking-wide">Actividades</h2>
+        <div className="grid grid-cols-2 gap-4">
+          <StatCard title="Pendientes"  value={stats.pendingActivities} />
+          <StatCard
+            title="Vencidas"
+            value={stats.overdueActivities}
+            className={stats.overdueActivities > 0 ? 'border-destructive' : undefined}
+          />
+        </div>
+      </section>
+    </div>
   )
 }
