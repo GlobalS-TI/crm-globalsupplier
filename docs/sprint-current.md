@@ -1,13 +1,8 @@
-# Sprint 0 — Fundamentos
+# Sprint 2 — Oportunidades + Pipeline
 
 ## Checklist
-- [ ] Crear proyecto Supabase y Vercel
-- [x] Configurar Next.js 14 con TypeScript + Tailwind + shadcn/ui
-- [x] Conectar cliente Supabase (server + browser)
-- [x] Correr migración inicial del schema
-- [x] Configurar Supabase Auth con roles (tabla profiles)
-- [x] Middleware de protección de rutas por rol
-- [x] Estructura de carpetas base creada
-- [x] Todos los CLAUDE.md en su lugar
-- [x] .env.example commiteado
-- [x] ADRs iniciales en docs/adr/
+- [ ] CRUD de Oportunidades con todas las reglas de negocio
+- [x] Vista Kanban del pipeline por etapas
+- [ ] Vista de lista con filtros por vendedor, unidad de negocio, etapa
+- [x] Lógica de `stale` (trigger Postgres)
+- [x] Indicador visual de oportunidades vencidas (+7 días sin actividad)
