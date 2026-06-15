@@ -1,6 +1,7 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useActionState, useEffect, useRef } from 'react'
+import { useToast } from '@/hooks/use-toast'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -26,6 +27,15 @@ interface Props {
 
 export function ContactForm({ action, defaultValues, companies, submitLabel = 'Guardar' }: Props) {
   const [state, formAction, pending] = useActionState<ActionState, FormData>(action, null)
+  const { toast } = useToast()
+  const wasPending = useRef(false)
+
+  useEffect(() => {
+    if (wasPending.current && !pending && state === null) {
+      toast({ title: 'Cambios guardados correctamente' })
+    }
+    wasPending.current = pending
+  }, [pending, state, toast])
 
   return (
     <form action={formAction} className="space-y-4">

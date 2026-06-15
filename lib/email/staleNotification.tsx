@@ -64,7 +64,7 @@ export async function sendStaleNotifications(): Promise<{ sent: number; error?: 
 
   const oppData = staleOpps.map(o => ({
     nombre: o.nombre,
-    owner:  o.owner.full_name,
+    owner:  o.owner?.full_name ?? 'Sin asignar',
     etapa:  o.etapa,
   }))
 

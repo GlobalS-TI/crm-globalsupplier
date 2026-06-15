@@ -12,7 +12,7 @@ const fmt = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN',
 
 interface OpportunityKanbanCardProps {
   opportunity: OpportunityWithRelations
-  draggable?:  boolean
+  draggable?:  boolean  // false only for the DragOverlay ghost
 }
 
 export function OpportunityKanbanCard({ opportunity: opp, draggable = true }: OpportunityKanbanCardProps) {
@@ -29,7 +29,7 @@ export function OpportunityKanbanCard({ opportunity: opp, draggable = true }: Op
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="touch-none">
       <Link href={`/oportunidades/${opp.id}` as Route} draggable={false}>
-        <Card className={`cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow ${!draggable ? 'cursor-default' : ''}`}>
+        <Card className="cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow">
           <CardContent className="p-3 space-y-1.5">
             <div className="flex items-start justify-between gap-2">
               <p className="text-sm font-medium leading-tight line-clamp-2 select-none">{opp.nombre}</p>
@@ -41,7 +41,7 @@ export function OpportunityKanbanCard({ opportunity: opp, draggable = true }: Op
             )}
 
             <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span className="select-none">{opp.owner.full_name.split(' ')[0]}</span>
+              <span className="select-none">{opp.owner?.full_name.split(' ')[0] ?? '—'}</span>
               {opp.monto_estimado > 0 && (
                 <span className="font-medium text-foreground select-none">{fmt.format(opp.monto_estimado)}</span>
               )}

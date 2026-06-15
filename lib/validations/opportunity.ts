@@ -20,7 +20,13 @@ export const businessUnitSchema = z.enum([
 // ----------------------------------------------------------------
 // Create — business rules enforced here and in OpportunityService
 // ----------------------------------------------------------------
-export const createOpportunitySchema = z.object({
+const OPEN_STAGES = [
+  'nuevo_lead', 'contactado', 'diagnostico',
+  'cotizacion_enviada', 'seguimiento', 'negociacion',
+] as const
+
+// Base shape — used to derive updateOpportunitySchema (ZodObject needed for .omit/.partial)
+const createOpportunityBase = z.object({
   nombre:               z.string().min(1).max(255),
   business_unit:        businessUnitSchema,
   fuente:               leadSourceSchema,
@@ -35,15 +41,26 @@ export const createOpportunitySchema = z.object({
   next_activity_at:     z.string().datetime({ offset: true }).optional(),
   notas:                z.string().max(2000).optional(),
 })
-// Service enforces: next_activity_at required for open stages (rule 3)
+
+// Rule 3 enforced here (ADR-004): open stages require next_activity_at
+export const createOpportunitySchema = createOpportunityBase.superRefine((d, ctx) => {
+  if ((OPEN_STAGES as readonly string[]).includes(d.etapa) && !d.next_activity_at) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['next_activity_at'],
+      message: 'next_activity_at es requerido para etapas abiertas',
+    })
+  }
+})
 // Service enforces: monto_final > 0 when etapa = ganado (rule 2)
 
 // ----------------------------------------------------------------
 // Update — all fields optional; service re-applies business rules
 // ----------------------------------------------------------------
-export const updateOpportunitySchema = createOpportunitySchema
+export const updateOpportunitySchema = createOpportunityBase
   .omit({ owner_id: true })
   .partial()
+  .extend({ monto_final: z.number().min(0).nullable().optional() })
 
 // ----------------------------------------------------------------
 // Stage transition — used by Kanban move action

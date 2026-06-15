@@ -1,9 +1,14 @@
 'use client'
 
+import { useState, useTransition } from 'react'
 import {
   Phone, Mail, Users, Monitor, FileText, RotateCcw, MoreHorizontal, CheckCircle2, Clock, XCircle,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { completeActivity, deleteActivity } from '@/app/(dashboard)/actividades/actions'
 import type { ActivityRow } from '@/lib/repositories/interfaces/IActivityRepository'
 import type { ActivityType, ActivityStatus } from '@/lib/validations/activity'
@@ -30,11 +35,22 @@ interface ActivityTimelineProps {
 }
 
 export function ActivityTimeline({ activities, opportunityId }: ActivityTimelineProps) {
+  const [deleteId, setDeleteId] = useState<string | null>(null)
+  const [, startTransition] = useTransition()
+
+  function handleDeleteConfirm() {
+    if (!deleteId) return
+    const id = deleteId
+    setDeleteId(null)
+    startTransition(async () => { await deleteActivity(id, opportunityId) })
+  }
+
   if (activities.length === 0) {
     return <p className="text-sm text-muted-foreground py-4">Sin actividades registradas.</p>
   }
 
   return (
+    <>
     <ol className="relative border-l border-border ml-3 space-y-6">
       {activities.map(act => {
         const Icon       = TYPE_ICONS[act.tipo as ActivityType] ?? MoreHorizontal
@@ -85,26 +101,43 @@ export function ActivityTimeline({ activities, opportunityId }: ActivityTimeline
               {/* Actions */}
               <div className="flex items-center gap-3 pt-1">
                 {isPending && (
-                  <form action={completeActivity.bind(null, act.id, opportunityId)}>
+                  <form action={async () => { await completeActivity(act.id, opportunityId) }}>
                     <button type="submit" className="flex items-center gap-1 text-xs text-primary hover:underline">
                       <CheckCircle2 className="h-3 w-3" /> Completar
                     </button>
                   </form>
                 )}
-                <form action={deleteActivity.bind(null, act.id, opportunityId)}>
-                  <button
-                    type="submit"
-                    className="flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive"
-                    onClick={e => { if (!confirm('¿Eliminar actividad?')) e.preventDefault() }}
-                  >
-                    <XCircle className="h-3 w-3" /> Eliminar
-                  </button>
-                </form>
+                <button
+                  type="button"
+                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive"
+                  onClick={() => setDeleteId(act.id)}
+                >
+                  <XCircle className="h-3 w-3" /> Eliminar
+                </button>
               </div>
             </div>
           </li>
         )
       })}
     </ol>
+
+    <AlertDialog open={deleteId !== null} onOpenChange={v => { if (!v) setDeleteId(null) }}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>¿Eliminar actividad?</AlertDialogTitle>
+          <AlertDialogDescription>Esta acción no se puede deshacer.</AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleDeleteConfirm}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            Eliminar
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   )
 }

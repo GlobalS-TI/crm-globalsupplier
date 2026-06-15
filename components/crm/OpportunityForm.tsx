@@ -1,6 +1,7 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useActionState, useEffect, useRef } from 'react'
+import { useToast } from '@/hooks/use-toast'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -58,6 +59,15 @@ export function OpportunityForm({
   action, defaultValues: d = {}, profiles, companies, currentUserId, submitLabel = 'Guardar',
 }: OpportunityFormProps) {
   const [state, formAction, pending] = useActionState(action, null)
+  const { toast } = useToast()
+  const wasPending = useRef(false)
+
+  useEffect(() => {
+    if (wasPending.current && !pending && state === null) {
+      toast({ title: 'Cambios guardados correctamente' })
+    }
+    wasPending.current = pending
+  }, [pending, state, toast])
 
   return (
     <form action={formAction} className="space-y-5">
@@ -153,7 +163,7 @@ export function OpportunityForm({
           <Label htmlFor="monto_final">Monto final (MXN)</Label>
           <Input
             id="monto_final" name="monto_final" type="number"
-            min={0} step="0.01" defaultValue={d.monto_final ?? ''}
+            min={0} step="0.01" defaultValue={d.monto_final ?? undefined}
             placeholder="Solo para oportunidades ganadas"
           />
         </div>

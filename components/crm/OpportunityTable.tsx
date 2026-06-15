@@ -69,7 +69,7 @@ export function OpportunityTable({ opportunities }: OpportunityTableProps) {
                   </Badge>
                 </TableCell>
                 <TableCell className="text-muted-foreground">
-                  {opp.owner.full_name}
+                  {opp.owner?.full_name ?? '—'}
                 </TableCell>
                 <TableCell className="text-right font-medium">
                   {opp.monto_estimado > 0 ? fmt.format(opp.monto_estimado) : '—'}

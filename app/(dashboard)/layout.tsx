@@ -11,9 +11,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('full_name')
+    .select('full_name, is_active')
     .eq('id', user.id)
     .single()
+
+  if (!profile?.is_active) redirect('/login')
 
   return (
     <div className="flex h-screen overflow-hidden">

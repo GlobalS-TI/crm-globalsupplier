@@ -32,12 +32,6 @@ export class OpportunityService {
   async create(raw: CreateOpportunityInput): Promise<OpportunityWithRelations> {
     const data = createOpportunitySchema.parse(raw)
 
-    // Rule 3: open opportunities must schedule a next activity
-    const isOpen = !CLOSED_STAGES.includes(data.etapa as typeof CLOSED_STAGES[number])
-    if (isOpen && !data.next_activity_at) {
-      throw new Error('next_activity_at is required for open opportunities')
-    }
-
     // Rule 2: ganado requires positive monto_final (Zod catches missing; service catches zero)
     if (data.etapa === 'ganado') {
       if (!data.monto_final || data.monto_final <= 0) {
@@ -56,7 +50,7 @@ export class OpportunityService {
     const data = updateOpportunitySchema.parse(raw)
 
     const nextStage = data.etapa ?? existing.etapa
-    const nextMonto = data.monto_final ?? existing.monto_final
+    const nextMonto = data.monto_final !== undefined ? data.monto_final : existing.monto_final
 
     // Rule 2: cannot save ganado without positive monto_final
     if (nextStage === 'ganado' && (!nextMonto || nextMonto <= 0)) {

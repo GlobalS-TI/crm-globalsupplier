@@ -6,7 +6,7 @@ export type OpportunityRow = Database['public']['Tables']['opportunities']['Row'
 export type OpportunityWithRelations = OpportunityRow & {
   company: { nombre: string } | null
   contact: { nombre: string; apellido: string | null } | null
-  owner:   { full_name: string }
+  owner:   { full_name: string } | null
 }
 
 export type DashboardStats = {

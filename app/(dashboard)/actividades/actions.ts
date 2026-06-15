@@ -44,14 +44,24 @@ export async function createActivity(_prev: ActionState, form: FormData): Promis
   }
 }
 
-export async function completeActivity(id: string, opportunityId: string): Promise<void> {
-  await makeService().complete(id)
-  revalidatePath(`/oportunidades/${opportunityId}`)
-  revalidatePath('/actividades')
+export async function completeActivity(id: string, opportunityId: string): Promise<{ error?: string }> {
+  try {
+    await makeService().complete(id)
+    revalidatePath(`/oportunidades/${opportunityId}`)
+    revalidatePath('/actividades')
+    return {}
+  } catch (e) {
+    return { error: (e as Error).message }
+  }
 }
 
-export async function deleteActivity(id: string, opportunityId: string): Promise<void> {
-  await makeService().delete(id)
-  revalidatePath(`/oportunidades/${opportunityId}`)
-  revalidatePath('/actividades')
+export async function deleteActivity(id: string, opportunityId: string): Promise<{ error?: string }> {
+  try {
+    await makeService().delete(id)
+    revalidatePath(`/oportunidades/${opportunityId}`)
+    revalidatePath('/actividades')
+    return {}
+  } catch (e) {
+    return { error: (e as Error).message }
+  }
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState, useState } from 'react'
+import { useActionState, useEffect, useRef, useState } from 'react'
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel,
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
@@ -26,7 +26,15 @@ interface StageTransitionModalProps {
 export function StageTransitionModal({ targetStage, action }: StageTransitionModalProps) {
   const [open, setOpen] = useState(false)
   const [state, formAction, pending] = useActionState(action, null)
+  const submitted = useRef(false)
   const needsMonto = targetStage === 'ganado'
+
+  useEffect(() => {
+    if (submitted.current && state === null && !pending) {
+      setOpen(false)
+      submitted.current = false
+    }
+  }, [state, pending])
 
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
@@ -45,7 +53,7 @@ export function StageTransitionModal({ targetStage, action }: StageTransitionMod
           </AlertDialogDescription>
         </AlertDialogHeader>
 
-        <form action={formAction} id="stage-form" className="space-y-3">
+        <form action={formAction} id="stage-form" className="space-y-3" onSubmit={() => { submitted.current = true }}>
           <input type="hidden" name="etapa" value={targetStage} />
           {needsMonto && (
             <div className="space-y-1.5">
