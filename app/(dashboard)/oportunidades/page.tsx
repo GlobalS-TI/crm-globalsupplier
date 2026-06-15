@@ -29,6 +29,7 @@ export default async function OportunidadesPage({ searchParams }: PageProps) {
     ...(sp.stage  && { stage:        sp.stage as OpportunityStage }),
     ...(sp.stale === 'true' && { stale: true }),
   }
+  const boardKey = `${sp.owner ?? ''}-${sp.unit ?? ''}-${sp.stage ?? ''}-${sp.stale ?? ''}`
 
   const supabase = await createClient()
   const [opportunities, profilesResult] = await Promise.all([
@@ -57,7 +58,7 @@ export default async function OportunidadesPage({ searchParams }: PageProps) {
       <div className="flex-1 overflow-hidden">
         {view === 'kanban' ? (
           <div className="h-full py-4">
-            <OpportunityKanbanBoard opportunities={opportunities} />
+            <OpportunityKanbanBoard key={boardKey} opportunities={opportunities} />
           </div>
         ) : (
           <div className="p-6">

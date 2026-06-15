@@ -86,6 +86,20 @@ export async function kanbanMoveToStage(
   }
 }
 
+export async function kanbanReopenStage(
+  id: string,
+  stage: OpportunityStage,
+): Promise<{ error?: string }> {
+  try {
+    await makeService().update(id, { etapa: stage, monto_final: null })
+    revalidatePath('/oportunidades')
+    revalidatePath(`/oportunidades/${id}`)
+    return {}
+  } catch (e) {
+    return { error: (e as Error).message }
+  }
+}
+
 export async function deleteOpportunity(id: string): Promise<void> {
   await makeService().delete(id)
   revalidatePath('/oportunidades')

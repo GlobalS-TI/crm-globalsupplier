@@ -16,6 +16,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
 import { OpportunityKanbanCard } from '@/components/crm/OpportunityKanbanCard'
 import { KanbanStageModal } from '@/components/crm/KanbanStageModal'
+import { KanbanReopenModal } from '@/components/crm/KanbanReopenModal'
 import { kanbanMoveToStage } from '@/app/(dashboard)/oportunidades/actions'
 import type { OpportunityWithRelations } from '@/lib/repositories/interfaces/IOpportunityRepository'
 import type { OpportunityStage } from '@/lib/validations/opportunity'
@@ -36,6 +37,12 @@ const CLOSED: Set<OpportunityStage> = new Set(['ganado', 'perdido'])
 type PendingDrop = {
   card:        OpportunityWithRelations
   targetStage: 'ganado' | 'perdido'
+}
+
+type PendingReopen = {
+  card:        OpportunityWithRelations
+  sourceStage: 'ganado' | 'perdido'
+  targetStage: OpportunityStage
 }
 
 interface Props {
@@ -75,7 +82,6 @@ function KanbanColumn({
             <OpportunityKanbanCard
               key={opp.id}
               opportunity={opp}
-              draggable={!isClosed}
             />
           ))}
           {cards.length === 0 && (
@@ -96,7 +102,8 @@ export function OpportunityKanbanBoard({ opportunities }: Props) {
   const [activeId, setActiveId] = useState<string | null>(null)
   const [overId, setOverId]     = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
-  const [pendingDrop, setPendingDrop] = useState<PendingDrop | null>(null)
+  const [pendingDrop, setPendingDrop]     = useState<PendingDrop | null>(null)
+  const [pendingReopen, setPendingReopen] = useState<PendingReopen | null>(null)
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -129,12 +136,22 @@ export function OpportunityKanbanBoard({ opportunities }: Props) {
     const card        = items.find(o => o.id === oppId)
     if (!card || card.etapa === targetStage) return
 
-    if (CLOSED.has(targetStage)) {
+    const sourceIsClosed = CLOSED.has(card.etapa)
+    const targetIsClosed = CLOSED.has(targetStage)
+
+    if (sourceIsClosed && targetIsClosed) return
+
+    if (sourceIsClosed && !targetIsClosed) {
+      setPendingReopen({ card, sourceStage: card.etapa as 'ganado' | 'perdido', targetStage })
+      return
+    }
+
+    if (targetIsClosed) {
       setPendingDrop({ card, targetStage: targetStage as 'ganado' | 'perdido' })
       return
     }
 
-    // Optimistic update
+    // Optimistic update (open → open)
     setItems(prev =>
       prev.map(o => o.id === oppId ? { ...o, etapa: targetStage } : o)
     )
@@ -161,6 +178,19 @@ export function OpportunityKanbanBoard({ opportunities }: Props) {
 
   function handleModalCancel() {
     setPendingDrop(null)
+  }
+
+  function handleReopenConfirm() {
+    if (!pendingReopen) return
+    const { card, targetStage } = pendingReopen
+    setItems(prev =>
+      prev.map(o => o.id === card.id ? { ...o, etapa: targetStage, monto_final: null } : o)
+    )
+    setPendingReopen(null)
+  }
+
+  function handleReopenCancel() {
+    setPendingReopen(null)
   }
 
   return (
@@ -200,6 +230,18 @@ export function OpportunityKanbanBoard({ opportunities }: Props) {
           targetStage={pendingDrop.targetStage}
           onConfirm={handleModalConfirm}
           onCancel={handleModalCancel}
+        />
+      )}
+
+      {pendingReopen && (
+        <KanbanReopenModal
+          open
+          oppId={pendingReopen.card.id}
+          oppName={pendingReopen.card.nombre}
+          sourceStage={pendingReopen.sourceStage}
+          targetStage={pendingReopen.targetStage}
+          onConfirm={handleReopenConfirm}
+          onCancel={handleReopenCancel}
         />
       )}
     </>
