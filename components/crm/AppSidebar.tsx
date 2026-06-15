@@ -9,6 +9,8 @@ import {
   Building2,
   Users,
   Activity,
+  Library,
+  UserRoundSearch,
   LogOut,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
@@ -24,6 +26,8 @@ const NAV_ITEMS: { href: Route; label: string; icon: LucideIcon }[] = [
   { href: '/empresas',      label: 'Empresas',      icon: Building2 },
   { href: '/contactos',     label: 'Contactos',     icon: Users },
   { href: '/actividades',   label: 'Actividades',   icon: Activity },
+  { href: '/contenido',     label: 'Contenido',     icon: Library },
+  { href: '/leads',         label: 'Leads',         icon: UserRoundSearch },
 ]
 
 interface AppSidebarProps {

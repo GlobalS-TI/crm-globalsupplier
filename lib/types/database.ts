@@ -204,6 +204,244 @@ export type Database = {
           },
         ]
       }
+      content_categories: {
+        Row: {
+          created_at: string
+          icono: string | null
+          id: string
+          nombre: string
+          orden: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          icono?: string | null
+          id?: string
+          nombre: string
+          orden?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          icono?: string | null
+          id?: string
+          nombre?: string
+          orden?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      content_files: {
+        Row: {
+          created_at: string
+          file_path: string | null
+          file_size: number | null
+          id: string
+          item_id: string
+          mime_type: string | null
+          nombre: string
+          owner_id: string
+          tipo: string
+          url: string | null
+        }
+        Insert: {
+          created_at?: string
+          file_path?: string | null
+          file_size?: number | null
+          id?: string
+          item_id: string
+          mime_type?: string | null
+          nombre: string
+          owner_id: string
+          tipo: string
+          url?: string | null
+        }
+        Update: {
+          created_at?: string
+          file_path?: string | null
+          file_size?: number | null
+          id?: string
+          item_id?: string
+          mime_type?: string | null
+          nombre?: string
+          owner_id?: string
+          tipo?: string
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_files_item_id_fkey"
+            columns: ["item_id"]
+            isOneToOne: false
+            referencedRelation: "content_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_files_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      content_items: {
+        Row: {
+          business_unit: Database["public"]["Enums"]["business_unit"]
+          category_id: string
+          created_at: string
+          descripcion: string | null
+          id: string
+          nombre: string
+          owner_id: string
+          updated_at: string
+        }
+        Insert: {
+          business_unit: Database["public"]["Enums"]["business_unit"]
+          category_id: string
+          created_at?: string
+          descripcion?: string | null
+          id?: string
+          nombre: string
+          owner_id: string
+          updated_at?: string
+        }
+        Update: {
+          business_unit?: Database["public"]["Enums"]["business_unit"]
+          category_id?: string
+          created_at?: string
+          descripcion?: string | null
+          id?: string
+          nombre?: string
+          owner_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "content_items_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "content_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "content_items_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lead_sections: {
+        Row: {
+          created_at: string
+          created_by: string
+          descripcion: string | null
+          id: string
+          nombre: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          descripcion?: string | null
+          id?: string
+          nombre: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          descripcion?: string | null
+          id?: string
+          nombre?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_sections_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leads: {
+        Row: {
+          assigned_to: string | null
+          converted_opportunity_id: string | null
+          created_at: string
+          created_by: string
+          email: string | null
+          empresa: string | null
+          id: string
+          nombre: string
+          requerimientos: string | null
+          requirements_file_path: string | null
+          section_id: string
+          telefono: string | null
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          converted_opportunity_id?: string | null
+          created_at?: string
+          created_by: string
+          email?: string | null
+          empresa?: string | null
+          id?: string
+          nombre: string
+          requerimientos?: string | null
+          requirements_file_path?: string | null
+          section_id: string
+          telefono?: string | null
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          converted_opportunity_id?: string | null
+          created_at?: string
+          created_by?: string
+          email?: string | null
+          empresa?: string | null
+          id?: string
+          nombre?: string
+          requerimientos?: string | null
+          requirements_file_path?: string | null
+          section_id?: string
+          telefono?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_converted_opportunity_id_fkey"
+            columns: ["converted_opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_section_id_fkey"
+            columns: ["section_id"]
+            isOneToOne: false
+            referencedRelation: "lead_sections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       opportunities: {
         Row: {
           business_unit: Database["public"]["Enums"]["business_unit"]
@@ -347,7 +585,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_manage_leads: { Args: never; Returns: boolean }
+      is_content_manager: { Args: never; Returns: boolean }
       is_full_access: { Args: never; Returns: boolean }
+      is_leads_manager: { Args: never; Returns: boolean }
       mark_stale_opportunities: { Args: never; Returns: number }
       owns_opportunity: { Args: { opp_id: string }; Returns: boolean }
       recompute_opportunity_stale: {

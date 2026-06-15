@@ -1,15 +1,17 @@
-# Sprint 5 — Empresas y Contactos
+# Sprint 6 — Biblioteca de Contenido (Base)
 
 ## Checklist
-- [x] Zod schemas para empresa y contacto (lib/validations/)
-- [x] CompanyRepository + ContactRepository con CRUD completo
-- [x] CompanyService + ContactService
-- [x] Server Actions para empresas y contactos
-- [x] /empresas — lista con búsqueda por nombre
-- [x] /empresas/nueva — form de creación
-- [x] /empresas/[id] — edición + contactos vinculados + oportunidades vinculadas
-- [x] /contactos — lista con búsqueda, filtro por empresa via query param
-- [x] /contactos/nuevo — form de creación (pre-rellena empresa si viene ?company_id=)
-- [x] /contactos/[id] — edición + oportunidades vinculadas
-- [x] DeleteButton reutilizable con AlertDialog de confirmación
-- [x] SearchInput reutilizable con URL param ?q=
+- [x] ADR-006 — módulo de biblioteca de contenido
+- [x] Migración: tablas content_categories, content_items, content_files + RLS + Storage bucket
+- [x] Seed: 12 categorías por defecto (editables/borrables desde UI)
+- [x] Zod schemas en lib/validations/content.ts
+- [x] Interfaces IContentCategoryRepository, IContentItemRepository, IContentFileRepository
+- [x] Implementaciones ContentCategoryRepository, ContentItemRepository, ContentFileRepository
+- [x] ContentService con CRUD de categorías, items y archivos
+- [ ] /contenido — sidebar de categorías + tabla de items por marca
+- [ ] Vista de items agrupada por business_unit con conteo de archivos
+- [ ] Preview: imagen inline, PDF embed, YouTube player, descarga directa
+- [ ] Upload de archivos (drag & drop, límite 200 MB)
+- [ ] Pegar URL de YouTube
+- [ ] CRUD de categorías desde UI (solo marketing / director_general)
+- [ ] CRUD de items desde UI
