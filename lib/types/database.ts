@@ -783,6 +783,47 @@ export type Database = {
           },
         ]
       }
+      sales_targets: {
+        Row: {
+          id: string
+          vendedor_id: string
+          year: number
+          month: number
+          target_amount: number
+          created_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          vendedor_id: string
+          year: number
+          month: number
+          target_amount?: number
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          vendedor_id?: string
+          year?: number
+          month?: number
+          target_amount?: number
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_targets_vendedor_id_fkey"
+            columns: ["vendedor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

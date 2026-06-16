@@ -11,6 +11,7 @@ import {
   Activity,
   Library,
   UserRoundSearch,
+  Target,
   LogOut,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
@@ -28,6 +29,7 @@ const NAV_ITEMS: { href: Route; label: string; icon: LucideIcon }[] = [
   { href: '/actividades',   label: 'Actividades',   icon: Activity },
   { href: '/contenido',     label: 'Contenido',     icon: Library },
   { href: '/leads',         label: 'Leads',         icon: UserRoundSearch },
+  { href: '/metas',         label: 'Metas',         icon: Target },
 ]
 
 interface AppSidebarProps {
