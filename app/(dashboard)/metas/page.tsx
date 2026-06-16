@@ -36,8 +36,9 @@ export default async function MetasPage({ searchParams }: Props) {
     .eq('is_active', true)
     .order('full_name')
 
+  const SELLER_ROLES = ['vendedor', 'direccion_comercial']
   const vendors = isDirector
-    ? (allProfiles ?? []).filter(p => p.role !== 'marketing' && p.role !== 'administracion')
+    ? (allProfiles ?? []).filter(p => SELLER_ROLES.includes(p.role))
     : [{ id: user.id, full_name: profile?.full_name ?? '', role: profile?.role ?? '' }]
 
   // Determine selected vendedor
@@ -52,6 +53,7 @@ export default async function MetasPage({ searchParams }: Props) {
     <div className="p-8 space-y-8">
       <h1 className="text-2xl font-bold">Metas de venta</h1>
       <SalesTargetsBoard
+        key={`${vendedorId}-${year}`}
         vendors={vendors}
         selectedVendedorId={vendedorId}
         year={year}
