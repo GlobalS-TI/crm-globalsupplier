@@ -580,6 +580,209 @@ export type Database = {
         }
         Relationships: []
       }
+      task_board_columns: {
+        Row: {
+          board_id: string
+          config: Json
+          created_at: string
+          id: string
+          nombre: string
+          position: number
+          tipo: Database["public"]["Enums"]["task_column_type"]
+        }
+        Insert: {
+          board_id: string
+          config?: Json
+          created_at?: string
+          id?: string
+          nombre: string
+          position?: number
+          tipo?: Database["public"]["Enums"]["task_column_type"]
+        }
+        Update: {
+          board_id?: string
+          config?: Json
+          created_at?: string
+          id?: string
+          nombre?: string
+          position?: number
+          tipo?: Database["public"]["Enums"]["task_column_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_board_columns_board_id_fkey"
+            columns: ["board_id"]
+            isOneToOne: false
+            referencedRelation: "task_boards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      task_boards: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          nombre: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          nombre?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          nombre?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_boards_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      task_column_values: {
+        Row: {
+          column_id: string
+          task_id: string
+          value: string | null
+        }
+        Insert: {
+          column_id: string
+          task_id: string
+          value?: string | null
+        }
+        Update: {
+          column_id?: string
+          task_id?: string
+          value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_column_values_column_id_fkey"
+            columns: ["column_id"]
+            isOneToOne: false
+            referencedRelation: "task_board_columns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_column_values_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      task_groups: {
+        Row: {
+          board_id: string
+          color: string
+          created_at: string
+          id: string
+          nombre: string
+          position: number
+        }
+        Insert: {
+          board_id: string
+          color?: string
+          created_at?: string
+          id?: string
+          nombre: string
+          position?: number
+        }
+        Update: {
+          board_id?: string
+          color?: string
+          created_at?: string
+          id?: string
+          nombre?: string
+          position?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_groups_board_id_fkey"
+            columns: ["board_id"]
+            isOneToOne: false
+            referencedRelation: "task_boards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tasks: {
+        Row: {
+          board_id: string
+          created_at: string
+          created_by: string
+          fecha_entrega: string | null
+          group_id: string | null
+          id: string
+          opportunity_id: string | null
+          position: number
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          board_id: string
+          created_at?: string
+          created_by: string
+          fecha_entrega?: string | null
+          group_id?: string | null
+          id?: string
+          opportunity_id?: string | null
+          position?: number
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          board_id?: string
+          created_at?: string
+          created_by?: string
+          fecha_entrega?: string | null
+          group_id?: string | null
+          id?: string
+          opportunity_id?: string | null
+          position?: number
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_board_id_fkey"
+            columns: ["board_id"]
+            isOneToOne: false
+            referencedRelation: "task_boards"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "task_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -631,6 +834,14 @@ export type Database = {
         | "negociacion"
         | "ganado"
         | "perdido"
+      task_column_type:
+        | "text"
+        | "number"
+        | "date"
+        | "selector"
+        | "person"
+        | "url"
+        | "business_unit"
       user_role:
         | "director_general"
         | "direccion_comercial"
@@ -804,6 +1015,15 @@ export const Constants = {
         "negociacion",
         "ganado",
         "perdido",
+      ],
+      task_column_type: [
+        "text",
+        "number",
+        "date",
+        "selector",
+        "person",
+        "url",
+        "business_unit",
       ],
       user_role: [
         "director_general",

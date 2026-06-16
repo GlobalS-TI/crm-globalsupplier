@@ -113,7 +113,7 @@ export function LeadTable({ leads, section, sectionId, canManageLeads, isLeadsMa
                           className="flex items-center gap-1 text-xs text-primary hover:underline mt-0.5"
                         >
                           <ExternalLink className="h-3 w-3 shrink-0" />
-                          Ver enlace
+                          Ver requierimientos
                         </a>
                       ) : (
                         <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
