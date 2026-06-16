@@ -46,7 +46,7 @@ export class LeadService {
 
   deleteLead(id: string) { return this.leads.delete(id) }
 
-  bulkImportLeads(rows: ImportLeadRow[], sectionId: string, userId: string) {
-    return this.leads.bulkCreate(rows, sectionId, userId)
+  bulkImportLeads(rows: ImportLeadRow[], sectionId: string, userId: string, responsableId?: string) {
+    return this.leads.bulkCreate(rows, sectionId, userId, responsableId)
   }
 }

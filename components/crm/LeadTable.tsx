@@ -95,7 +95,8 @@ export function LeadTable({ leads, section, sectionId, canManageLeads, isLeadsMa
                 <th className="px-4 py-2.5 text-left font-medium text-muted-foreground">Nombre</th>
                 <th className="px-4 py-2.5 text-left font-medium text-muted-foreground hidden md:table-cell">Empresa</th>
                 <th className="px-4 py-2.5 text-left font-medium text-muted-foreground hidden lg:table-cell">Contacto</th>
-                <th className="px-4 py-2.5 text-left font-medium text-muted-foreground hidden xl:table-cell">Asignado a</th>
+                <th className="px-4 py-2.5 text-left font-medium text-muted-foreground hidden xl:table-cell">Responsable</th>
+                <th className="px-4 py-2.5 text-left font-medium text-muted-foreground hidden xl:table-cell">Vendedor</th>
                 <th className="px-4 py-2.5 text-right font-medium text-muted-foreground w-24">Acciones</th>
               </tr>
             </thead>
@@ -163,8 +164,14 @@ export function LeadTable({ leads, section, sectionId, canManageLeads, isLeadsMa
                     </div>
                   </td>
                   <td className="px-4 py-3 hidden xl:table-cell">
-                    {lead.assignee
-                      ? <span className="text-xs">{lead.assignee.full_name}</span>
+                    {lead.responsable
+                      ? <span className="text-xs">{lead.responsable.full_name}</span>
+                      : <span className="text-xs text-muted-foreground">—</span>
+                    }
+                  </td>
+                  <td className="px-4 py-3 hidden xl:table-cell">
+                    {lead.vendedor
+                      ? <span className="text-xs">{lead.vendedor.full_name}</span>
                       : <span className="text-xs text-muted-foreground">Sin asignar</span>
                     }
                   </td>

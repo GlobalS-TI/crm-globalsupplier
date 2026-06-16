@@ -22,15 +22,16 @@ export const createLeadSchema = z.object({
   telefono:                z.string().max(50).optional(),
   requerimientos:          z.string().max(3000).optional(),
   requirements_file_path:  z.string().optional(),
-  assigned_to:             z.string().uuid().optional(),
+  responsable_id:          z.string().uuid().optional(),
+  vendedor_id:             z.string().uuid().optional(),
 })
 
 export const updateLeadSchema = createLeadSchema
   .omit({ section_id: true })
   .extend({
     converted_opportunity_id: z.string().uuid().optional(),
-    // Allow null to explicitly clear assignment (string | null | undefined)
-    assigned_to: z.string().uuid().nullable().optional(),
+    responsable_id:           z.string().uuid().nullable().optional(),
+    vendedor_id:              z.string().uuid().nullable().optional(),
   })
   .partial()
 

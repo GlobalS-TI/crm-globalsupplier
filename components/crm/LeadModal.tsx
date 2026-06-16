@@ -265,10 +265,22 @@ function SharedFields({ assignableUsers, defaultValues }: SharedProps) {
         />
       </div>
 
+      {/* Responsable — siempre direccion_comercial, solo lectura */}
+      {defaultValues?.responsable && (
+        <div className="space-y-1.5 col-span-2">
+          <Label>Responsable</Label>
+          <div className="flex items-center gap-2 rounded-md border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground">
+            {defaultValues.responsable.full_name}
+            <span className="ml-auto text-xs">Dirección Comercial</span>
+          </div>
+        </div>
+      )}
+
+      {/* Vendedor — asignable por director */}
       <div className="space-y-1.5 col-span-2">
-        <Label htmlFor="lf_assigned">Asignado a</Label>
-        <Select name="assigned_to" defaultValue={defaultValues?.assigned_to ?? '__none__'}>
-          <SelectTrigger id="lf_assigned">
+        <Label htmlFor="lf_vendedor">Vendedor asignado</Label>
+        <Select name="vendedor_id" defaultValue={defaultValues?.vendedor_id ?? '__none__'}>
+          <SelectTrigger id="lf_vendedor">
             <SelectValue placeholder="Sin asignar" />
           </SelectTrigger>
           <SelectContent>

@@ -16,7 +16,7 @@ import type {
 } from '@/lib/validations/lead'
 
 const LEAD_WITH_RELATIONS =
-  '*, assignee:profiles!assigned_to(full_name), section:lead_sections!section_id(nombre)'
+  '*, responsable:profiles!responsable_id(full_name), vendedor:profiles!vendedor_id(full_name), section:lead_sections!section_id(nombre)'
 
 async function db() {
   return createClient()
@@ -138,14 +138,15 @@ export class LeadRepository implements ILeadRepository {
     if (error) throw error
   }
 
-  async bulkCreate(rows: ImportLeadRow[], sectionId: string, createdBy: string): Promise<number> {
+  async bulkCreate(rows: ImportLeadRow[], sectionId: string, createdBy: string, responsableId?: string): Promise<number> {
     if (rows.length === 0) return 0
     const supabase = await db()
     const payload = rows.map(r => ({
       ...r,
-      section_id:  sectionId,
-      created_by:  createdBy,
-      email:       r.email || null,
+      section_id:     sectionId,
+      created_by:     createdBy,
+      email:          r.email || null,
+      responsable_id: responsableId ?? null,
     }))
     const { data, error } = await supabase
       .from('leads')

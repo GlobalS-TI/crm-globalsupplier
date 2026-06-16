@@ -27,7 +27,8 @@ export type LeadRow = {
   telefono:                 string | null
   requerimientos:           string | null
   requirements_file_path:   string | null
-  assigned_to:              string | null
+  responsable_id:           string | null
+  vendedor_id:              string | null
   converted_opportunity_id: string | null
   created_by:               string
   created_at:               string
@@ -35,8 +36,9 @@ export type LeadRow = {
 }
 
 export type LeadWithRelations = LeadRow & {
-  assignee: { full_name: string } | null
-  section:  { nombre: string }
+  responsable: { full_name: string } | null
+  vendedor:    { full_name: string } | null
+  section:     { nombre: string }
 }
 
 export type LeadSectionWithCount = LeadSectionRow & {
@@ -61,5 +63,5 @@ export interface ILeadRepository {
   create(data: CreateLeadInput, createdBy: string): Promise<LeadRow>
   update(id: string, data: UpdateLeadInput): Promise<LeadRow>
   delete(id: string): Promise<void>
-  bulkCreate(rows: ImportLeadRow[], sectionId: string, createdBy: string): Promise<number>
+  bulkCreate(rows: ImportLeadRow[], sectionId: string, createdBy: string, responsableId?: string): Promise<number>
 }

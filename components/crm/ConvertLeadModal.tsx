@@ -130,7 +130,7 @@ export function ConvertLeadButton({ lead, assignableUsers }: Props) {
             <Label htmlFor="cl_owner">Responsable *</Label>
             <Select
               name="owner_id"
-              defaultValue={lead.assigned_to ?? ''}
+              defaultValue={lead.vendedor_id ?? ''}
               required
             >
               <SelectTrigger id="cl_owner">

@@ -21,6 +21,24 @@ async function getUser() {
   return user
 }
 
+async function getResponsableId(): Promise<string | undefined> {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('role', 'direccion_comercial')
+    .eq('is_active', true)
+    .limit(1)
+    .single()
+  return data?.id
+}
+
+function parseVendedor(form: FormData): string | undefined | null {
+  const v = form.get('vendedor_id') as string
+  if (!v || v === '__none__') return undefined
+  return v
+}
+
 // ── Sections ──────────────────────────────────────────────────────
 
 export async function createSection(_prev: ActionState, form: FormData): Promise<ActionState> {
@@ -61,7 +79,7 @@ export async function deleteSection(id: string): Promise<void> {
 
 export async function createLead(_prev: ActionState, form: FormData): Promise<ActionState> {
   try {
-    const user = await getUser()
+    const [user, responsableId] = await Promise.all([getUser(), getResponsableId()])
     await service().createLead({
       section_id:     form.get('section_id') as string,
       nombre:         form.get('nombre') as string,
@@ -69,7 +87,8 @@ export async function createLead(_prev: ActionState, form: FormData): Promise<Ac
       email:          (form.get('email') as string) || undefined,
       telefono:       (form.get('telefono') as string) || undefined,
       requerimientos: (form.get('requerimientos') as string) || undefined,
-      assigned_to:    (() => { const v = form.get('assigned_to') as string; return (!v || v === '__none__') ? undefined : v })(),
+      responsable_id: responsableId,
+      vendedor_id:    parseVendedor(form) ?? undefined,
     }, user.id)
     revalidatePath('/leads')
     return null
@@ -80,15 +99,14 @@ export async function createLead(_prev: ActionState, form: FormData): Promise<Ac
 
 export async function updateLead(id: string, _prev: ActionState, form: FormData): Promise<ActionState> {
   try {
-    const assignedTo = form.get('assigned_to') as string
+    const v = form.get('vendedor_id') as string
     await service().updateLead(id, {
       nombre:         form.get('nombre') as string,
       empresa:        (form.get('empresa') as string) || undefined,
       email:          (form.get('email') as string) || undefined,
       telefono:       (form.get('telefono') as string) || undefined,
       requerimientos: (form.get('requerimientos') as string) || undefined,
-      // '__none__' sentinel or empty → null (clears assignment)
-      assigned_to:    (!assignedTo || assignedTo === '__none__') ? null : assignedTo,
+      vendedor_id:    (!v || v === '__none__') ? null : v,
     })
     revalidatePath('/leads')
     return null
@@ -119,8 +137,8 @@ export async function bulkImportLeads(
   sectionId: string,
 ): Promise<{ count: number } | { error: string }> {
   try {
-    const user  = await getUser()
-    const count = await service().bulkImportLeads(rows, sectionId, user.id)
+    const [user, responsableId] = await Promise.all([getUser(), getResponsableId()])
+    const count = await service().bulkImportLeads(rows, sectionId, user.id, responsableId)
     revalidatePath('/leads')
     return { count }
   } catch (e) {
@@ -128,13 +146,12 @@ export async function bulkImportLeads(
   }
 }
 
-// Returns created lead data for client-side file upload flow
 export async function createLeadAndReturn(
   form: FormData,
 ): Promise<{ id: string } | { error: string }> {
   try {
-    const user = await getUser()
-    const assignedTo = form.get('assigned_to') as string
+    const [user, responsableId] = await Promise.all([getUser(), getResponsableId()])
+    const v = form.get('vendedor_id') as string
     const lead = await service().createLead({
       section_id:     form.get('section_id') as string,
       nombre:         form.get('nombre') as string,
@@ -142,7 +159,8 @@ export async function createLeadAndReturn(
       email:          (form.get('email') as string) || undefined,
       telefono:       (form.get('telefono') as string) || undefined,
       requerimientos: (form.get('requerimientos') as string) || undefined,
-      assigned_to:    (!assignedTo || assignedTo === '__none__') ? undefined : assignedTo,
+      responsable_id: responsableId,
+      vendedor_id:    (!v || v === '__none__') ? undefined : v,
     }, user.id)
     revalidatePath('/leads')
     return { id: lead.id }
@@ -156,11 +174,9 @@ export async function setLeadRequirementFile(leadId: string, filePath: string): 
   revalidatePath('/leads')
 }
 
-export async function assignLead(id: string, assignedTo: string | null): Promise<ActionState> {
+export async function assignVendedor(id: string, vendedorId: string | null): Promise<ActionState> {
   try {
-    await service().updateLead(id, {
-      assigned_to: assignedTo ?? undefined,
-    })
+    await service().updateLead(id, { vendedor_id: vendedorId })
     revalidatePath('/leads')
     return null
   } catch (e) {
@@ -176,15 +192,15 @@ export async function convertLeadToOpportunity(
   try {
     const oppService = new OpportunityService(new OpportunityRepository())
     const opp = await oppService.create({
-      nombre:               form.get('nombre') as string,
-      business_unit:        form.get('business_unit') as never,
-      fuente:               form.get('fuente') as never,
-      owner_id:             form.get('owner_id') as string,
-      etapa:                'nuevo_lead',
-      monto_estimado:       0,
-      probabilidad:         0,
-      next_activity_at:     form.get('next_activity_at') as string,
-      notas:                (form.get('notas') as string) || undefined,
+      nombre:           form.get('nombre') as string,
+      business_unit:    form.get('business_unit') as never,
+      fuente:           form.get('fuente') as never,
+      owner_id:         form.get('owner_id') as string,
+      etapa:            'nuevo_lead',
+      monto_estimado:   0,
+      probabilidad:     0,
+      next_activity_at: form.get('next_activity_at') as string,
+      notas:            (form.get('notas') as string) || undefined,
     })
 
     await service().updateLead(leadId, { converted_opportunity_id: opp.id })

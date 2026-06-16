@@ -36,7 +36,7 @@ export default async function LeadsPage({ searchParams }: PageProps) {
   const { data: assignableData } = await supabase
     .from('profiles')
     .select('id, full_name')
-    .in('role', ['direccion_comercial', 'vendedor'])
+    .in('role', ['vendedor'])
     .eq('is_active', true)
     .order('full_name')
 

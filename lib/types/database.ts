@@ -367,7 +367,6 @@ export type Database = {
       }
       leads: {
         Row: {
-          assigned_to: string | null
           converted_opportunity_id: string | null
           created_at: string
           created_by: string
@@ -377,12 +376,13 @@ export type Database = {
           nombre: string
           requerimientos: string | null
           requirements_file_path: string | null
+          responsable_id: string | null
           section_id: string
           telefono: string | null
           updated_at: string
+          vendedor_id: string | null
         }
         Insert: {
-          assigned_to?: string | null
           converted_opportunity_id?: string | null
           created_at?: string
           created_by: string
@@ -392,12 +392,13 @@ export type Database = {
           nombre: string
           requerimientos?: string | null
           requirements_file_path?: string | null
+          responsable_id?: string | null
           section_id: string
           telefono?: string | null
           updated_at?: string
+          vendedor_id?: string | null
         }
         Update: {
-          assigned_to?: string | null
           converted_opportunity_id?: string | null
           created_at?: string
           created_by?: string
@@ -407,14 +408,23 @@ export type Database = {
           nombre?: string
           requerimientos?: string | null
           requirements_file_path?: string | null
+          responsable_id?: string | null
           section_id?: string
           telefono?: string | null
           updated_at?: string
+          vendedor_id?: string | null
         }
         Relationships: [
           {
-            foreignKeyName: "leads_assigned_to_fkey"
-            columns: ["assigned_to"]
+            foreignKeyName: "leads_vendedor_id_fkey"
+            columns: ["vendedor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_responsable_id_fkey"
+            columns: ["responsable_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
