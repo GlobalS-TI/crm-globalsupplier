@@ -447,6 +447,7 @@ export type Database = {
           business_unit: Database["public"]["Enums"]["business_unit"]
           company_id: string | null
           contact_id: string | null
+          cotizacion_path: string | null
           created_at: string
           etapa: Database["public"]["Enums"]["opportunity_stage"]
           fecha_cierre_estimada: string | null
@@ -458,6 +459,7 @@ export type Database = {
           next_activity_at: string | null
           nombre: string
           notas: string | null
+          orden_compra_path: string | null
           owner_id: string
           probabilidad: number
           stale: boolean
@@ -467,6 +469,7 @@ export type Database = {
           business_unit: Database["public"]["Enums"]["business_unit"]
           company_id?: string | null
           contact_id?: string | null
+          cotizacion_path?: string | null
           created_at?: string
           etapa?: Database["public"]["Enums"]["opportunity_stage"]
           fecha_cierre_estimada?: string | null
@@ -478,6 +481,7 @@ export type Database = {
           next_activity_at?: string | null
           nombre: string
           notas?: string | null
+          orden_compra_path?: string | null
           owner_id: string
           probabilidad?: number
           stale?: boolean
@@ -487,6 +491,7 @@ export type Database = {
           business_unit?: Database["public"]["Enums"]["business_unit"]
           company_id?: string | null
           contact_id?: string | null
+          cotizacion_path?: string | null
           created_at?: string
           etapa?: Database["public"]["Enums"]["opportunity_stage"]
           fecha_cierre_estimada?: string | null
@@ -498,6 +503,7 @@ export type Database = {
           next_activity_at?: string | null
           nombre?: string
           notas?: string | null
+          orden_compra_path?: string | null
           owner_id?: string
           probabilidad?: number
           stale?: boolean
@@ -579,6 +585,54 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      sales_targets: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          month: number
+          target_amount: number
+          updated_at: string
+          vendedor_id: string
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          month: number
+          target_amount?: number
+          updated_at?: string
+          vendedor_id: string
+          year: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          month?: number
+          target_amount?: number
+          updated_at?: string
+          vendedor_id?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_targets_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_targets_vendedor_id_fkey"
+            columns: ["vendedor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       task_board_columns: {
         Row: {
@@ -779,47 +833,6 @@ export type Database = {
             columns: ["opportunity_id"]
             isOneToOne: false
             referencedRelation: "opportunities"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      sales_targets: {
-        Row: {
-          id: string
-          vendedor_id: string
-          year: number
-          month: number
-          target_amount: number
-          created_by: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          vendedor_id: string
-          year: number
-          month: number
-          target_amount?: number
-          created_by?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          vendedor_id?: string
-          year?: number
-          month?: number
-          target_amount?: number
-          created_by?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "sales_targets_vendedor_id_fkey"
-            columns: ["vendedor_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]

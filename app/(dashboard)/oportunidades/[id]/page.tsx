@@ -8,6 +8,7 @@ import { ActivityRepository } from '@/lib/repositories/supabase/ActivityReposito
 import { ActivityService } from '@/lib/services/ActivityService'
 import { OpportunityForm } from '@/components/crm/OpportunityForm'
 import { StageTransitionModal } from '@/components/crm/StageTransitionModal'
+import { GanadoStageButton } from '@/components/crm/GanadoStageButton'
 import { QuickStageButton } from '@/components/crm/QuickStageButton'
 import { ActivityTimeline } from '@/components/crm/ActivityTimeline'
 import { ActivityForm } from '@/components/crm/ActivityForm'
@@ -80,8 +81,10 @@ export default async function OportunidadDetailPage({
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Cambiar etapa</p>
             <div className="flex flex-wrap gap-2">
               {ALL_STAGES.filter(s => s !== opp.etapa).map(stage =>
-                stage === 'ganado' || stage === 'perdido' ? (
-                  <StageTransitionModal key={stage} targetStage={stage} action={boundMove} />
+                stage === 'ganado' ? (
+                  <GanadoStageButton key="ganado" oppId={id} oppName={opp.nombre} />
+                ) : stage === 'perdido' ? (
+                  <StageTransitionModal key="perdido" targetStage="perdido" action={boundMove} />
                 ) : (
                   <QuickStageButton key={stage} label={STAGE_LABELS[stage]} stage={stage} action={boundMove} />
                 )

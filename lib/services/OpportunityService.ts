@@ -70,8 +70,13 @@ export class OpportunityService {
   }
 
   async moveToStage(id: string, raw: StageTransitionInput): Promise<OpportunityWithRelations> {
-    const { etapa, monto_final } = stageTransitionSchema.parse(raw)
-    return this.update(id, { etapa, ...(monto_final !== undefined && { monto_final }) })
+    const { etapa, monto_final, cotizacion_path, orden_compra_path } = stageTransitionSchema.parse(raw)
+    return this.update(id, {
+      etapa,
+      ...(monto_final       !== undefined && { monto_final }),
+      ...(cotizacion_path   !== undefined && { cotizacion_path }),
+      ...(orden_compra_path !== undefined && { orden_compra_path }),
+    })
   }
 
   async delete(id: string): Promise<void> {

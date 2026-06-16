@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/badge'
 import { OpportunityKanbanCard } from '@/components/crm/OpportunityKanbanCard'
 import { KanbanStageModal } from '@/components/crm/KanbanStageModal'
 import { KanbanReopenModal } from '@/components/crm/KanbanReopenModal'
+import { GanadoTransitionModal } from '@/components/crm/GanadoTransitionModal'
 import { kanbanMoveToStage } from '@/app/(dashboard)/oportunidades/actions'
 import type { OpportunityWithRelations } from '@/lib/repositories/interfaces/IOpportunityRepository'
 import type { OpportunityStage } from '@/lib/validations/opportunity'
@@ -222,12 +223,22 @@ export function OpportunityKanbanBoard({ opportunities }: Props) {
         </DragOverlay>
       </DndContext>
 
-      {pendingDrop && (
+      {pendingDrop && pendingDrop.targetStage === 'ganado' && (
+        <GanadoTransitionModal
+          open
+          oppId={pendingDrop.card.id}
+          oppName={pendingDrop.card.nombre}
+          onConfirm={handleModalConfirm}
+          onCancel={handleModalCancel}
+        />
+      )}
+
+      {pendingDrop && pendingDrop.targetStage === 'perdido' && (
         <KanbanStageModal
           open
           oppId={pendingDrop.card.id}
           oppName={pendingDrop.card.nombre}
-          targetStage={pendingDrop.targetStage}
+          targetStage="perdido"
           onConfirm={handleModalConfirm}
           onCancel={handleModalCancel}
         />

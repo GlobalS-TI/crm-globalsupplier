@@ -60,17 +60,26 @@ export const createOpportunitySchema = createOpportunityBase.superRefine((d, ctx
 export const updateOpportunitySchema = createOpportunityBase
   .omit({ owner_id: true })
   .partial()
-  .extend({ monto_final: z.number().min(0).nullable().optional() })
+  .extend({
+    monto_final:       z.number().min(0).nullable().optional(),
+    cotizacion_path:   z.string().optional(),
+    orden_compra_path: z.string().optional(),
+  })
 
 // ----------------------------------------------------------------
 // Stage transition — used by Kanban move action
 // ----------------------------------------------------------------
 export const stageTransitionSchema = z.object({
-  etapa:       opportunityStageSchema,
-  monto_final: z.number().min(0).optional(),
+  etapa:             opportunityStageSchema,
+  monto_final:       z.number().min(0).optional(),
+  cotizacion_path:   z.string().optional(),
+  orden_compra_path: z.string().optional(),
 }).refine(
   (d) => d.etapa !== 'ganado' || (d.monto_final !== undefined && d.monto_final > 0),
   { message: 'monto_final must be > 0 when moving to ganado', path: ['monto_final'] }
+).refine(
+  (d) => d.etapa !== 'ganado' || (d.cotizacion_path && d.orden_compra_path),
+  { message: 'Se requiere cotización y orden de compra para marcar como ganado', path: ['cotizacion_path'] }
 )
 
 // ----------------------------------------------------------------

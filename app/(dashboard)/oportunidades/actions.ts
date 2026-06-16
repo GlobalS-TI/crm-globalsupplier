@@ -72,11 +72,15 @@ export async function kanbanMoveToStage(
   id: string,
   stage: OpportunityStage,
   montoFinal?: number,
+  cotizacionPath?: string,
+  ordenCompraPath?: string,
 ): Promise<{ error?: string }> {
   try {
     await makeService().moveToStage(id, {
       etapa: stage,
-      ...(montoFinal !== undefined && { monto_final: montoFinal }),
+      ...(montoFinal       !== undefined && { monto_final: montoFinal }),
+      ...(cotizacionPath   !== undefined && { cotizacion_path: cotizacionPath }),
+      ...(ordenCompraPath  !== undefined && { orden_compra_path: ordenCompraPath }),
     })
     revalidatePath('/oportunidades')
     revalidatePath(`/oportunidades/${id}`)
