@@ -12,7 +12,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('full_name, is_active')
+    .select('full_name, is_active, role')
     .eq('id', user.id)
     .single()
 
@@ -23,6 +23,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       <AppSidebar
         userFullName={profile?.full_name ?? user.email ?? 'Usuario'}
         userEmail={user.email ?? ''}
+        userRole={profile?.role ?? 'vendedor'}
       />
       <main className="flex-1 overflow-y-auto bg-background">
         <PageTransition>{children}</PageTransition>

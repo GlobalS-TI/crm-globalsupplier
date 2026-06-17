@@ -14,6 +14,7 @@ import {
   Library,
   UserRoundSearch,
   Target,
+  FolderKanban,
   LogOut,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
@@ -23,6 +24,8 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
 import { logout } from '@/app/(dashboard)/actions'
 import { ThemeToggle } from './ThemeToggle'
+import { PROJECT_ROLES } from '@/lib/types'
+import type { UserRole } from '@/lib/types'
 
 const NAV_ITEMS: { href: Route; label: string; icon: LucideIcon }[] = [
   { href: '/dashboard',     label: 'Dashboard',     icon: LayoutDashboard },
@@ -38,9 +41,10 @@ const NAV_ITEMS: { href: Route; label: string; icon: LucideIcon }[] = [
 interface AppSidebarProps {
   userFullName: string
   userEmail:    string
+  userRole:     UserRole
 }
 
-export function AppSidebar({ userFullName, userEmail }: AppSidebarProps) {
+export function AppSidebar({ userFullName, userEmail, userRole }: AppSidebarProps) {
   const pathname = usePathname()
   const { resolvedTheme } = useTheme()
   const [bouncing, setBouncing] = useState(false)
@@ -76,7 +80,7 @@ export function AppSidebar({ userFullName, userEmail }: AppSidebarProps) {
       <Separator />
 
       {/* Nav */}
-      <nav className="flex-1 px-2 py-3 space-y-0.5">
+      <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
         {NAV_ITEMS.map(({ href, label, icon: Icon }, i) => (
           <Link key={href} href={href}>
             <span
@@ -95,6 +99,26 @@ export function AppSidebar({ userFullName, userEmail }: AppSidebarProps) {
             </span>
           </Link>
         ))}
+
+        {/* Proyectos — solo roles autorizados (RLS es la seguridad real) */}
+        {PROJECT_ROLES.includes(userRole) && (
+          <Link href={'/proyectos' as Route}>
+            <span
+              key={`proyectos-${bouncing}`}
+              className={cn(
+                'flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors',
+                bouncing && 'nav-bounce-item',
+                pathname === '/proyectos' || pathname.startsWith('/proyectos/')
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+              )}
+              style={{ '--nav-i': NAV_ITEMS.length } as React.CSSProperties}
+            >
+              <FolderKanban className="h-4 w-4 shrink-0" />
+              Proyectos
+            </span>
+          </Link>
+        )}
       </nav>
 
       <Separator />
