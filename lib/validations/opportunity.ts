@@ -38,7 +38,17 @@ const createOpportunityBase = z.object({
   monto_final:          z.number().min(0).optional(),
   probabilidad:         z.number().int().min(0).max(100).default(0),
   fecha_cierre_estimada: z.string().date().optional(),
-  next_activity_at:     z.string().datetime({ offset: true }).optional(),
+  next_activity_at:     z.preprocess(
+    (v) => {
+      if (typeof v !== 'string') return v
+      // Normalize datetime-local format (no tz) → UTC ISO 8601
+      if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/.test(v)) {
+        return v.length === 16 ? `${v}:00.000Z` : `${v}.000Z`
+      }
+      return v
+    },
+    z.string().datetime({ offset: true }),
+  ).optional(),
   notas:                z.string().max(2000).optional(),
 })
 
