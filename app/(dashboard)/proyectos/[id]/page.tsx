@@ -158,7 +158,7 @@ export default async function ProyectoDetailPage({ params, searchParams }: PageP
           <div className="max-w-3xl">
             <ProjectFilesPanel
               addAction={addFile.bind(null, project.id)}
-              deleteAction={(fileId) => deleteFile(fileId, project.id)}
+              deleteAction={deleteFile.bind(null, project.id)}
               files={project.files}
             />
           </div>

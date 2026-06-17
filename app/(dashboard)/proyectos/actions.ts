@@ -148,7 +148,7 @@ export async function addFile(id: string, _prev: ActionState, form: FormData): P
   }
 }
 
-export async function deleteFile(fileId: string, projectId: string): Promise<void> {
+export async function deleteFile(projectId: string, fileId: string): Promise<void> {
   await makeService().deleteFile(fileId)
   revalidatePath(`/proyectos/${projectId}`)
 }
