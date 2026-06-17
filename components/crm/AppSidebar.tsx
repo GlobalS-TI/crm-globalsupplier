@@ -2,6 +2,8 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useTheme } from 'next-themes'
+import { useEffect, useRef, useState } from 'react'
 import type { Route } from 'next'
 import {
   LayoutDashboard,
@@ -20,6 +22,7 @@ import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
 import { logout } from '@/app/(dashboard)/actions'
+import { ThemeToggle } from './ThemeToggle'
 
 const NAV_ITEMS: { href: Route; label: string; icon: LucideIcon }[] = [
   { href: '/dashboard',     label: 'Dashboard',     icon: LayoutDashboard },
@@ -39,6 +42,23 @@ interface AppSidebarProps {
 
 export function AppSidebar({ userFullName, userEmail }: AppSidebarProps) {
   const pathname = usePathname()
+  const { resolvedTheme } = useTheme()
+  const [bouncing, setBouncing] = useState(false)
+  const prevTheme = useRef<string | undefined>(undefined)
+
+  useEffect(() => {
+    if (prevTheme.current === undefined) {
+      prevTheme.current = resolvedTheme
+      return
+    }
+    if (prevTheme.current !== resolvedTheme) {
+      prevTheme.current = resolvedTheme
+      setBouncing(true)
+      const t = setTimeout(() => setBouncing(false), 800)
+      return () => clearTimeout(t)
+    }
+  }, [resolvedTheme])
+
   const initials = userFullName
     .split(' ')
     .slice(0, 2)
@@ -57,15 +77,18 @@ export function AppSidebar({ userFullName, userEmail }: AppSidebarProps) {
 
       {/* Nav */}
       <nav className="flex-1 px-2 py-3 space-y-0.5">
-        {NAV_ITEMS.map(({ href, label, icon: Icon }) => (
+        {NAV_ITEMS.map(({ href, label, icon: Icon }, i) => (
           <Link key={href} href={href}>
             <span
+              key={`${href}-${bouncing}`}
               className={cn(
                 'flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors',
+                bouncing && 'nav-bounce-item',
                 pathname === href || (href !== '/dashboard' && pathname.startsWith(href))
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
               )}
+              style={{ '--nav-i': i } as React.CSSProperties}
             >
               <Icon className="h-4 w-4 shrink-0" />
               {label}
@@ -87,6 +110,7 @@ export function AppSidebar({ userFullName, userEmail }: AppSidebarProps) {
             <p className="text-xs text-muted-foreground truncate">{userEmail}</p>
           </div>
         </div>
+        <ThemeToggle />
         <form action={logout}>
           <Button
             type="submit"

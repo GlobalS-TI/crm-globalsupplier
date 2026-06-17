@@ -65,24 +65,29 @@ export default async function DashboardPage() {
             value={fmtCurrency.format(exec.kpis.wonThisMonth)}
             trend={salesTrend}
             trendLabel="vs mes anterior"
+            delay={0}
           />
           <StatCard
             title="Pipeline total"
             value={fmtCurrency.format(exec.kpis.pipelineTotal)}
+            delay={60}
           />
           <StatCard
             title="Pronóstico ponderado"
             value={fmtCurrency.format(legacyStats.weightedForecast)}
+            delay={120}
           />
           <StatCard
             title="Oportunidades abiertas"
             value={exec.kpis.opportunitiesOpen}
             sub={`${exec.kpis.newThisMonth} nuevas este mes`}
+            delay={180}
           />
           <StatCard
             title="Sin actividad"
             value={legacyStats.staleCount}
             className={legacyStats.staleCount > 0 ? 'border-destructive' : undefined}
+            delay={240}
           />
         </div>
       </section>
@@ -139,13 +144,14 @@ export default async function DashboardPage() {
       <section>
         <h2 className="text-xs font-semibold text-muted-foreground mb-3 uppercase tracking-wide">Conteos de pipeline</h2>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard title="Oportunidades abiertas" value={legacyStats.openCount} />
-          <StatCard title="Ganadas (total)"        value={legacyStats.wonCount} />
-          <StatCard title="Perdidas (total)"        value={legacyStats.lostCount} />
+          <StatCard title="Oportunidades abiertas" value={legacyStats.openCount}  delay={0} />
+          <StatCard title="Ganadas (total)"        value={legacyStats.wonCount}   delay={60} />
+          <StatCard title="Perdidas (total)"        value={legacyStats.lostCount}  delay={120} />
           <StatCard
             title="Actividades vencidas"
             value={legacyStats.overdueActivities}
             className={legacyStats.overdueActivities > 0 ? 'border-destructive' : undefined}
+            delay={180}
           />
         </div>
       </section>

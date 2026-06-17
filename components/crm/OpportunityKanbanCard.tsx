@@ -29,7 +29,7 @@ export function OpportunityKanbanCard({ opportunity: opp, draggable = true }: Op
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="touch-none">
       <Link href={`/oportunidades/${opp.id}` as Route} draggable={false}>
-        <Card className="cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow">
+        <Card className="cursor-grab active:cursor-grabbing hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
           <CardContent className="p-3 space-y-1.5">
             <div className="flex items-start justify-between gap-2">
               <p className="text-sm font-medium leading-tight line-clamp-2 select-none">{opp.nombre}</p>

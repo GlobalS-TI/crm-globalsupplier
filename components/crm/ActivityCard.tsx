@@ -33,7 +33,7 @@ export function ActivityCard({ act }: Props) {
 
   return (
     <>
-    <div className={`flex items-start gap-3 p-3 rounded-lg border ${isOver ? 'border-destructive/50 bg-destructive/5' : 'bg-card'}`}>
+    <div className={`flex items-start gap-3 p-3 rounded-lg border transition-all duration-200 hover:-translate-y-0.5 hover:shadow-sm ${isOver ? 'border-destructive/50 bg-destructive/5' : 'bg-card'}`}>
       <div className={`mt-0.5 shrink-0 ${isOver ? 'text-destructive' : 'text-muted-foreground'}`}>
         {isOver ? <AlertTriangle className="h-4 w-4" /> : <Clock className="h-4 w-4" />}
       </div>

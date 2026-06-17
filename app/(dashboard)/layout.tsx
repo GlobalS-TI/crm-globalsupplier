@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { AppSidebar } from '@/components/crm/AppSidebar'
+import { PageTransition } from '@/components/crm/PageTransition'
 import { Toaster } from '@/components/ui/toaster'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -24,7 +25,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         userEmail={user.email ?? ''}
       />
       <main className="flex-1 overflow-y-auto bg-background">
-        {children}
+        <PageTransition>{children}</PageTransition>
       </main>
       <Toaster />
     </div>
