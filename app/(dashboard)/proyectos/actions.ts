@@ -15,7 +15,8 @@ function makeService() {
 function parseForm(form: FormData): Record<string, unknown> {
   const obj: Record<string, unknown> = {}
   for (const [key, value] of form.entries()) {
-    if (typeof value === 'string' && value !== '') obj[key] = value
+    // skip empty strings and the "Sin asignar" sentinel from Select components
+    if (typeof value === 'string' && value !== '' && value !== '__none__') obj[key] = value
   }
   // numeric coercion
   if (obj.estimated_hours) obj.estimated_hours = Number(obj.estimated_hours)

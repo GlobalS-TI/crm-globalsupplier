@@ -54,12 +54,12 @@ export function ProjectForm({ action, project, profiles }: Props) {
 
         <div className="space-y-1.5">
           <Label htmlFor="stakeholder_id">Stakeholder (aprueba)</Label>
-          <Select name="stakeholder_id" defaultValue={project?.stakeholder_id ?? ''}>
+          <Select name="stakeholder_id" defaultValue={project?.stakeholder_id ?? '__none__'}>
             <SelectTrigger id="stakeholder_id">
               <SelectValue placeholder="Seleccionar" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">— Sin asignar —</SelectItem>
+              <SelectItem value="__none__">— Sin asignar —</SelectItem>
               {profiles.map(p => (
                 <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>
               ))}
@@ -69,12 +69,12 @@ export function ProjectForm({ action, project, profiles }: Props) {
 
         <div className="space-y-1.5">
           <Label htmlFor="requested_by_id">Solicitado por</Label>
-          <Select name="requested_by_id" defaultValue={project?.requested_by_id ?? ''}>
+          <Select name="requested_by_id" defaultValue={project?.requested_by_id ?? '__none__'}>
             <SelectTrigger id="requested_by_id">
               <SelectValue placeholder="Seleccionar" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">— Sin asignar —</SelectItem>
+              <SelectItem value="__none__">— Sin asignar —</SelectItem>
               {profiles.map(p => (
                 <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>
               ))}
