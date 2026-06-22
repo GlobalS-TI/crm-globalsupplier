@@ -416,15 +416,8 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "leads_vendedor_id_fkey"
+            foreignKeyName: "leads_assigned_to_fkey"
             columns: ["vendedor_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "leads_responsable_id_fkey"
-            columns: ["responsable_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -439,6 +432,13 @@ export type Database = {
           {
             foreignKeyName: "leads_created_by_fkey"
             columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_responsable_id_fkey"
+            columns: ["responsable_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -595,6 +595,289 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      project_briefs: {
+        Row: {
+          deadline_desired: string | null
+          deadline_real: string | null
+          id: string
+          notes: string | null
+          project_id: string
+          updated_at: string
+          what: string | null
+          why: string | null
+        }
+        Insert: {
+          deadline_desired?: string | null
+          deadline_real?: string | null
+          id?: string
+          notes?: string | null
+          project_id: string
+          updated_at?: string
+          what?: string | null
+          why?: string | null
+        }
+        Update: {
+          deadline_desired?: string | null
+          deadline_real?: string | null
+          id?: string
+          notes?: string | null
+          project_id?: string
+          updated_at?: string
+          what?: string | null
+          why?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_briefs_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_decision_logs: {
+        Row: {
+          author_id: string | null
+          created_at: string
+          entry: string
+          id: string
+          project_id: string
+        }
+        Insert: {
+          author_id?: string | null
+          created_at?: string
+          entry: string
+          id?: string
+          project_id: string
+        }
+        Update: {
+          author_id?: string | null
+          created_at?: string
+          entry?: string
+          id?: string
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_decision_logs_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_decision_logs_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_files: {
+        Row: {
+          created_at: string
+          id: string
+          label: string
+          project_id: string
+          type: Database["public"]["Enums"]["project_file_type"]
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          label: string
+          project_id: string
+          type?: Database["public"]["Enums"]["project_file_type"]
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          label?: string
+          project_id?: string
+          type?: Database["public"]["Enums"]["project_file_type"]
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_files_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_handoff_checklists: {
+        Row: {
+          assets_exported: boolean
+          assets_note: string | null
+          breakpoints_defined: boolean
+          breakpoints_note: string | null
+          component_states: boolean
+          component_states_note: string | null
+          id: string
+          interactions_annotated: boolean
+          interactions_note: string | null
+          naming_convention: boolean
+          naming_note: string | null
+          project_id: string
+          updated_at: string
+        }
+        Insert: {
+          assets_exported?: boolean
+          assets_note?: string | null
+          breakpoints_defined?: boolean
+          breakpoints_note?: string | null
+          component_states?: boolean
+          component_states_note?: string | null
+          id?: string
+          interactions_annotated?: boolean
+          interactions_note?: string | null
+          naming_convention?: boolean
+          naming_note?: string | null
+          project_id: string
+          updated_at?: string
+        }
+        Update: {
+          assets_exported?: boolean
+          assets_note?: string | null
+          breakpoints_defined?: boolean
+          breakpoints_note?: string | null
+          component_states?: boolean
+          component_states_note?: string | null
+          id?: string
+          interactions_annotated?: boolean
+          interactions_note?: string | null
+          naming_convention?: boolean
+          naming_note?: string | null
+          project_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_handoff_checklists_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      project_stage_logs: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          comment: string | null
+          from_status: Database["public"]["Enums"]["project_status"] | null
+          id: string
+          project_id: string
+          to_status: Database["public"]["Enums"]["project_status"]
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          comment?: string | null
+          from_status?: Database["public"]["Enums"]["project_status"] | null
+          id?: string
+          project_id: string
+          to_status: Database["public"]["Enums"]["project_status"]
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          comment?: string | null
+          from_status?: Database["public"]["Enums"]["project_status"] | null
+          id?: string
+          project_id?: string
+          to_status?: Database["public"]["Enums"]["project_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_stage_logs_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_stage_logs_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      projects: {
+        Row: {
+          brand: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          due_date: string | null
+          estimated_hours: number | null
+          id: string
+          requested_by_id: string | null
+          stakeholder_id: string | null
+          status: Database["public"]["Enums"]["project_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          brand: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_date?: string | null
+          estimated_hours?: number | null
+          id?: string
+          requested_by_id?: string | null
+          stakeholder_id?: string | null
+          status?: Database["public"]["Enums"]["project_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          brand?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          due_date?: string | null
+          estimated_hours?: number | null
+          id?: string
+          requested_by_id?: string | null
+          stakeholder_id?: string | null
+          status?: Database["public"]["Enums"]["project_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projects_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_requested_by_id_fkey"
+            columns: ["requested_by_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_stakeholder_id_fkey"
+            columns: ["stakeholder_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sales_targets: {
         Row: {
@@ -856,6 +1139,7 @@ export type Database = {
       is_content_manager: { Args: never; Returns: boolean }
       is_full_access: { Args: never; Returns: boolean }
       is_leads_manager: { Args: never; Returns: boolean }
+      is_project_team: { Args: never; Returns: boolean }
       mark_stale_opportunities: { Args: never; Returns: number }
       owns_opportunity: { Args: { opp_id: string }; Returns: boolean }
       recompute_opportunity_stale: {
@@ -898,6 +1182,14 @@ export type Database = {
         | "negociacion"
         | "ganado"
         | "perdido"
+      project_file_type: "FIGMA" | "REPO" | "ASSET" | "DOC" | "OTHER"
+      project_status:
+        | "INCOMING"
+        | "ANALYSIS"
+        | "DESIGN"
+        | "DEVELOPMENT"
+        | "QA"
+        | "DELIVERED"
       task_column_type:
         | "text"
         | "number"
@@ -1079,6 +1371,15 @@ export const Constants = {
         "negociacion",
         "ganado",
         "perdido",
+      ],
+      project_file_type: ["FIGMA", "REPO", "ASSET", "DOC", "OTHER"],
+      project_status: [
+        "INCOMING",
+        "ANALYSIS",
+        "DESIGN",
+        "DEVELOPMENT",
+        "QA",
+        "DELIVERED",
       ],
       task_column_type: [
         "text",
