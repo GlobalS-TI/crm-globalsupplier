@@ -1,5 +1,5 @@
 import type { IOpportunityRepository, OpportunityWithRelations, DashboardStats, OpportunityFilters, ExecutiveDashboard } from '@/lib/repositories/interfaces/IOpportunityRepository'
-import type { CreateOpportunityInput, UpdateOpportunityInput, StageTransitionInput } from '@/lib/validations/opportunity'
+import type { StageTransitionInput } from '@/lib/validations/opportunity'
 import { createOpportunitySchema, updateOpportunitySchema, stageTransitionSchema } from '@/lib/validations/opportunity'
 
 const CLOSED_STAGES = ['ganado', 'perdido'] as const
@@ -29,7 +29,7 @@ export class OpportunityService {
     return this.repo.getExecutiveDashboard()
   }
 
-  async create(raw: CreateOpportunityInput): Promise<OpportunityWithRelations> {
+  async create(raw: unknown): Promise<OpportunityWithRelations> {
     const data = createOpportunitySchema.parse(raw)
 
     // Rule 2: ganado requires positive monto_final (Zod catches missing; service catches zero)
@@ -45,7 +45,7 @@ export class OpportunityService {
     return full
   }
 
-  async update(id: string, raw: UpdateOpportunityInput): Promise<OpportunityWithRelations> {
+  async update(id: string, raw: unknown): Promise<OpportunityWithRelations> {
     const existing = await this.getById(id)
     const data = updateOpportunitySchema.parse(raw)
 
