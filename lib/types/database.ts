@@ -333,6 +333,45 @@ export type Database = {
           },
         ]
       }
+      opportunity_costs: {
+        Row: {
+          opportunity_id: string
+          costo: number
+          notas: string | null
+          created_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          opportunity_id: string
+          costo?: number
+          notas?: string | null
+          created_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          opportunity_id?: string
+          costo?: number
+          notas?: string | null
+          created_by?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "opportunity_costs_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: true
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opportunity_costs_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_sections: {
         Row: {
           created_at: string
@@ -1136,6 +1175,7 @@ export type Database = {
     }
     Functions: {
       can_manage_leads: { Args: never; Returns: boolean }
+      is_comisiones_viewer: { Args: never; Returns: boolean }
       is_content_manager: { Args: never; Returns: boolean }
       is_full_access: { Args: never; Returns: boolean }
       is_leads_manager: { Args: never; Returns: boolean }
