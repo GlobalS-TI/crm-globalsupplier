@@ -65,6 +65,7 @@ export class ProjectService {
       ...(data.brand           !== undefined && { brand:           data.brand }),
       ...(data.stakeholder_id  !== undefined && { stakeholder_id:  data.stakeholder_id  ?? null }),
       ...(data.requested_by_id !== undefined && { requested_by_id: data.requested_by_id ?? null }),
+      ...(data.start_date      !== undefined && { start_date:      data.start_date      ?? null }),
       ...(data.due_date        !== undefined && { due_date:        data.due_date        ?? null }),
       ...(data.estimated_hours !== undefined && { estimated_hours: data.estimated_hours ?? null }),
     })
