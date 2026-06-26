@@ -74,7 +74,12 @@ export class ProjectService {
     })
   }
 
-  async advanceStatus(id: string, userId: string, comment?: string): Promise<ProjectRow> {
+  async advanceStatus(
+    id: string,
+    userId: string,
+    comment?: string,
+    file?: { label: string; url: string; type: string },
+  ): Promise<ProjectRow> {
     const project = await this.repo.findById(id)
     if (!project) throw new Error('Proyecto no encontrado')
 
@@ -108,6 +113,15 @@ export class ProjectService {
       }
     }
 
+    // Regla: archivo requerido al pasar a Orden de compra o Facturación
+    const REQUIRES_FILE: ProjectStatus[] = ['ORDEN_COMPRA', 'FACTURACION']
+    if (REQUIRES_FILE.includes(nextStatus as ProjectStatus)) {
+      if (!file?.url?.trim() || !file?.label?.trim()) {
+        const label = nextStatus === 'ORDEN_COMPRA' ? 'Orden de compra' : 'Factura'
+        throw new Error(`Debes adjuntar el archivo de ${label} para avanzar a esta fase.`)
+      }
+    }
+
     const updated = await this.repo.update(id, { status: nextStatus })
     await this.repo.addStageLog({
       project_id:  id,
@@ -116,6 +130,16 @@ export class ProjectService {
       changed_by:  userId,
       comment:     comment ?? null,
     })
+
+    if (file?.url?.trim() && file?.label?.trim()) {
+      await this.repo.addFile({
+        project_id: id,
+        label:      file.label.trim(),
+        url:        file.url.trim(),
+        type:       (file.type as ProjectFileInput['type']) || 'DOC',
+      })
+    }
+
     return updated
   }
 

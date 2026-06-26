@@ -1,8 +1,9 @@
 'use client'
 
 import { useActionState, useState } from 'react'
-import { ArrowRight, CheckCircle2 } from 'lucide-react'
+import { ArrowRight, CheckCircle2, Paperclip } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import {
@@ -11,6 +12,12 @@ import {
 import { getStatusesForTipo, PROJECT_STATUS_LABELS } from '@/lib/types'
 import type { ProjectStatus, ProjectTipo } from '@/lib/types'
 import type { ActionState } from '@/app/(dashboard)/proyectos/actions'
+
+const FILE_REQUIRED_STAGES: ProjectStatus[] = ['ORDEN_COMPRA', 'FACTURACION']
+const FILE_STAGE_LABEL: Partial<Record<ProjectStatus, string>> = {
+  ORDEN_COMPRA: 'Orden de compra',
+  FACTURACION:  'Factura',
+}
 
 interface Props {
   projectId: string
@@ -30,9 +37,11 @@ export function ProjectStageTransition({ projectId: _, tipo, status, action }: P
     null,
   )
 
-  const statuses   = getStatusesForTipo(tipo)
-  const currentIdx = statuses.indexOf(status)
-  const nextStatus = statuses[currentIdx + 1] as ProjectStatus | undefined
+  const statuses      = getStatusesForTipo(tipo)
+  const currentIdx    = statuses.indexOf(status)
+  const nextStatus    = statuses[currentIdx + 1] as ProjectStatus | undefined
+  const requiresFile  = nextStatus ? FILE_REQUIRED_STAGES.includes(nextStatus) : false
+  const fileLabel     = nextStatus ? FILE_STAGE_LABEL[nextStatus] : undefined
 
   const finalLabel = tipo === 'INDUSTRIAL' ? 'Proyecto cerrado' : 'Proyecto entregado'
 
@@ -63,6 +72,36 @@ export function ProjectStageTransition({ projectId: _, tipo, status, action }: P
           </DialogHeader>
 
           <form action={dispatch} className="space-y-4">
+            {requiresFile && (
+              <div className="space-y-3 rounded-md border border-dashed p-3">
+                <p className="text-xs font-medium flex items-center gap-1.5 text-muted-foreground">
+                  <Paperclip className="h-3.5 w-3.5" />
+                  {fileLabel} <span className="text-destructive">*</span>
+                </p>
+                <div className="space-y-1.5">
+                  <Label htmlFor="file_label">Descripción</Label>
+                  <Input
+                    id="file_label"
+                    name="file_label"
+                    required
+                    defaultValue={fileLabel}
+                    placeholder={`ej. ${fileLabel} — Proveedor XYZ`}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="file_url">URL del archivo <span className="text-destructive">*</span></Label>
+                  <Input
+                    id="file_url"
+                    name="file_url"
+                    type="url"
+                    required
+                    placeholder="https://drive.google.com/…"
+                  />
+                </div>
+                <input type="hidden" name="file_type" value="DOC" />
+              </div>
+            )}
+
             <div className="space-y-1.5">
               <Label htmlFor="comment">Comentario <span className="text-muted-foreground font-normal">(opcional)</span></Label>
               <Textarea

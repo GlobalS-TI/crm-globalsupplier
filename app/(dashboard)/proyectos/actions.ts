@@ -67,8 +67,13 @@ export async function advanceStatus(id: string, _prev: ActionState, form: FormDa
   if (!user) return { error: 'No autenticado' }
 
   const comment = form.get('comment')?.toString().trim() || undefined
+  const fileLabel = form.get('file_label')?.toString().trim()
+  const fileUrl   = form.get('file_url')?.toString().trim()
+  const fileType  = form.get('file_type')?.toString().trim()
+  const file = fileUrl ? { label: fileLabel ?? '', url: fileUrl, type: fileType ?? 'DOC' } : undefined
+
   try {
-    await makeService().advanceStatus(id, user.id, comment)
+    await makeService().advanceStatus(id, user.id, comment, file)
     revalidatePath(`/proyectos/${id}`)
     return null
   } catch (e) {
