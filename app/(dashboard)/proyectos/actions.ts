@@ -36,10 +36,17 @@ export async function createProject(_prev: ActionState, form: FormData): Promise
   const user = await getCurrentUser()
   if (!user) return { error: 'No autenticado' }
 
-  const result = await makeService().createProject(parseForm(form), user.id).catch(e => e)
-  if (result instanceof Error) return { error: result.message }
-
-  redirect(`/proyectos/${result.id}`)
+  let id: string
+  try {
+    const project = await makeService().createProject(parseForm(form), user.id)
+    id = project.id
+  } catch (e: unknown) {
+    const msg = e instanceof Error
+      ? e.message
+      : (e as { message?: string })?.message ?? 'Error al crear el proyecto'
+    return { error: msg }
+  }
+  redirect(`/proyectos/${id}`)
 }
 
 export async function updateProject(id: string, _prev: ActionState, form: FormData): Promise<ActionState> {
