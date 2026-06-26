@@ -77,7 +77,6 @@ export default async function ProyectoDetailPage({ params, searchParams }: PageP
               {project.requested_by  && <span>Solicitado por: <strong className="text-foreground">{project.requested_by.full_name}</strong></span>}
               {project.start_date    && <span>Inicio: <strong className="text-foreground">{new Date(project.start_date + 'T00:00:00').toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })}</strong></span>}
               {project.due_date      && <span>Límite: <strong className="text-foreground">{new Date(project.due_date + 'T00:00:00').toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })}</strong></span>}
-              {project.estimated_hours != null && <span>Est: <strong className="text-foreground">{project.estimated_hours}h</strong></span>}
             </div>
           </div>
 

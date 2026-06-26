@@ -87,16 +87,6 @@ export function ProjectForm({ action, project, profiles }: Props) {
           </Select>
         </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="estimated_hours">Horas estimadas</Label>
-          <Input
-            id="estimated_hours" name="estimated_hours" type="number"
-            min="0" max="9999" step="0.5"
-            defaultValue={project?.estimated_hours ?? ''}
-            placeholder="0"
-          />
-        </div>
-
         <div className="sm:col-span-2 space-y-1.5">
           <Label htmlFor="description">Descripción</Label>
           <Textarea
