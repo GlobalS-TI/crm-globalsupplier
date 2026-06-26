@@ -12,6 +12,7 @@ import { ProjectHandoffForm } from '@/components/crm/ProjectHandoffForm'
 import { ProjectDecisionLog } from '@/components/crm/ProjectDecisionLog'
 import { ProjectFilesPanel } from '@/components/crm/ProjectFilesPanel'
 import { ProjectStageLog } from '@/components/crm/ProjectStageLog'
+import { ProjectDeleteButton } from '@/components/crm/ProjectDeleteButton'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
@@ -19,7 +20,7 @@ import { BRAND_LABELS, PROJECT_TIPO_LABELS } from '@/lib/types'
 import type { BusinessUnit, ProjectStatus, ProjectTipo } from '@/lib/types'
 import {
   updateProject, advanceStatus, saveBrief, saveHandoff,
-  addDecisionEntry, addFile, deleteFile,
+  addDecisionEntry, addFile, deleteFile, deleteProject,
 } from '@/app/(dashboard)/proyectos/actions'
 
 export const dynamic  = 'force-dynamic'
@@ -85,13 +86,17 @@ export default async function ProyectoDetailPage({ params, searchParams }: PageP
             </div>
           </div>
 
-          {/* Advance status */}
-          <div className="shrink-0">
+          {/* Acciones */}
+          <div className="shrink-0 flex items-center gap-2">
             <ProjectStageTransition
               projectId={project.id}
               tipo={tipo}
               status={status}
               action={advanceStatus.bind(null, project.id)}
+            />
+            <ProjectDeleteButton
+              projectTitle={project.title}
+              action={deleteProject.bind(null, project.id)}
             />
           </div>
         </div>

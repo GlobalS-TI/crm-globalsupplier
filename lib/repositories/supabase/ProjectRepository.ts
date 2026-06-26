@@ -124,4 +124,10 @@ export class ProjectRepository implements IProjectRepository {
     const { error } = await sb.from('project_files').delete().eq('id', id)
     if (error) throw error
   }
+
+  async delete(id: string): Promise<void> {
+    const sb: AnyClient = await createClient()
+    const { error } = await sb.from('projects').delete().eq('id', id)
+    if (error) throw error
+  }
 }

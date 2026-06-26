@@ -192,4 +192,8 @@ export class ProjectService {
   async deleteFile(id: string): Promise<void> {
     return this.repo.deleteFile(id)
   }
+
+  async deleteProject(id: string): Promise<void> {
+    return this.repo.delete(id)
+  }
 }

@@ -164,3 +164,8 @@ export async function deleteFile(projectId: string, fileId: string): Promise<voi
   await makeService().deleteFile(fileId)
   revalidatePath(`/proyectos/${projectId}`)
 }
+
+export async function deleteProject(id: string): Promise<void> {
+  await makeService().deleteProject(id)
+  redirect('/proyectos')
+}
