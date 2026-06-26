@@ -1,5 +1,4 @@
 import type { ICompanyRepository, CompanyRow, CompanyWithContacts } from '@/lib/repositories/interfaces/ICompanyRepository'
-import type { CreateCompanyInput, UpdateCompanyInput } from '@/lib/validations/company'
 import { createCompanySchema, updateCompanySchema } from '@/lib/validations/company'
 
 export class CompanyService {
@@ -21,12 +20,12 @@ export class CompanyService {
     return this.repo.findAll(search)
   }
 
-  async create(raw: CreateCompanyInput, ownerId: string): Promise<CompanyRow> {
+  async create(raw: unknown, ownerId: string): Promise<CompanyRow> {
     const data = createCompanySchema.parse(raw)
     return this.repo.create({ ...data, owner_id: ownerId })
   }
 
-  async update(id: string, raw: UpdateCompanyInput): Promise<CompanyRow> {
+  async update(id: string, raw: unknown): Promise<CompanyRow> {
     await this.getById(id)
     const data = updateCompanySchema.parse(raw)
     return this.repo.update(id, data)

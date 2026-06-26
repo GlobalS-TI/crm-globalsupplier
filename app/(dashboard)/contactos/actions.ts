@@ -28,7 +28,7 @@ export async function createContact(_prev: ActionState, form: FormData): Promise
   if (!user) return { error: 'No autenticado' }
 
   try {
-    const created = await service().create(parseForm(form) as never, user.id)
+    const created = await service().create(parseForm(form), user.id)
     redirect(`/contactos/${created.id}`)
   } catch (e) {
     if ((e as { digest?: string }).digest?.startsWith('NEXT_REDIRECT')) throw e
@@ -38,7 +38,7 @@ export async function createContact(_prev: ActionState, form: FormData): Promise
 
 export async function updateContact(id: string, _prev: ActionState, form: FormData): Promise<ActionState> {
   try {
-    await service().update(id, parseForm(form) as never)
+    await service().update(id, parseForm(form))
     revalidatePath(`/contactos/${id}`)
     revalidatePath('/contactos')
     return null
