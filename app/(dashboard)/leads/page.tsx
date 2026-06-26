@@ -1,6 +1,7 @@
 import { UserRoundSearch } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { LeadSectionRepository, LeadRepository } from '@/lib/repositories/supabase/LeadRepository'
+import { ProfileRepository } from '@/lib/repositories/supabase/ProfileRepository'
 import { LeadService } from '@/lib/services/LeadService'
 import { LeadSectionNav } from '@/components/crm/LeadSectionNav'
 import { LeadTable } from '@/components/crm/LeadTable'
@@ -29,7 +30,7 @@ export default async function LeadsPage({ searchParams }: PageProps) {
   const isLeadsManager = ['marketing', 'director_general'].includes(role)
   const canManageLeads = ['marketing', 'director_general', 'direccion_comercial'].includes(role)
 
-  const svc      = new LeadService(new LeadSectionRepository(), new LeadRepository())
+  const svc      = new LeadService(new LeadSectionRepository(), new LeadRepository(), new ProfileRepository())
   const sections = await svc.listSections()
   const leads    = sec ? await svc.listLeadsBySection(sec) : []
 
