@@ -20,7 +20,7 @@ import { BRAND_LABELS, PROJECT_TIPO_LABELS } from '@/lib/types'
 import type { BusinessUnit, ProjectStatus, ProjectTipo } from '@/lib/types'
 import {
   updateProject, advanceStatus, saveBrief, saveHandoff,
-  addDecisionEntry, addFile, deleteFile, deleteProject,
+  addDecisionEntry, addFile, deleteFile, deleteProject, archiveProject,
 } from '@/app/(dashboard)/proyectos/actions'
 
 export const dynamic  = 'force-dynamic'
@@ -95,8 +95,9 @@ export default async function ProyectoDetailPage({ params, searchParams }: PageP
               action={advanceStatus.bind(null, project.id)}
             />
             <ProjectDeleteButton
+              projectId={project.id}
               projectTitle={project.title}
-              action={deleteProject.bind(null, project.id)}
+              action={deleteProject}
             />
           </div>
         </div>

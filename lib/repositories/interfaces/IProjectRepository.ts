@@ -10,6 +10,7 @@ export interface ProjectRow {
   tipo:            ProjectTipo
   brand:           BusinessUnit
   status:          ProjectStatus
+  is_archived:     boolean
   stakeholder_id:  string | null
   requested_by_id: string | null
   start_date:      string | null
@@ -94,8 +95,9 @@ export interface ProjectWithRelations extends ProjectRow {
 // Filters para listado
 // ----------------------------------------------------------------
 export interface ProjectFilters {
-  brand?:  BusinessUnit
-  status?: ProjectStatus
+  brand?:      BusinessUnit
+  status?:     ProjectStatus
+  archived?:   boolean
 }
 
 // ----------------------------------------------------------------
@@ -107,6 +109,7 @@ export interface IProjectRepository {
   create(data: Omit<ProjectRow, 'id' | 'created_at' | 'updated_at'>): Promise<ProjectRow>
   update(id: string, data: Partial<Omit<ProjectRow, 'id' | 'created_at'>>): Promise<ProjectRow>
   delete(id: string): Promise<void>
+  archive(id: string): Promise<void>
 
   upsertBrief(projectId: string, data: Omit<ProjectBriefRow, 'id' | 'project_id' | 'updated_at'>): Promise<ProjectBriefRow>
   upsertHandoff(projectId: string, data: Omit<ProjectHandoffRow, 'id' | 'project_id' | 'updated_at'>): Promise<ProjectHandoffRow>

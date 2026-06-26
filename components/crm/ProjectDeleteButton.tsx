@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -8,17 +9,26 @@ import {
 } from '@/components/ui/dialog'
 
 interface Props {
-  action: () => Promise<void>
+  action:       (id: string) => Promise<{ error: string } | null>
+  projectId:    string
   projectTitle: string
 }
 
-export function ProjectDeleteButton({ action, projectTitle }: Props) {
-  const [open, setOpen]       = useState(false)
+export function ProjectDeleteButton({ action, projectId, projectTitle }: Props) {
+  const router                     = useRouter()
+  const [open, setOpen]            = useState(false)
+  const [error, setError]          = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
 
   function handleConfirm() {
+    setError(null)
     startTransition(async () => {
-      await action()
+      const result = await action(projectId)
+      if (result?.error) {
+        setError(result.error)
+      } else {
+        router.push('/proyectos')
+      }
     })
   }
 
@@ -42,6 +52,9 @@ export function ProjectDeleteButton({ action, projectTitle }: Props) {
               se borrarán el brief, archivos, historial y todos los datos asociados.
             </DialogDescription>
           </DialogHeader>
+          {error && (
+            <p className="text-sm text-destructive bg-destructive/10 rounded-md px-3 py-2">{error}</p>
+          )}
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setOpen(false)} disabled={pending}>
               Cancelar

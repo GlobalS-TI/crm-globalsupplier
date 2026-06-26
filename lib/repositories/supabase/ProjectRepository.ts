@@ -34,6 +34,7 @@ export class ProjectRepository implements IProjectRepository {
     let q = sb
       .from('projects')
       .select('*, stakeholder:profiles!stakeholder_id(full_name), requested_by:profiles!requested_by_id(full_name)')
+      .eq('is_archived', filters?.archived ?? false)
       .order('created_at', { ascending: false })
 
     if (filters?.brand)  q = q.eq('brand', filters.brand)
@@ -128,6 +129,12 @@ export class ProjectRepository implements IProjectRepository {
   async delete(id: string): Promise<void> {
     const sb: AnyClient = await createClient()
     const { error } = await sb.from('projects').delete().eq('id', id)
+    if (error) throw error
+  }
+
+  async archive(id: string): Promise<void> {
+    const sb: AnyClient = await createClient()
+    const { error } = await sb.from('projects').update({ is_archived: true }).eq('id', id)
     if (error) throw error
   }
 }

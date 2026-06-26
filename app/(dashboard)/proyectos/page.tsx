@@ -4,10 +4,12 @@ import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ProjectStatusBadge } from '@/components/crm/ProjectStatusBadge'
+import { ProjectRowActions } from '@/components/crm/ProjectRowActions'
 import { ProjectService } from '@/lib/services/ProjectService'
 import { ProjectRepository } from '@/lib/repositories/supabase/ProjectRepository'
 import { BUSINESS_UNITS, BRAND_LABELS, PROJECT_STATUSES, PROJECT_STATUS_LABELS, PROJECT_TIPO_LABELS } from '@/lib/types'
 import type { BusinessUnit, ProjectStatus, ProjectTipo } from '@/lib/types'
+import { deleteProject, archiveProject } from '@/app/(dashboard)/proyectos/actions'
 
 export const metadata = { title: 'Proyectos — CRM Global Supplier' }
 export const dynamic  = 'force-dynamic'
@@ -68,11 +70,12 @@ export default async function ProyectosPage({ searchParams }: PageProps) {
                 <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden md:table-cell">Tipo</th>
                 <th className="px-4 py-3 text-left font-medium text-muted-foreground">Estado</th>
                 <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden lg:table-cell">Fecha límite</th>
+                <th className="w-8" />
               </tr>
             </thead>
             <tbody>
               {projects.map((p, i) => (
-                <tr key={p.id} className="border-t hover:bg-muted/30 transition-colors animate-fade-up" style={{ '--stagger': `${i * 30}ms` } as React.CSSProperties}>
+                <tr key={p.id} className="group border-t hover:bg-muted/30 transition-colors animate-fade-up" style={{ '--stagger': `${i * 30}ms` } as React.CSSProperties}>
                   <td className="px-4 py-3">
                     <Link href={`/proyectos/${p.id}` as Route} className="font-medium hover:underline">
                       {p.title}
@@ -91,6 +94,14 @@ export default async function ProyectosPage({ searchParams }: PageProps) {
                     {p.due_date
                       ? new Date(p.due_date + 'T00:00:00').toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })
                       : '—'}
+                  </td>
+                  <td className="px-2 py-3">
+                    <ProjectRowActions
+                      projectId={p.id}
+                      projectTitle={p.title}
+                      deleteAction={deleteProject}
+                      archiveAction={archiveProject}
+                    />
                   </td>
                 </tr>
               ))}

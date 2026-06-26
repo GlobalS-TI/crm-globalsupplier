@@ -42,6 +42,7 @@ export class ProjectService {
       description:     data.description ?? null,
       brand:           data.brand,
       status:          'INCOMING',
+      is_archived:     false,
       stakeholder_id:  data.stakeholder_id  ?? null,
       requested_by_id: data.requested_by_id ?? null,
       start_date:      data.start_date      ?? null,
@@ -195,5 +196,9 @@ export class ProjectService {
 
   async deleteProject(id: string): Promise<void> {
     return this.repo.delete(id)
+  }
+
+  async archiveProject(id: string): Promise<void> {
+    return this.repo.archive(id)
   }
 }

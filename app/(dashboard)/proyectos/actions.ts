@@ -165,7 +165,23 @@ export async function deleteFile(projectId: string, fileId: string): Promise<voi
   revalidatePath(`/proyectos/${projectId}`)
 }
 
-export async function deleteProject(id: string): Promise<void> {
-  await makeService().deleteProject(id)
-  redirect('/proyectos')
+export async function deleteProject(id: string): Promise<{ error: string } | null> {
+  try {
+    await makeService().deleteProject(id)
+    revalidatePath('/proyectos')
+    return null
+  } catch (e) {
+    return { error: (e as Error).message }
+  }
+}
+
+export async function archiveProject(id: string): Promise<{ error: string } | null> {
+  try {
+    await makeService().archiveProject(id)
+    revalidatePath('/proyectos')
+    revalidatePath(`/proyectos/${id}`)
+    return null
+  } catch (e) {
+    return { error: (e as Error).message }
+  }
 }
