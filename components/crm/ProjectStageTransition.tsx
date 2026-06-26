@@ -1,11 +1,11 @@
 'use client'
 
 import { useActionState, useState } from 'react'
-import { ArrowRight, CheckCircle2, Paperclip } from 'lucide-react'
+import { ArrowRight, CheckCircle2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
+import { ProjectFileDropzone } from '@/components/crm/ProjectFileDropzone'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog'
@@ -20,14 +20,21 @@ const FILE_STAGE_LABEL: Partial<Record<ProjectStatus, string>> = {
 }
 
 interface Props {
-  projectId: string
-  tipo:      ProjectTipo
-  status:    ProjectStatus
-  action:    (prev: ActionState, form: FormData) => Promise<ActionState>
+  projectId:  string
+  tipo:       ProjectTipo
+  status:     ProjectStatus
+  action:     (prev: ActionState, form: FormData) => Promise<ActionState>
 }
 
-export function ProjectStageTransition({ projectId: _, tipo, status, action }: Props) {
-  const [open, setOpen] = useState(false)
+export function ProjectStageTransition({ projectId, tipo, status, action }: Props) {
+  const [open, setOpen]           = useState(false)
+  const [fileUrl, setFileUrl]     = useState('')
+  const [fileLabel, setFileLabel] = useState('')
+
+  function handleOpenChange(v: boolean) {
+    setOpen(v)
+    if (!v) { setFileUrl(''); setFileLabel('') }
+  }
   const [state, dispatch, pending] = useActionState(
     async (prev: ActionState, form: FormData) => {
       const result = await action(prev, form)
@@ -37,11 +44,11 @@ export function ProjectStageTransition({ projectId: _, tipo, status, action }: P
     null,
   )
 
-  const statuses      = getStatusesForTipo(tipo)
-  const currentIdx    = statuses.indexOf(status)
-  const nextStatus    = statuses[currentIdx + 1] as ProjectStatus | undefined
-  const requiresFile  = nextStatus ? FILE_REQUIRED_STAGES.includes(nextStatus) : false
-  const fileLabel     = nextStatus ? FILE_STAGE_LABEL[nextStatus] : undefined
+  const statuses         = getStatusesForTipo(tipo)
+  const currentIdx       = statuses.indexOf(status)
+  const nextStatus       = statuses[currentIdx + 1] as ProjectStatus | undefined
+  const requiresFile     = nextStatus ? FILE_REQUIRED_STAGES.includes(nextStatus) : false
+  const stageFileLabel   = nextStatus ? FILE_STAGE_LABEL[nextStatus] : undefined
 
   const finalLabel = tipo === 'INDUSTRIAL' ? 'Proyecto cerrado' : 'Proyecto entregado'
 
@@ -61,7 +68,7 @@ export function ProjectStageTransition({ projectId: _, tipo, status, action }: P
         <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
       </Button>
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Avanzar a {PROJECT_STATUS_LABELS[nextStatus]}</DialogTitle>
@@ -73,32 +80,21 @@ export function ProjectStageTransition({ projectId: _, tipo, status, action }: P
 
           <form action={dispatch} className="space-y-4">
             {requiresFile && (
-              <div className="space-y-3 rounded-md border border-dashed p-3">
-                <p className="text-xs font-medium flex items-center gap-1.5 text-muted-foreground">
-                  <Paperclip className="h-3.5 w-3.5" />
-                  {fileLabel} <span className="text-destructive">*</span>
-                </p>
-                <div className="space-y-1.5">
-                  <Label htmlFor="file_label">Descripción</Label>
-                  <Input
-                    id="file_label"
-                    name="file_label"
-                    required
-                    defaultValue={fileLabel}
-                    placeholder={`ej. ${fileLabel} — Proveedor XYZ`}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="file_url">URL del archivo <span className="text-destructive">*</span></Label>
-                  <Input
-                    id="file_url"
-                    name="file_url"
-                    type="url"
-                    required
-                    placeholder="https://drive.google.com/…"
-                  />
-                </div>
-                <input type="hidden" name="file_type" value="DOC" />
+              <div className="space-y-1.5">
+                <Label>
+                  {stageFileLabel} <span className="text-destructive">*</span>
+                </Label>
+                <ProjectFileDropzone
+                  projectId={projectId}
+                  onUploaded={(url, label) => { setFileUrl(url); setFileLabel(label) }}
+                />
+                {fileUrl && (
+                  <>
+                    <input type="hidden" name="file_url"   value={fileUrl} />
+                    <input type="hidden" name="file_label" value={fileLabel} />
+                    <input type="hidden" name="file_type"  value="DOC" />
+                  </>
+                )}
               </div>
             )}
 
@@ -122,7 +118,7 @@ export function ProjectStageTransition({ projectId: _, tipo, status, action }: P
               <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={pending}>
                 Cancelar
               </Button>
-              <Button type="submit" disabled={pending}>
+              <Button type="submit" disabled={pending || (requiresFile && !fileUrl)}>
                 {pending ? 'Avanzando…' : `Confirmar → ${PROJECT_STATUS_LABELS[nextStatus]}`}
               </Button>
             </DialogFooter>

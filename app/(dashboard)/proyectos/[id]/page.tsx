@@ -169,6 +169,7 @@ export default async function ProyectoDetailPage({ params, searchParams }: PageP
         {activeTab === 'archivos' && (
           <div className="max-w-3xl">
             <ProjectFilesPanel
+              projectId={project.id}
               addAction={addFile.bind(null, project.id)}
               deleteAction={deleteFile.bind(null, project.id)}
               files={project.files}
