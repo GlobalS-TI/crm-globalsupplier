@@ -29,10 +29,10 @@ export function CreateSectionButton() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <button className="w-full flex items-center gap-2 px-3 py-2 text-xs text-muted-foreground hover:bg-accent hover:text-accent-foreground rounded-md transition-colors">
-          <Plus className="h-3.5 w-3.5" />
+        <Button size="sm">
+          <Plus className="h-4 w-4 mr-1" />
           Nueva campaña
-        </button>
+        </Button>
       </DialogTrigger>
       <DialogContent className="max-w-sm">
         <DialogHeader>
