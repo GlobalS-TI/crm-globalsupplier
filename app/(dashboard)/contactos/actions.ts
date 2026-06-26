@@ -50,5 +50,6 @@ export async function updateContact(id: string, _prev: ActionState, form: FormDa
 export async function deleteContact(id: string): Promise<void> {
   await service().delete(id)
   revalidatePath('/contactos')
+  revalidatePath('/oportunidades')
   redirect('/contactos')
 }

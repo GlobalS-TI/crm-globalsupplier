@@ -51,5 +51,7 @@ export async function updateCompany(id: string, _prev: ActionState, form: FormDa
 export async function deleteCompany(id: string): Promise<void> {
   await service().delete(id)
   revalidatePath('/empresas')
+  revalidatePath('/contactos')
+  revalidatePath('/oportunidades')
   redirect('/empresas')
 }

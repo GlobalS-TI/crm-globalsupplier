@@ -8,12 +8,14 @@ import {
   updateLeadSectionSchema,
   createLeadSchema,
   updateLeadSchema,
+  importLeadRowSchema,
   type CreateLeadSectionInput,
   type UpdateLeadSectionInput,
   type CreateLeadInput,
   type UpdateLeadInput,
   type ImportLeadRow,
 } from '@/lib/validations/lead'
+import { z } from 'zod'
 
 export class LeadService {
   constructor(
@@ -53,7 +55,8 @@ export class LeadService {
   deleteLead(id: string) { return this.leads.delete(id) }
 
   bulkImportLeads(rows: ImportLeadRow[], sectionId: string, userId: string, responsableId?: string) {
-    return this.leads.bulkCreate(rows, sectionId, userId, responsableId)
+    const validated = z.array(importLeadRowSchema).parse(rows)
+    return this.leads.bulkCreate(validated, sectionId, userId, responsableId)
   }
 
   async getResponsableId(): Promise<string | undefined> {
