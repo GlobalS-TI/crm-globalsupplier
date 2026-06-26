@@ -33,7 +33,7 @@ export function ProjectForm({ action, project, profiles }: Props) {
           <Input id="title" name="title" required defaultValue={project?.title} placeholder="Nombre del proyecto" />
         </div>
 
-        <div className="space-y-1.5">
+        <div className="sm:col-span-2 space-y-1.5">
           <Label htmlFor="brand">Marca *</Label>
           <Select name="brand" defaultValue={project?.brand} required>
             <SelectTrigger id="brand">
@@ -45,6 +45,11 @@ export function ProjectForm({ action, project, profiles }: Props) {
               ))}
             </SelectContent>
           </Select>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="start_date">Fecha de inicio</Label>
+          <Input id="start_date" name="start_date" type="date" defaultValue={project?.start_date ?? ''} />
         </div>
 
         <div className="space-y-1.5">

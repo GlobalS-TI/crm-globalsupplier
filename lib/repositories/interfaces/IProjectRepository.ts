@@ -11,6 +11,7 @@ export interface ProjectRow {
   status:          ProjectStatus
   stakeholder_id:  string | null
   requested_by_id: string | null
+  start_date:      string | null
   due_date:        string | null
   estimated_hours: number | null
   created_by:      string | null

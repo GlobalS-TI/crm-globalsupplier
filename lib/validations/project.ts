@@ -13,6 +13,7 @@ export const createProjectSchema = z.object({
   brand:           businessUnitSchema,
   stakeholder_id:  z.string().uuid().optional(),
   requested_by_id: z.string().uuid().optional(),
+  start_date:      z.string().date().optional(),
   due_date:        z.string().date().optional(),
   estimated_hours: z.coerce.number().min(0).max(9999).optional(),
 })

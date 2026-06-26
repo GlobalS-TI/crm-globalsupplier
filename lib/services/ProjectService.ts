@@ -43,6 +43,7 @@ export class ProjectService {
       status:          'INCOMING',
       stakeholder_id:  data.stakeholder_id  ?? null,
       requested_by_id: data.requested_by_id ?? null,
+      start_date:      data.start_date      ?? null,
       due_date:        data.due_date        ?? null,
       estimated_hours: data.estimated_hours ?? null,
       created_by:      userId,
