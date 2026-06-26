@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { BUSINESS_UNITS, BRAND_LABELS } from '@/lib/types'
+import { BUSINESS_UNITS, BRAND_LABELS, PROJECT_TIPO_LABELS } from '@/lib/types'
+import type { ProjectTipo } from '@/lib/types'
 import type { ActionState } from '@/app/(dashboard)/proyectos/actions'
 import type { ProjectRow } from '@/lib/repositories/interfaces/IProjectRepository'
 
@@ -33,7 +34,21 @@ export function ProjectForm({ action, project, profiles }: Props) {
           <Input id="title" name="title" required defaultValue={project?.title} placeholder="Nombre del proyecto" />
         </div>
 
-        <div className="sm:col-span-2 space-y-1.5">
+        <div className="space-y-1.5">
+          <Label htmlFor="tipo">Tipo *</Label>
+          <Select name="tipo" defaultValue={project?.tipo ?? 'DISENO'} required>
+            <SelectTrigger id="tipo">
+              <SelectValue placeholder="Tipo de proyecto" />
+            </SelectTrigger>
+            <SelectContent>
+              {(Object.keys(PROJECT_TIPO_LABELS) as ProjectTipo[]).map(t => (
+                <SelectItem key={t} value={t}>{PROJECT_TIPO_LABELS[t]}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-1.5">
           <Label htmlFor="brand">Marca *</Label>
           <Select name="brand" defaultValue={project?.brand} required>
             <SelectTrigger id="brand">

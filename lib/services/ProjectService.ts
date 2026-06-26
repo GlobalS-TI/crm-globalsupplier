@@ -1,5 +1,5 @@
-import { PROJECT_STATUSES, PROJECT_STATUS_ORDER } from '@/lib/types'
-import type { ProjectStatus } from '@/lib/types'
+import { getStatusesForTipo } from '@/lib/types'
+import type { ProjectStatus, ProjectTipo } from '@/lib/types'
 import {
   createProjectSchema,
   updateProjectSchema,
@@ -37,6 +37,7 @@ export class ProjectService {
   async createProject(raw: unknown, userId: string): Promise<ProjectRow> {
     const data = createProjectSchema.parse(raw)
     const project = await this.repo.create({
+      tipo:            data.tipo,
       title:           data.title,
       description:     data.description ?? null,
       brand:           data.brand,
@@ -66,6 +67,8 @@ export class ProjectService {
       ...(data.brand           !== undefined && { brand:           data.brand }),
       ...(data.stakeholder_id  !== undefined && { stakeholder_id:  data.stakeholder_id  ?? null }),
       ...(data.requested_by_id !== undefined && { requested_by_id: data.requested_by_id ?? null }),
+      ...(data.tipo            !== undefined && { tipo:            data.tipo }),
+      ...(data.start_date      !== undefined && { start_date:      data.start_date      ?? null }),
       ...(data.due_date        !== undefined && { due_date:        data.due_date        ?? null }),
       ...(data.estimated_hours !== undefined && { estimated_hours: data.estimated_hours ?? null }),
     })
@@ -75,22 +78,24 @@ export class ProjectService {
     const project = await this.repo.findById(id)
     if (!project) throw new Error('Proyecto no encontrado')
 
-    const currentIdx = PROJECT_STATUS_ORDER[project.status as ProjectStatus]
-    if (currentIdx === PROJECT_STATUSES.length - 1) {
-      throw new Error('El proyecto ya está en el estado final (Delivered)')
+    const tipo     = (project.tipo ?? 'DISENO') as ProjectTipo
+    const statuses = getStatusesForTipo(tipo)
+    const currentIdx = statuses.indexOf(project.status as ProjectStatus)
+    if (currentIdx === statuses.length - 1) {
+      throw new Error('El proyecto ya está en el estado final.')
     }
-    const nextStatus = PROJECT_STATUSES[currentIdx + 1]
+    const nextStatus = statuses[currentIdx + 1]
 
-    // Regla: brief requerido antes de salir de INCOMING
+    // Regla: brief requerido antes de salir de INCOMING (ambos tipos)
     if (project.status === 'INCOMING') {
       const b = project.brief
       if (!b?.what?.trim() || !b?.why?.trim()) {
-        throw new Error('Completa el Brief (Qué y Por qué) antes de avanzar a Analysis.')
+        throw new Error('Completa el Brief (Qué y Por qué) antes de avanzar.')
       }
     }
 
-    // Regla: handoff completo antes de pasar de DESIGN a DEVELOPMENT
-    if (project.status === 'DESIGN') {
+    // Regla: handoff completo antes de pasar de DISEÑO a DESARROLLO (solo proyectos DISENO)
+    if (tipo === 'DISENO' && project.status === 'DESIGN') {
       const h = project.handoff
       if (
         !h?.component_states    ||
@@ -99,7 +104,7 @@ export class ProjectService {
         !h?.assets_exported     ||
         !h?.naming_convention
       ) {
-        throw new Error('El Handoff Checklist debe estar 100% completo antes de pasar a Development.')
+        throw new Error('El Handoff Checklist debe estar 100% completo antes de pasar a Desarrollo.')
       }
     }
 

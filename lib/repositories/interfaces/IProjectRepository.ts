@@ -1,4 +1,4 @@
-import type { BusinessUnit, ProjectStatus, ProjectFileType } from '@/lib/types'
+import type { BusinessUnit, ProjectStatus, ProjectTipo, ProjectFileType } from '@/lib/types'
 
 // ----------------------------------------------------------------
 // Row types (espejo del schema de DB)
@@ -7,6 +7,7 @@ export interface ProjectRow {
   id:              string
   title:           string
   description:     string | null
+  tipo:            ProjectTipo
   brand:           BusinessUnit
   status:          ProjectStatus
   stakeholder_id:  string | null

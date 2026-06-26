@@ -15,8 +15,8 @@ import { ProjectStageLog } from '@/components/crm/ProjectStageLog'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
-import { BRAND_LABELS } from '@/lib/types'
-import type { BusinessUnit, ProjectStatus } from '@/lib/types'
+import { BRAND_LABELS, PROJECT_TIPO_LABELS } from '@/lib/types'
+import type { BusinessUnit, ProjectStatus, ProjectTipo } from '@/lib/types'
 import {
   updateProject, advanceStatus, saveBrief, saveHandoff,
   addDecisionEntry, addFile, deleteFile,
@@ -29,20 +29,11 @@ interface PageProps {
   searchParams: Promise<{ tab?: string }>
 }
 
-const TABS = [
-  { id: 'resumen',    label: 'Resumen' },
-  { id: 'brief',      label: 'Brief' },
-  { id: 'handoff',    label: 'Handoff' },
-  { id: 'decisiones', label: 'Decisiones' },
-  { id: 'archivos',   label: 'Archivos' },
-] as const
-
-type TabId = typeof TABS[number]['id']
+type TabId = 'resumen' | 'brief' | 'handoff' | 'decisiones' | 'archivos'
 
 export default async function ProyectoDetailPage({ params, searchParams }: PageProps) {
   const { id }  = await params
   const { tab } = await searchParams
-  const activeTab: TabId = (TABS.find(t => t.id === tab)?.id) ?? 'resumen'
 
   const [project, supabase] = await Promise.all([
     new ProjectService(new ProjectRepository()).getProjectById(id),
@@ -57,7 +48,18 @@ export default async function ProyectoDetailPage({ params, searchParams }: PageP
     .eq('is_active', true)
     .order('full_name')
 
-  const status = project.status as ProjectStatus
+  const tipo    = (project.tipo ?? 'DISENO') as ProjectTipo
+  const status  = project.status as ProjectStatus
+  const isDiseno = tipo === 'DISENO'
+
+  const tabs: { id: TabId; label: string }[] = [
+    { id: 'resumen',    label: 'Resumen' },
+    { id: 'brief',      label: 'Brief' },
+    ...(isDiseno ? [{ id: 'handoff' as TabId, label: 'Handoff' }] : []),
+    { id: 'decisiones', label: 'Decisiones' },
+    { id: 'archivos',   label: 'Archivos' },
+  ]
+  const activeTab: TabId = (tabs.find(t => t.id === tab)?.id) ?? 'resumen'
 
   return (
     <div className="flex flex-col h-full">
@@ -68,6 +70,9 @@ export default async function ProyectoDetailPage({ params, searchParams }: PageP
             <div className="flex items-center gap-2 flex-wrap">
               <Badge variant="outline" className="text-xs">
                 {BRAND_LABELS[project.brand as BusinessUnit]}
+              </Badge>
+              <Badge variant="secondary" className="text-xs">
+                {PROJECT_TIPO_LABELS[tipo]}
               </Badge>
               <ProjectStatusBadge status={status} />
             </div>
@@ -84,6 +89,7 @@ export default async function ProyectoDetailPage({ params, searchParams }: PageP
           <div className="shrink-0">
             <ProjectStageTransition
               projectId={project.id}
+              tipo={tipo}
               status={status}
               action={advanceStatus.bind(null, project.id)}
             />
@@ -92,7 +98,7 @@ export default async function ProyectoDetailPage({ params, searchParams }: PageP
 
         {/* Tab nav */}
         <div className="flex gap-1 border-b -mx-8 px-8 overflow-x-auto">
-          {TABS.map(t => (
+          {tabs.map(t => (
             <Link
               key={t.id}
               href={`/proyectos/${id}?tab=${t.id}` as Route}

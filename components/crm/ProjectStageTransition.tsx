@@ -8,35 +8,39 @@ import { Label } from '@/components/ui/label'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog'
-import { PROJECT_STATUSES, PROJECT_STATUS_ORDER, PROJECT_STATUS_LABELS } from '@/lib/types'
-import type { ProjectStatus } from '@/lib/types'
+import { getStatusesForTipo, PROJECT_STATUS_LABELS } from '@/lib/types'
+import type { ProjectStatus, ProjectTipo } from '@/lib/types'
 import type { ActionState } from '@/app/(dashboard)/proyectos/actions'
 
 interface Props {
   projectId: string
+  tipo:      ProjectTipo
   status:    ProjectStatus
   action:    (prev: ActionState, form: FormData) => Promise<ActionState>
 }
 
-export function ProjectStageTransition({ projectId: _, status, action }: Props) {
+export function ProjectStageTransition({ projectId: _, tipo, status, action }: Props) {
   const [open, setOpen] = useState(false)
   const [state, dispatch, pending] = useActionState(
     async (prev: ActionState, form: FormData) => {
       const result = await action(prev, form)
-      if (!result) setOpen(false)   // cierra solo si no hay error
+      if (!result) setOpen(false)
       return result
     },
     null,
   )
 
-  const currentIdx = PROJECT_STATUS_ORDER[status]
-  const nextStatus = PROJECT_STATUSES[currentIdx + 1] as ProjectStatus | undefined
+  const statuses   = getStatusesForTipo(tipo)
+  const currentIdx = statuses.indexOf(status)
+  const nextStatus = statuses[currentIdx + 1] as ProjectStatus | undefined
+
+  const finalLabel = tipo === 'INDUSTRIAL' ? 'Proyecto cerrado' : 'Proyecto entregado'
 
   if (!nextStatus) {
     return (
       <span className="inline-flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
         <CheckCircle2 className="h-3.5 w-3.5" />
-        Proyecto entregado
+        {finalLabel}
       </span>
     )
   }

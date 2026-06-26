@@ -6,8 +6,8 @@ import { Badge } from '@/components/ui/badge'
 import { ProjectStatusBadge } from '@/components/crm/ProjectStatusBadge'
 import { ProjectService } from '@/lib/services/ProjectService'
 import { ProjectRepository } from '@/lib/repositories/supabase/ProjectRepository'
-import { BUSINESS_UNITS, BRAND_LABELS, PROJECT_STATUSES, PROJECT_STATUS_LABELS } from '@/lib/types'
-import type { BusinessUnit, ProjectStatus } from '@/lib/types'
+import { BUSINESS_UNITS, BRAND_LABELS, PROJECT_STATUSES, PROJECT_STATUS_LABELS, PROJECT_TIPO_LABELS } from '@/lib/types'
+import type { BusinessUnit, ProjectStatus, ProjectTipo } from '@/lib/types'
 
 export const metadata = { title: 'Proyectos — CRM Global Supplier' }
 export const dynamic  = 'force-dynamic'
@@ -65,9 +65,9 @@ export default async function ProyectosPage({ searchParams }: PageProps) {
               <tr>
                 <th className="px-4 py-3 text-left font-medium text-muted-foreground">Proyecto</th>
                 <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden sm:table-cell">Marca</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden md:table-cell">Tipo</th>
                 <th className="px-4 py-3 text-left font-medium text-muted-foreground">Estado</th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden md:table-cell">Fecha límite</th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden lg:table-cell">Horas est.</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground hidden lg:table-cell">Fecha límite</th>
               </tr>
             </thead>
             <tbody>
@@ -81,16 +81,16 @@ export default async function ProyectosPage({ searchParams }: PageProps) {
                   <td className="px-4 py-3 hidden sm:table-cell">
                     <Badge variant="outline" className="text-xs">{BRAND_LABELS[p.brand as BusinessUnit]}</Badge>
                   </td>
+                  <td className="px-4 py-3 hidden md:table-cell">
+                    <Badge variant="secondary" className="text-xs">{PROJECT_TIPO_LABELS[(p.tipo ?? 'DISENO') as ProjectTipo]}</Badge>
+                  </td>
                   <td className="px-4 py-3">
                     <ProjectStatusBadge status={p.status as ProjectStatus} />
                   </td>
-                  <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
+                  <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">
                     {p.due_date
                       ? new Date(p.due_date + 'T00:00:00').toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })
                       : '—'}
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground hidden lg:table-cell">
-                    {p.estimated_hours != null ? `${p.estimated_hours}h` : '—'}
                   </td>
                 </tr>
               ))}
