@@ -185,8 +185,8 @@ export async function convertLeadToOpportunity(
     const oppService = new OpportunityService(new OpportunityRepository())
     const opp = await oppService.create({
       nombre:           form.get('nombre') as string,
-      business_unit:    form.get('business_unit') as never,
-      fuente:           form.get('fuente') as never,
+      business_unit:    form.get('business_unit'),
+      fuente:           form.get('fuente'),
       owner_id:         form.get('owner_id') as string,
       etapa:            'nuevo_lead',
       monto_estimado:   0,
