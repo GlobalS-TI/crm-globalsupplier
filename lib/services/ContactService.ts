@@ -1,5 +1,4 @@
 import type { IContactRepository, ContactRow, ContactWithCompany } from '@/lib/repositories/interfaces/IContactRepository'
-import type { CreateContactInput, UpdateContactInput } from '@/lib/validations/contact'
 import { createContactSchema, updateContactSchema } from '@/lib/validations/contact'
 
 export class ContactService {
@@ -21,12 +20,12 @@ export class ContactService {
     return this.repo.findAll(opts)
   }
 
-  async create(raw: CreateContactInput, ownerId: string): Promise<ContactRow> {
+  async create(raw: unknown, ownerId: string): Promise<ContactRow> {
     const data = createContactSchema.parse(raw)
     return this.repo.create({ ...data, owner_id: ownerId })
   }
 
-  async update(id: string, raw: UpdateContactInput): Promise<ContactRow> {
+  async update(id: string, raw: unknown): Promise<ContactRow> {
     await this.getById(id)
     const data = updateContactSchema.parse(raw)
     return this.repo.update(id, data)

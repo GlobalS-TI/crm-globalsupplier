@@ -28,7 +28,7 @@ export async function createCompany(_prev: ActionState, form: FormData): Promise
   if (!user) return { error: 'No autenticado' }
 
   try {
-    const created = await service().create(parseForm(form) as never, user.id)
+    const created = await service().create(parseForm(form), user.id)
     // redirect outside try/catch not needed — redirect throws internally
     redirect(`/empresas/${created.id}`)
   } catch (e) {
@@ -39,7 +39,7 @@ export async function createCompany(_prev: ActionState, form: FormData): Promise
 
 export async function updateCompany(id: string, _prev: ActionState, form: FormData): Promise<ActionState> {
   try {
-    await service().update(id, parseForm(form) as never)
+    await service().update(id, parseForm(form))
     revalidatePath(`/empresas/${id}`)
     revalidatePath('/empresas')
     return null
