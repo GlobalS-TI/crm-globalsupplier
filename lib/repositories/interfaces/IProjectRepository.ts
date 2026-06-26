@@ -122,6 +122,7 @@ export interface IProjectRepository {
   update(id: string, data: Partial<Omit<ProjectRow, 'id' | 'created_at'>>): Promise<ProjectRow>
   delete(id: string): Promise<void>
   archive(id: string): Promise<void>
+  unarchive(id: string): Promise<void>
 
   upsertBrief(projectId: string, data: Omit<ProjectBriefRow, 'id' | 'project_id' | 'updated_at'>): Promise<ProjectBriefRow>
   upsertHandoff(projectId: string, data: Omit<ProjectHandoffRow, 'id' | 'project_id' | 'updated_at'>): Promise<ProjectHandoffRow>

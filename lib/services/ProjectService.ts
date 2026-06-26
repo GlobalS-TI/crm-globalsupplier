@@ -204,6 +204,10 @@ export class ProjectService {
     return this.repo.archive(id)
   }
 
+  async unarchiveProject(id: string): Promise<void> {
+    return this.repo.unarchive(id)
+  }
+
   async addProjectUpdate(projectId: string, raw: unknown, userId: string): Promise<ProjectUpdateRow> {
     const data = projectUpdateSchema.parse(raw)
     return this.repo.addUpdate({

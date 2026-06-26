@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import type { Route } from 'next'
-import { Plus } from 'lucide-react'
+import { Plus, Archive } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ProjectStatusBadge } from '@/components/crm/ProjectStatusBadge'
@@ -31,12 +31,20 @@ export default async function ProyectosPage({ searchParams }: PageProps) {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="text-2xl font-bold">Proyectos</h1>
-        <Button asChild size="sm">
-          <Link href={'/proyectos/nuevo' as Route}>
-            <Plus className="h-4 w-4 mr-1" />
-            Nuevo proyecto
-          </Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="ghost" size="sm" asChild className="text-muted-foreground">
+            <Link href={'/proyectos/archivados' as Route}>
+              <Archive className="h-4 w-4 mr-1" />
+              Archivados
+            </Link>
+          </Button>
+          <Button asChild size="sm">
+            <Link href={'/proyectos/nuevo' as Route}>
+              <Plus className="h-4 w-4 mr-1" />
+              Nuevo proyecto
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {/* Filtros */}

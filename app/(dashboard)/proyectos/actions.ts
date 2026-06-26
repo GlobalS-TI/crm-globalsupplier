@@ -216,3 +216,14 @@ export async function archiveProject(id: string): Promise<{ error: string } | nu
     return { error: (e as Error).message }
   }
 }
+
+export async function unarchiveProject(id: string): Promise<{ error: string } | null> {
+  try {
+    await makeService().unarchiveProject(id)
+    revalidatePath('/proyectos')
+    revalidatePath('/proyectos/archivados')
+    return null
+  } catch (e) {
+    return { error: (e as Error).message }
+  }
+}

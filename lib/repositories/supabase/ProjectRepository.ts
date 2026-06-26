@@ -131,13 +131,20 @@ export class ProjectRepository implements IProjectRepository {
 
   async delete(id: string): Promise<void> {
     const sb: AnyClient = await createClient()
-    const { error } = await sb.from('projects').delete().eq('id', id)
+    const { data, error } = await sb.from('projects').delete().eq('id', id).select('id')
     if (error) throw error
+    if (!data?.length) throw new Error('Sin permisos para eliminar este proyecto.')
   }
 
   async archive(id: string): Promise<void> {
     const sb: AnyClient = await createClient()
     const { error } = await sb.from('projects').update({ is_archived: true }).eq('id', id)
+    if (error) throw error
+  }
+
+  async unarchive(id: string): Promise<void> {
+    const sb: AnyClient = await createClient()
+    const { error } = await sb.from('projects').update({ is_archived: false }).eq('id', id)
     if (error) throw error
   }
 
