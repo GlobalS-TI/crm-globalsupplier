@@ -10,6 +10,7 @@ import type {
   ProjectStageLogRow,
   ProjectDecisionLogRow,
   ProjectFileRow,
+  ProjectUpdateRow,
   ProjectFilters,
 } from '@/lib/repositories/interfaces/IProjectRepository'
 
@@ -22,7 +23,8 @@ const WITH_RELATIONS = `
   handoff:project_handoff_checklists(*),
   stage_logs:project_stage_logs(*, changer:profiles!changed_by(full_name)),
   decision_logs:project_decision_logs(*, author:profiles!author_id(full_name)),
-  files:project_files(*)
+  files:project_files(*),
+  updates:project_updates(*, author:profiles!author_id(full_name))
 `
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -62,6 +64,7 @@ export class ProjectRepository implements IProjectRepository {
     project.stage_logs    = (project.stage_logs    ?? []).sort((a: ProjectStageLogRow, b: ProjectStageLogRow) => a.changed_at.localeCompare(b.changed_at))
     project.decision_logs = (project.decision_logs ?? []).sort((a: ProjectDecisionLogRow, b: ProjectDecisionLogRow) => a.created_at.localeCompare(b.created_at))
     project.files         = (project.files         ?? []).sort((a: ProjectFileRow, b: ProjectFileRow) => b.created_at.localeCompare(a.created_at))
+    project.updates       = (project.updates       ?? []).sort((a: ProjectUpdateRow, b: ProjectUpdateRow) => a.created_at.localeCompare(b.created_at))
     return project
   }
 
@@ -136,5 +139,16 @@ export class ProjectRepository implements IProjectRepository {
     const sb: AnyClient = await createClient()
     const { error } = await sb.from('projects').update({ is_archived: true }).eq('id', id)
     if (error) throw error
+  }
+
+  async addUpdate(data: Omit<ProjectUpdateRow, 'id' | 'created_at' | 'author'>): Promise<ProjectUpdateRow> {
+    const sb: AnyClient = await createClient()
+    const { data: row, error } = await sb
+      .from('project_updates')
+      .insert(data)
+      .select('*, author:profiles!author_id(full_name)')
+      .single()
+    if (error) throw error
+    return row as ProjectUpdateRow
   }
 }

@@ -77,6 +77,17 @@ export interface ProjectFileRow {
   created_at: string
 }
 
+export interface ProjectUpdateRow {
+  id:         string
+  project_id: string
+  content:    string
+  file_url:   string | null
+  file_label: string | null
+  author_id:  string | null
+  created_at: string
+  author:     { full_name: string } | null
+}
+
 // ----------------------------------------------------------------
 // Aggregado completo para la vista de detalle
 // ----------------------------------------------------------------
@@ -89,6 +100,7 @@ export interface ProjectWithRelations extends ProjectRow {
   stage_logs:    ProjectStageLogRow[]
   decision_logs: ProjectDecisionLogRow[]
   files:         ProjectFileRow[]
+  updates:       ProjectUpdateRow[]
 }
 
 // ----------------------------------------------------------------
@@ -119,4 +131,6 @@ export interface IProjectRepository {
 
   addFile(data: Omit<ProjectFileRow, 'id' | 'created_at'>): Promise<ProjectFileRow>
   deleteFile(id: string): Promise<void>
+
+  addUpdate(data: Omit<ProjectUpdateRow, 'id' | 'created_at' | 'author'>): Promise<ProjectUpdateRow>
 }

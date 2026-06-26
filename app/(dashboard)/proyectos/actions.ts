@@ -165,6 +165,24 @@ export async function deleteFile(projectId: string, fileId: string): Promise<voi
   revalidatePath(`/proyectos/${projectId}`)
 }
 
+export async function addProjectUpdate(id: string, _prev: ActionState, form: FormData): Promise<ActionState> {
+  const user = await getCurrentUser()
+  if (!user) return { error: 'No autenticado' }
+
+  const raw = {
+    content:    form.get('content')?.toString().trim(),
+    file_url:   form.get('file_url')?.toString().trim()   || undefined,
+    file_label: form.get('file_label')?.toString().trim() || undefined,
+  }
+  try {
+    await makeService().addProjectUpdate(id, raw, user.id)
+    revalidatePath(`/proyectos/${id}`)
+    return null
+  } catch (e) {
+    return { error: (e as Error).message }
+  }
+}
+
 export async function saveProjectFile(
   projectId: string,
   data: { label: string; url: string; type: string },

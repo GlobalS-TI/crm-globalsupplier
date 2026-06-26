@@ -7,6 +7,7 @@ import {
   handoffSchema,
   decisionLogEntrySchema,
   projectFileSchema,
+  projectUpdateSchema,
   type CreateProjectInput,
   type UpdateProjectInput,
   type BriefInput,
@@ -20,6 +21,7 @@ import type {
   ProjectBriefRow,
   ProjectHandoffRow,
   ProjectFileRow,
+  ProjectUpdateRow,
   ProjectFilters,
 } from '@/lib/repositories/interfaces/IProjectRepository'
 
@@ -200,5 +202,16 @@ export class ProjectService {
 
   async archiveProject(id: string): Promise<void> {
     return this.repo.archive(id)
+  }
+
+  async addProjectUpdate(projectId: string, raw: unknown, userId: string): Promise<ProjectUpdateRow> {
+    const data = projectUpdateSchema.parse(raw)
+    return this.repo.addUpdate({
+      project_id: projectId,
+      content:    data.content,
+      file_url:   data.file_url   ?? null,
+      file_label: data.file_label ?? null,
+      author_id:  userId,
+    })
   }
 }

@@ -59,6 +59,12 @@ export const advanceStatusSchema = z.object({
   comment: z.string().max(1000).optional(),
 })
 
+export const projectUpdateSchema = z.object({
+  content:    z.string().min(1, 'La actualización no puede estar vacía').max(5000),
+  file_url:   z.string().url().optional(),
+  file_label: z.string().max(200).optional(),
+})
+
 export type ProjectTipoInput      = z.infer<typeof projectTipoSchema>
 export type CreateProjectInput    = z.infer<typeof createProjectSchema>
 export type UpdateProjectInput    = z.infer<typeof updateProjectSchema>

@@ -13,6 +13,7 @@ import { ProjectDecisionLog } from '@/components/crm/ProjectDecisionLog'
 import { ProjectFilesPanel } from '@/components/crm/ProjectFilesPanel'
 import { ProjectStageLog } from '@/components/crm/ProjectStageLog'
 import { ProjectDeleteButton } from '@/components/crm/ProjectDeleteButton'
+import { ProjectUpdatesFeed } from '@/components/crm/ProjectUpdatesFeed'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
@@ -21,6 +22,7 @@ import type { BusinessUnit, ProjectStatus, ProjectTipo } from '@/lib/types'
 import {
   updateProject, advanceStatus, saveBrief, saveHandoff,
   addDecisionEntry, addFile, deleteFile, deleteProject, archiveProject,
+  addProjectUpdate,
 } from '@/app/(dashboard)/proyectos/actions'
 
 export const dynamic  = 'force-dynamic'
@@ -30,7 +32,7 @@ interface PageProps {
   searchParams: Promise<{ tab?: string }>
 }
 
-type TabId = 'resumen' | 'brief' | 'handoff' | 'decisiones' | 'archivos'
+type TabId = 'resumen' | 'brief' | 'handoff' | 'decisiones' | 'archivos' | 'seguimiento'
 
 export default async function ProyectoDetailPage({ params, searchParams }: PageProps) {
   const { id }  = await params
@@ -53,12 +55,15 @@ export default async function ProyectoDetailPage({ params, searchParams }: PageP
   const status  = project.status as ProjectStatus
   const isDiseno = tipo === 'DISENO'
 
+  const showSeguimiento = status !== 'INCOMING'
+
   const tabs: { id: TabId; label: string }[] = [
     { id: 'resumen',    label: 'Resumen' },
     { id: 'brief',      label: 'Brief' },
     ...(isDiseno ? [{ id: 'handoff' as TabId, label: 'Handoff' }] : []),
     { id: 'decisiones', label: 'Decisiones' },
     { id: 'archivos',   label: 'Archivos' },
+    ...(showSeguimiento ? [{ id: 'seguimiento' as TabId, label: 'Seguimiento' }] : []),
   ]
   const activeTab: TabId = (tabs.find(t => t.id === tab)?.id) ?? 'resumen'
 
@@ -173,6 +178,16 @@ export default async function ProyectoDetailPage({ params, searchParams }: PageP
               addAction={addFile.bind(null, project.id)}
               deleteAction={deleteFile.bind(null, project.id)}
               files={project.files}
+            />
+          </div>
+        )}
+
+        {activeTab === 'seguimiento' && (
+          <div className="max-w-2xl">
+            <ProjectUpdatesFeed
+              projectId={project.id}
+              updates={project.updates}
+              action={addProjectUpdate.bind(null, project.id)}
             />
           </div>
         )}
