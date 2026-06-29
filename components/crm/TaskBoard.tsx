@@ -490,7 +490,7 @@ export function TaskBoard({ board, initialGroups, initialTasks, users }: Props) 
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center px-6 py-4 border-b border-border shrink-0">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-border shrink-0">
         <div>
           <h1 className="text-xl font-bold">{board.nombre}</h1>
           <p className="text-xs text-muted-foreground mt-0.5">
