@@ -9,6 +9,7 @@ import {
 } from '@/app/(dashboard)/actividades/task-actions'
 import { TaskBoardCell } from '@/components/crm/TaskBoardCell'
 import { TaskBoardAddColumn } from '@/components/crm/TaskBoardAddColumn'
+import { TaskImportButton } from '@/components/crm/TaskImportButton'
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -162,6 +163,7 @@ function TaskRow({ task, columns, users, onTituloSave, onDelete, onCellChange, o
             column={col}
             value={task.column_values[col.id] ?? null}
             users={users}
+            taskId={task.id}
             onChange={val => onCellChange(col.id, val)}
             onOptionsUpdate={onOptionsUpdate}
           />
@@ -487,11 +489,20 @@ export function TaskBoard({ board, initialGroups, initialTasks, users }: Props) 
             {tasks.length} tarea{tasks.length !== 1 ? 's' : ''} · {groups.length} grupo{groups.length !== 1 ? 's' : ''}
           </p>
         </div>
-        <TaskBoardAddColumn
-          boardId={board.id}
-          nextPosition={columns.length}
-          onColumnAdded={col => setColumns(prev => [...prev, col])}
-        />
+        <div className="flex items-center gap-2">
+          <TaskImportButton
+            boardId={board.id}
+            onImported={count => {
+              // Reload to show new tasks — full refresh is simplest since we don't have the new IDs
+              window.location.reload()
+            }}
+          />
+          <TaskBoardAddColumn
+            boardId={board.id}
+            nextPosition={columns.length}
+            onColumnAdded={col => setColumns(prev => [...prev, col])}
+          />
+        </div>
       </div>
 
       {/* Body */}
@@ -558,6 +569,7 @@ export function TaskBoard({ board, initialGroups, initialTasks, users }: Props) 
                       onCellChange={(colId, val) => handleCellChange(task.id, colId, val)}
                       onOptionsUpdate={handleOptionsUpdate}
                     />
+
                   ))}
                 </tbody>
               </table>

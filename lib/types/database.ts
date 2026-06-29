@@ -1235,9 +1235,12 @@ export type Database = {
         | "number"
         | "date"
         | "selector"
+        | "multi_selector"
         | "person"
         | "url"
         | "business_unit"
+        | "archivo"
+        | "priority"
       user_role:
         | "director_general"
         | "direccion_comercial"
@@ -1426,9 +1429,12 @@ export const Constants = {
         "number",
         "date",
         "selector",
+        "multi_selector",
         "person",
         "url",
         "business_unit",
+        "archivo",
+        "priority",
       ],
       user_role: [
         "director_general",

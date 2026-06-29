@@ -13,13 +13,16 @@ import type { TaskColumnType, SelectorOption } from '@/lib/validations/task'
 import { addBoardColumn } from '@/app/(dashboard)/actividades/task-actions'
 
 const TIPO_LABELS: Record<TaskColumnType, string> = {
-  text:          'Texto',
-  number:        'Número',
-  date:          'Fecha',
-  selector:      'Selector',
-  person:        'Persona',
-  url:           'URL',
-  business_unit: 'Marca (business unit)',
+  text:           'Texto',
+  number:         'Número',
+  date:           'Fecha',
+  selector:       'Selección simple',
+  multi_selector: 'Selección múltiple',
+  person:         'Persona',
+  url:            'URL',
+  business_unit:  'Marca',
+  archivo:        'Archivo adjunto',
+  priority:       'Prioridad',
 }
 
 const SELECTOR_PALETTE = [
@@ -62,7 +65,8 @@ export function TaskBoardAddColumn({ boardId, nextPosition, onColumnAdded }: Pro
     const name = nombre.trim()
     if (!name) return
     start(async () => {
-      const config = tipo === 'selector' ? { options } : {}
+      const needsOptions = tipo === 'selector' || tipo === 'multi_selector'
+      const config = needsOptions ? { options } : {}
       const result = await addBoardColumn({ board_id: boardId, nombre: name, tipo, position: nextPosition, config })
       if ('id' in result && result.id) {
         onColumnAdded({
@@ -128,8 +132,8 @@ export function TaskBoardAddColumn({ boardId, nextPosition, onColumnAdded }: Pro
               </select>
             </div>
 
-            {/* Options (selector only) */}
-            {tipo === 'selector' && (
+            {/* Options (selector / multi_selector) */}
+            {(tipo === 'selector' || tipo === 'multi_selector') && (
               <div className="space-y-2">
                 <Label>Opciones</Label>
                 <div className="space-y-1.5 max-h-40 overflow-y-auto">

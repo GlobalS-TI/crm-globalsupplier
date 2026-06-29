@@ -1,7 +1,8 @@
 import { z } from 'zod'
 
 export const taskColumnTypeSchema = z.enum([
-  'text', 'number', 'date', 'selector', 'person', 'url', 'business_unit',
+  'text', 'number', 'date', 'selector', 'multi_selector',
+  'person', 'url', 'business_unit', 'archivo', 'priority',
 ])
 
 export const selectorOptionSchema = z.object({
@@ -47,11 +48,24 @@ export const upsertColumnValueSchema = z.object({
   value:     z.string().nullable(),
 })
 
-export type TaskColumnType        = z.infer<typeof taskColumnTypeSchema>
-export type SelectorOption        = z.infer<typeof selectorOptionSchema>
-export type ColumnConfig          = z.infer<typeof columnConfigSchema>
+export const importTaskRowSchema = z.object({
+  titulo:        z.string().min(1).max(500),
+  fecha_entrega: z.string().date().optional(),
+})
+
+export const importTasksSchema = z.object({
+  board_id:  z.string().uuid(),
+  group_id:  z.string().uuid().optional(),
+  rows:      z.array(importTaskRowSchema).min(1).max(1000),
+})
+
+export type TaskColumnType         = z.infer<typeof taskColumnTypeSchema>
+export type SelectorOption         = z.infer<typeof selectorOptionSchema>
+export type ColumnConfig           = z.infer<typeof columnConfigSchema>
 export type CreateBoardColumnInput = z.infer<typeof createBoardColumnSchema>
 export type UpdateBoardColumnInput = z.infer<typeof updateBoardColumnSchema>
 export type CreateTaskInput        = z.infer<typeof createTaskSchema>
 export type UpdateTaskInput        = z.infer<typeof updateTaskSchema>
 export type UpsertColumnValueInput = z.infer<typeof upsertColumnValueSchema>
+export type ImportTaskRow          = z.infer<typeof importTaskRowSchema>
+export type ImportTasksInput       = z.infer<typeof importTasksSchema>
