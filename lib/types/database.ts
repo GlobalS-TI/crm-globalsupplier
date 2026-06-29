@@ -452,6 +452,56 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          id:            string
+          recipient_id:  string
+          type:          string
+          title:         string
+          body:          string
+          href:          string | null
+          read_at:       string | null
+          email_sent_at: string | null
+          email_error:   string | null
+          payload:       Json
+          created_at:    string
+        }
+        Insert: {
+          id?:           string
+          recipient_id:  string
+          type:          string
+          title:         string
+          body:          string
+          href?:         string | null
+          read_at?:      string | null
+          email_sent_at?:string | null
+          email_error?:  string | null
+          payload?:      Json
+          created_at?:   string
+        }
+        Update: {
+          id?:           string
+          recipient_id?: string
+          type?:         string
+          title?:        string
+          body?:         string
+          href?:         string | null
+          read_at?:      string | null
+          email_sent_at?:string | null
+          email_error?:  string | null
+          payload?:      Json
+          created_at?:   string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       opportunities: {
         Row: {
           business_unit: Database["public"]["Enums"]["business_unit"]

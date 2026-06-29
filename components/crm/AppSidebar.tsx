@@ -25,6 +25,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
 import { logout } from '@/app/(dashboard)/actions'
 import { ThemeToggle } from './ThemeToggle'
+import { NotificationBell } from './NotificationBell'
 import { PROJECT_ROLES, COMISIONES_ROLES } from '@/lib/types'
 import type { UserRole } from '@/lib/types'
 
@@ -43,9 +44,10 @@ interface AppSidebarProps {
   userFullName: string
   userEmail:    string
   userRole:     UserRole
+  userId:       string
 }
 
-export function AppSidebar({ userFullName, userEmail, userRole }: AppSidebarProps) {
+export function AppSidebar({ userFullName, userEmail, userRole, userId }: AppSidebarProps) {
   const pathname = usePathname()
   const { resolvedTheme } = useTheme()
   const [bouncing, setBouncing] = useState(false)
@@ -155,6 +157,7 @@ export function AppSidebar({ userFullName, userEmail, userRole }: AppSidebarProp
             <p className="text-xs text-muted-foreground truncate">{userEmail}</p>
           </div>
         </div>
+        <NotificationBell userId={userId} />
         <ThemeToggle />
         <form action={logout}>
           <Button

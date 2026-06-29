@@ -21,6 +21,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   return (
     <div className="flex h-screen overflow-hidden">
       <AppSidebar
+        userId={user.id}
         userFullName={profile?.full_name ?? user.email ?? 'Usuario'}
         userEmail={user.email ?? ''}
         userRole={profile?.role ?? 'vendedor'}

@@ -6,6 +6,8 @@ import { OpportunityRepository } from '@/lib/repositories/supabase/OpportunityRe
 import { OpportunityService } from '@/lib/services/OpportunityService'
 import { createOpportunitySchema, updateOpportunitySchema, stageTransitionSchema } from '@/lib/validations/opportunity'
 import type { OpportunityStage } from '@/lib/validations/opportunity'
+import { supabaseAdmin } from '@/lib/supabase/admin'
+import { notifyOppClosed, getManagementProfileIds } from '@/lib/notifications/send'
 
 function makeService() {
   return new OpportunityService(new OpportunityRepository())
@@ -62,10 +64,44 @@ export async function moveToStage(id: string, _prev: ActionState, form: FormData
     await makeService().moveToStage(id, raw.data)
     revalidatePath(`/oportunidades/${id}`)
     revalidatePath('/oportunidades')
+
+    if (raw.data.etapa === 'ganado' || raw.data.etapa === 'perdido') {
+      const etapa = raw.data.etapa
+      const monto = (raw.data as { monto_final?: number }).monto_final
+      void fireOppClosedNotification(id, etapa, monto)
+    }
+
     return null
   } catch (e) {
     return { error: (e as Error).message }
   }
+}
+
+async function fireOppClosedNotification(
+  id: string,
+  etapa: 'ganado' | 'perdido',
+  montoFinal?: number,
+): Promise<void> {
+  try {
+    const [oppRes, mgmtIds] = await Promise.all([
+      supabaseAdmin
+        .from('opportunities')
+        .select('nombre, owner:profiles!owner_id(full_name)')
+        .eq('id', id)
+        .single(),
+      getManagementProfileIds(),
+    ])
+    if (oppRes.data && mgmtIds.length) {
+      await notifyOppClosed({
+        recipientIds: mgmtIds,
+        oppId:        id,
+        oppNombre:    oppRes.data.nombre,
+        etapa,
+        vendedorName: (oppRes.data.owner as { full_name: string } | null)?.full_name ?? 'Sin asignar',
+        montoFinal,
+      })
+    }
+  } catch { /* notificaciones no bloquean */ }
 }
 
 export async function kanbanMoveToStage(
@@ -84,6 +120,11 @@ export async function kanbanMoveToStage(
     })
     revalidatePath('/oportunidades')
     revalidatePath(`/oportunidades/${id}`)
+
+    if (stage === 'ganado' || stage === 'perdido') {
+      void fireOppClosedNotification(id, stage, montoFinal)
+    }
+
     return {}
   } catch (e) {
     return { error: (e as Error).message }

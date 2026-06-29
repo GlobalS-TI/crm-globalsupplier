@@ -8,6 +8,8 @@ import { ProfileRepository } from '@/lib/repositories/supabase/ProfileRepository
 import { LeadService } from '@/lib/services/LeadService'
 import { OpportunityRepository } from '@/lib/repositories/supabase/OpportunityRepository'
 import { OpportunityService } from '@/lib/services/OpportunityService'
+import { supabaseAdmin } from '@/lib/supabase/admin'
+import { notifyLeadAssigned, notifyLeadConverted, getManagementProfileIds } from '@/lib/notifications/send'
 
 type ActionState = { error: string } | null
 
@@ -170,6 +172,29 @@ export async function assignVendedor(id: string, vendedorId: string | null): Pro
   try {
     await service().updateLead(id, { vendedor_id: vendedorId })
     revalidatePath('/leads')
+
+    if (vendedorId) {
+      void (async () => {
+        try {
+          const user = await getUser()
+          const [leadRes, assignerRes] = await Promise.all([
+            supabaseAdmin.from('leads').select('nombre, section:lead_sections(nombre)').eq('id', id).single(),
+            supabaseAdmin.from('profiles').select('full_name').eq('id', user.id).single(),
+          ])
+          if (leadRes.data && assignerRes.data) {
+            const section = leadRes.data.section as { nombre: string } | null
+            await notifyLeadAssigned({
+              recipientId:    vendedorId,
+              leadId:         id,
+              leadName:       leadRes.data.nombre,
+              sectionName:    section?.nombre ?? '',
+              assignedByName: assignerRes.data.full_name,
+            })
+          }
+        } catch { /* notificaciones no bloquean */ }
+      })()
+    }
+
     return null
   } catch (e) {
     return { error: (e as Error).message }
@@ -182,9 +207,10 @@ export async function convertLeadToOpportunity(
   form: FormData,
 ): Promise<ActionState> {
   try {
+    const oppNombre = form.get('nombre') as string
     const oppService = new OpportunityService(new OpportunityRepository())
     const opp = await oppService.create({
-      nombre:           form.get('nombre') as string,
+      nombre:           oppNombre,
       business_unit:    form.get('business_unit'),
       fuente:           form.get('fuente'),
       owner_id:         form.get('owner_id') as string,
@@ -198,6 +224,28 @@ export async function convertLeadToOpportunity(
     await service().updateLead(leadId, { converted_opportunity_id: opp.id })
     revalidatePath('/leads')
     revalidatePath('/oportunidades')
+
+    void (async () => {
+      try {
+        const user = await getUser()
+        const [leadRes, userRes, mgmtIds] = await Promise.all([
+          supabaseAdmin.from('leads').select('nombre').eq('id', leadId).single(),
+          supabaseAdmin.from('profiles').select('full_name').eq('id', user.id).single(),
+          getManagementProfileIds(),
+        ])
+        if (leadRes.data && userRes.data && mgmtIds.length) {
+          await notifyLeadConverted({
+            recipientIds:    mgmtIds,
+            leadId,
+            leadName:        leadRes.data.nombre,
+            oppId:           opp.id,
+            oppNombre,
+            convertedByName: userRes.data.full_name,
+          })
+        }
+      } catch { /* notificaciones no bloquean */ }
+    })()
+
     return null
   } catch (e) {
     return { error: (e as Error).message }
