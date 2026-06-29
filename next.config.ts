@@ -1,5 +1,7 @@
 import type { NextConfig } from 'next'
 
+const isDev = process.env.NODE_ENV
+
 const securityHeaders = [
   { key: 'X-Frame-Options',        value: 'DENY' },
   { key: 'X-Content-Type-Options', value: 'nosniff' },
@@ -19,7 +21,9 @@ const securityHeaders = [
       "default-src 'self'",
       // Supabase API + realtime websocket
       `connect-src 'self' ${process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''} wss://*.supabase.co https://*.supabase.co`,
-      "script-src 'self' 'unsafe-inline'",  // unsafe-inline necesario para Next.js RSC chunks
+      isDev
+        ? "script-src 'self' 'unsafe-inline' 'unsafe-eval'"
+        : "script-src 'self' unsafe-inline",  // unsafe-inline necesario para Next.js RSC chunks
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https://*.supabase.co",
       "font-src 'self'",
