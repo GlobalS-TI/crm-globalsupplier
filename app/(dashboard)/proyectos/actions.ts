@@ -36,10 +36,17 @@ export async function createProject(_prev: ActionState, form: FormData): Promise
   const user = await getCurrentUser()
   if (!user) return { error: 'No autenticado' }
 
-  const result = await makeService().createProject(parseForm(form), user.id).catch(e => e)
-  if (result instanceof Error) return { error: result.message }
-
-  redirect(`/proyectos/${result.id}`)
+  let id: string
+  try {
+    const project = await makeService().createProject(parseForm(form), user.id)
+    id = project.id
+  } catch (e: unknown) {
+    const msg = e instanceof Error
+      ? e.message
+      : (e as { message?: string })?.message ?? 'Error al crear el proyecto'
+    return { error: msg }
+  }
+  redirect(`/proyectos/${id}`)
 }
 
 export async function updateProject(id: string, _prev: ActionState, form: FormData): Promise<ActionState> {
@@ -60,8 +67,13 @@ export async function advanceStatus(id: string, _prev: ActionState, form: FormDa
   if (!user) return { error: 'No autenticado' }
 
   const comment = form.get('comment')?.toString().trim() || undefined
+  const fileLabel = form.get('file_label')?.toString().trim()
+  const fileUrl   = form.get('file_url')?.toString().trim()
+  const fileType  = form.get('file_type')?.toString().trim()
+  const file = fileUrl ? { label: fileLabel ?? '', url: fileUrl, type: fileType ?? 'DOC' } : undefined
+
   try {
-    await makeService().advanceStatus(id, user.id, comment)
+    await makeService().advanceStatus(id, user.id, comment, file)
     revalidatePath(`/proyectos/${id}`)
     return null
   } catch (e) {
@@ -151,4 +163,67 @@ export async function addFile(id: string, _prev: ActionState, form: FormData): P
 export async function deleteFile(projectId: string, fileId: string): Promise<void> {
   await makeService().deleteFile(fileId)
   revalidatePath(`/proyectos/${projectId}`)
+}
+
+export async function addProjectUpdate(id: string, _prev: ActionState, form: FormData): Promise<ActionState> {
+  const user = await getCurrentUser()
+  if (!user) return { error: 'No autenticado' }
+
+  const raw = {
+    content:    form.get('content')?.toString().trim(),
+    file_url:   form.get('file_url')?.toString().trim()   || undefined,
+    file_label: form.get('file_label')?.toString().trim() || undefined,
+  }
+  try {
+    await makeService().addProjectUpdate(id, raw, user.id)
+    revalidatePath(`/proyectos/${id}`)
+    return null
+  } catch (e) {
+    return { error: (e as Error).message }
+  }
+}
+
+export async function saveProjectFile(
+  projectId: string,
+  data: { label: string; url: string; type: string },
+): Promise<ActionState> {
+  try {
+    await makeService().addFile(projectId, data)
+    revalidatePath(`/proyectos/${projectId}`)
+    return null
+  } catch (e) {
+    return { error: (e as Error).message }
+  }
+}
+
+export async function deleteProject(id: string): Promise<{ error: string } | null> {
+  try {
+    await makeService().deleteProject(id)
+    revalidatePath('/proyectos')
+    return null
+  } catch (e) {
+    return { error: (e as Error).message }
+  }
+}
+
+export async function archiveProject(id: string): Promise<{ error: string } | null> {
+  try {
+    await makeService().archiveProject(id)
+    revalidatePath('/proyectos')
+    revalidatePath(`/proyectos/${id}`)
+    return null
+  } catch (e) {
+    return { error: (e as Error).message }
+  }
+}
+
+export async function unarchiveProject(id: string): Promise<{ error: string } | null> {
+  try {
+    await makeService().unarchiveProject(id)
+    revalidatePath('/proyectos')
+    revalidatePath('/proyectos/archivados')
+    return null
+  } catch (e) {
+    return { error: (e as Error).message }
+  }
 }

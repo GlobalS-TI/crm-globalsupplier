@@ -1,9 +1,11 @@
 import { UserRoundSearch } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { LeadSectionRepository, LeadRepository } from '@/lib/repositories/supabase/LeadRepository'
+import { ProfileRepository } from '@/lib/repositories/supabase/ProfileRepository'
 import { LeadService } from '@/lib/services/LeadService'
 import { LeadSectionNav } from '@/components/crm/LeadSectionNav'
 import { LeadTable } from '@/components/crm/LeadTable'
+import { CreateSectionButton } from '@/components/crm/LeadSectionModal'
 import type { AssignableUser } from '@/components/crm/LeadModal'
 
 export const metadata = { title: 'Leads — CRM Global Supplier' }
@@ -28,7 +30,7 @@ export default async function LeadsPage({ searchParams }: PageProps) {
   const isLeadsManager = ['marketing', 'director_general'].includes(role)
   const canManageLeads = ['marketing', 'director_general', 'direccion_comercial'].includes(role)
 
-  const svc      = new LeadService(new LeadSectionRepository(), new LeadRepository())
+  const svc      = new LeadService(new LeadSectionRepository(), new LeadRepository(), new ProfileRepository())
   const sections = await svc.listSections()
   const leads    = sec ? await svc.listLeadsBySection(sec) : []
 
@@ -67,13 +69,15 @@ export default async function LeadsPage({ searchParams }: PageProps) {
       />
 
       <div className="flex-1 overflow-y-auto p-8 space-y-6">
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <h1 className="text-2xl font-bold">Leads</h1>
+          {isLeadsManager && <CreateSectionButton />}
+        </div>
+
         {!sec ? (
           <div className="flex flex-col items-center justify-center h-64 gap-3 text-muted-foreground">
             <UserRoundSearch className="h-10 w-10 opacity-30" />
             <p className="text-sm">Selecciona una sección para ver los leads</p>
-            {isLeadsManager && (
-              <p className="text-xs">O crea una nueva sección desde el panel izquierdo</p>
-            )}
           </div>
         ) : (
           <LeadTable

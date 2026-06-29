@@ -1,5 +1,3 @@
-import Link from 'next/link'
-import type { Route } from 'next'
 import { Library } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { ContentCategoryRepository, ContentItemRepository } from '@/lib/repositories/supabase/ContentRepository'

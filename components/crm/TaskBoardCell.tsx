@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { format, parseISO } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { CalendarIcon, ExternalLink, Plus, Check, ChevronDown } from 'lucide-react'
+import { CalendarIcon, ExternalLink, Plus, Check, ChevronDown, Paperclip, Loader2, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Calendar } from '@/components/ui/calendar'
+import { createClient } from '@/lib/supabase/client'
 import type { TaskBoardColumnRow } from '@/lib/repositories/interfaces/ITaskRepository'
 import type { SelectorOption, ColumnConfig } from '@/lib/validations/task'
 import { updateColumnConfig } from '@/app/(dashboard)/actividades/task-actions'
@@ -54,6 +55,16 @@ function parseConfig(config: unknown): ColumnConfig {
   if (typeof config === 'object' && config !== null) return config as ColumnConfig
   return {}
 }
+
+// ----------------------------------------------------------------
+// Priority constants
+// ----------------------------------------------------------------
+const PRIORITY_OPTIONS = [
+  { value: 'urgente', label: 'Urgente', color: '#ef4444' },
+  { value: 'alta',    label: 'Alta',    color: '#f97316' },
+  { value: 'media',   label: 'Media',   color: '#eab308' },
+  { value: 'baja',    label: 'Baja',    color: '#6b7280' },
+]
 
 // ----------------------------------------------------------------
 // Shared dropdown content styles (applied inside PopoverContent)
@@ -130,6 +141,53 @@ function DisplayValue({ col, value, users }: { col: TaskBoardColumnRow; value: s
       >
         <ExternalLink className="h-3 w-3 shrink-0" />
         <span className="truncate">{value.replace(/^https?:\/\//, '')}</span>
+      </a>
+    )
+  }
+
+  if (col.tipo === 'priority') {
+    const opt = PRIORITY_OPTIONS.find(o => o.value === value)
+    if (!opt) return <span className="text-xs text-muted-foreground">{value}</span>
+    return (
+      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium text-white" style={{ backgroundColor: opt.color }}>
+        {opt.label}
+      </span>
+    )
+  }
+
+  if (col.tipo === 'multi_selector') {
+    let vals: string[] = []
+    try { vals = JSON.parse(value) } catch { vals = [value] }
+    const options = (parseConfig(col.config).options ?? [])
+    return (
+      <div className="flex items-center gap-1 flex-wrap">
+        {vals.slice(0, 2).map(v => {
+          const opt = options.find(o => o.value === v)
+          return opt ? (
+            <span key={v} className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium text-white" style={{ backgroundColor: opt.color ?? '#6b7280' }}>
+              {opt.label}
+            </span>
+          ) : null
+        })}
+        {vals.length > 2 && <span className="text-[10px] text-muted-foreground">+{vals.length - 2}</span>}
+      </div>
+    )
+  }
+
+  if (col.tipo === 'archivo') {
+    let file: { url: string; name: string } | null = null
+    try { file = JSON.parse(value) } catch { /* invalid */ }
+    if (!file?.url) return <span className="text-xs text-muted-foreground">{value}</span>
+    return (
+      <a
+        href={file.url}
+        target="_blank"
+        rel="noreferrer"
+        onClick={e => e.stopPropagation()}
+        className="flex items-center gap-1 text-xs text-primary hover:underline truncate max-w-[140px]"
+      >
+        <Paperclip className="h-3 w-3 shrink-0" />
+        <span className="truncate">{file.name}</span>
       </a>
     )
   }
@@ -477,17 +535,261 @@ function InlineTextCell({ value, onChange, tipo }: {
 }
 
 // ----------------------------------------------------------------
+// Priority popover
+// ----------------------------------------------------------------
+function PriorityCell({ value, onChange }: { value: string | null; onChange: (v: string | null) => void }) {
+  const [open, setOpen] = useState(false)
+  const opt = PRIORITY_OPTIONS.find(o => o.value === value)
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button className="w-full min-h-[32px] flex items-center px-2 rounded hover:bg-muted/30 transition-colors gap-1 group">
+          {opt ? (
+            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium text-white" style={{ backgroundColor: opt.color }}>
+              {opt.label}
+            </span>
+          ) : (
+            <span className="text-muted-foreground/30 text-xs group-hover:text-muted-foreground/60 transition-colors">—</span>
+          )}
+          <ChevronDown className="h-3 w-3 text-muted-foreground/30 ml-auto opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className={cn(dropdownContent, 'w-44')} align="start">
+        <div className="py-1">
+          <button
+            className="w-full text-left px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted/50"
+            onClick={() => { onChange(null); setOpen(false) }}
+          >
+            — Sin prioridad
+          </button>
+          {PRIORITY_OPTIONS.map(o => (
+            <button
+              key={o.value}
+              className="w-full text-left px-3 py-1.5 hover:bg-muted/50 flex items-center gap-2"
+              onClick={() => { onChange(o.value); setOpen(false) }}
+            >
+              <span className="w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: o.color }} />
+              <span className="text-xs flex-1">{o.label}</span>
+              {value === o.value && <Check className="h-3 w-3 text-primary shrink-0" />}
+            </button>
+          ))}
+        </div>
+      </PopoverContent>
+    </Popover>
+  )
+}
+
+// ----------------------------------------------------------------
+// Multi-selector popover
+// ----------------------------------------------------------------
+function MultiSelectorCell({ column, value, options, onChange, onOptionsUpdate }: {
+  column:          TaskBoardColumnRow
+  value:           string | null
+  options:         SelectorOption[]
+  onChange:        (v: string | null) => void
+  onOptionsUpdate: (opts: SelectorOption[]) => void
+}) {
+  const [open,      setOpen]      = useState(false)
+  const [newLabel,  setNewLabel]  = useState('')
+  const [newColor,  setNewColor]  = useState(COLOR_PALETTE[0])
+  const [adding,    setAdding]    = useState(false)
+  const [saving,    setSaving]    = useState(false)
+
+  let selected: string[] = []
+  try { selected = value ? JSON.parse(value) : [] } catch { selected = [] }
+
+  function toggle(val: string) {
+    const next = selected.includes(val) ? selected.filter(v => v !== val) : [...selected, val]
+    onChange(next.length ? JSON.stringify(next) : null)
+  }
+
+  async function addOption() {
+    const label = newLabel.trim()
+    if (!label) return
+    setSaving(true)
+    const opt: SelectorOption = { value: label.toLowerCase().replace(/[^a-z0-9]+/g, '_'), label, color: newColor }
+    const updated = [...options, opt]
+    await updateColumnConfig(column.id, { options: updated })
+    onOptionsUpdate(updated)
+    setNewLabel(''); setAdding(false); setSaving(false)
+    setNewColor(COLOR_PALETTE[(options.length + 1) % COLOR_PALETTE.length])
+  }
+
+  const display = selected.length === 0
+    ? <span className="text-muted-foreground/30 text-xs group-hover:text-muted-foreground/60 transition-colors">—</span>
+    : (
+      <div className="flex items-center gap-1 flex-wrap">
+        {selected.slice(0, 2).map(v => {
+          const opt = options.find(o => o.value === v)
+          return opt ? (
+            <span key={v} className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium text-white" style={{ backgroundColor: opt.color ?? '#6b7280' }}>
+              {opt.label}
+            </span>
+          ) : null
+        })}
+        {selected.length > 2 && <span className="text-[10px] text-muted-foreground">+{selected.length - 2}</span>}
+      </div>
+    )
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button className="w-full min-h-[32px] flex items-center px-2 rounded hover:bg-muted/30 transition-colors gap-1 group">
+          {display}
+          <ChevronDown className="h-3 w-3 text-muted-foreground/30 ml-auto opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className={dropdownContent} align="start">
+        <div className="py-1">
+          <button
+            className="w-full text-left px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted/50"
+            onClick={() => { onChange(null); setOpen(false) }}
+          >
+            — Limpiar selección
+          </button>
+          {options.map(opt => (
+            <button
+              key={opt.value}
+              className="w-full text-left px-3 py-1.5 hover:bg-muted/50 flex items-center gap-2"
+              onClick={() => toggle(opt.value)}
+            >
+              <span className={cn('w-3.5 h-3.5 rounded border-2 flex items-center justify-center shrink-0 transition-colors',
+                selected.includes(opt.value) ? 'bg-primary border-primary' : 'border-border'
+              )}>
+                {selected.includes(opt.value) && <span className="text-[8px] text-white font-bold leading-none">✓</span>}
+              </span>
+              <span className="w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: opt.color ?? '#6b7280' }} />
+              <span className="text-xs flex-1">{opt.label}</span>
+            </button>
+          ))}
+          <div className="border-t border-border/40 mt-1 pt-1">
+            {adding ? (
+              <div className="px-3 py-2 space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: newColor }} />
+                  <input
+                    autoFocus
+                    value={newLabel}
+                    onChange={e => setNewLabel(e.target.value)}
+                    onKeyDown={e => { if (e.key === 'Enter') addOption(); if (e.key === 'Escape') setAdding(false) }}
+                    placeholder="Nombre de la opción…"
+                    disabled={saving}
+                    className="flex-1 text-xs bg-transparent outline-none border-b border-muted-foreground/40 pb-0.5"
+                  />
+                </div>
+                <ColorPicker value={newColor} onChange={setNewColor} />
+                <div className="flex gap-2 justify-end">
+                  <button onClick={() => setAdding(false)} className="text-xs text-muted-foreground hover:text-foreground">Cancelar</button>
+                  <button onClick={addOption} disabled={saving || !newLabel.trim()} className="text-xs text-primary hover:text-primary/80 disabled:opacity-40">Guardar</button>
+                </div>
+              </div>
+            ) : (
+              <button
+                className="w-full text-left px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted/50 flex items-center gap-1.5"
+                onClick={() => setAdding(true)}
+              >
+                <Plus className="h-3 w-3" /> Agregar opción
+              </button>
+            )}
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  )
+}
+
+// ----------------------------------------------------------------
+// Archivo cell (file upload)
+// ----------------------------------------------------------------
+function ArchivoCell({ taskId, value, onChange }: {
+  taskId:   string
+  value:    string | null
+  onChange: (v: string | null) => void
+}) {
+  const [uploading, setUploading] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  let file: { url: string; name: string } | null = null
+  try { file = value ? JSON.parse(value) : null } catch { /* invalid */ }
+
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0]
+    if (!f) return
+    setUploading(true)
+    try {
+      const supabase = createClient()
+      const ext = f.name.split('.').pop() ?? ''
+      const safeName = f.name.replace(/[^a-zA-Z0-9._-]/g, '-')
+      const path = `tasks/${taskId}/${Date.now()}-${safeName}`
+      const { error } = await supabase.storage.from('media').upload(path, f)
+      if (error) throw error
+      const { data: { publicUrl } } = supabase.storage.from('media').getPublicUrl(path)
+      onChange(JSON.stringify({ url: publicUrl, name: f.name }))
+    } finally {
+      setUploading(false)
+      if (inputRef.current) inputRef.current.value = ''
+    }
+  }
+
+  if (uploading) {
+    return (
+      <div className="flex items-center gap-1.5 px-2 min-h-[32px]">
+        <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
+        <span className="text-xs text-muted-foreground">Subiendo…</span>
+      </div>
+    )
+  }
+
+  return (
+    <div className="flex items-center gap-1 px-1 min-h-[32px] group">
+      {file ? (
+        <>
+          <a
+            href={file.url}
+            target="_blank"
+            rel="noreferrer"
+            onClick={e => e.stopPropagation()}
+            className="flex items-center gap-1 text-xs text-primary hover:underline truncate max-w-[110px]"
+          >
+            <Paperclip className="h-3 w-3 shrink-0" />
+            <span className="truncate">{file.name}</span>
+          </a>
+          <button
+            onClick={() => onChange(null)}
+            className="text-muted-foreground/30 hover:text-destructive opacity-0 group-hover:opacity-100 transition-all ml-auto shrink-0"
+            title="Quitar archivo"
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </>
+      ) : (
+        <button
+          onClick={() => inputRef.current?.click()}
+          className="flex items-center gap-1 text-xs text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+        >
+          <Paperclip className="h-3.5 w-3.5" />
+          <span>Adjuntar</span>
+        </button>
+      )}
+      <input ref={inputRef} type="file" className="hidden" onChange={handleFileChange} />
+    </div>
+  )
+}
+
+// ----------------------------------------------------------------
 // TaskBoardCell — dispatcher
 // ----------------------------------------------------------------
 interface TaskBoardCellProps {
   column:          TaskBoardColumnRow
   value:           string | null
   users:           User[]
+  taskId:          string
   onChange:        (value: string | null) => void
   onOptionsUpdate: (columnId: string, opts: SelectorOption[]) => void
 }
 
-export function TaskBoardCell({ column, value, users, onChange, onOptionsUpdate }: TaskBoardCellProps) {
+export function TaskBoardCell({ column, value, users, taskId, onChange, onOptionsUpdate }: TaskBoardCellProps) {
   const cfg = parseConfig(column.config)
 
   const handleOptionsUpdate = useCallback((opts: SelectorOption[]) => {
@@ -504,6 +806,26 @@ export function TaskBoardCell({ column, value, users, onChange, onOptionsUpdate 
         onOptionsUpdate={handleOptionsUpdate}
       />
     )
+  }
+
+  if (column.tipo === 'multi_selector') {
+    return (
+      <MultiSelectorCell
+        column={column}
+        value={value}
+        options={cfg.options ?? []}
+        onChange={onChange}
+        onOptionsUpdate={handleOptionsUpdate}
+      />
+    )
+  }
+
+  if (column.tipo === 'priority') {
+    return <PriorityCell value={value} onChange={onChange} />
+  }
+
+  if (column.tipo === 'archivo') {
+    return <ArchivoCell taskId={taskId} value={value} onChange={onChange} />
   }
 
   if (column.tipo === 'business_unit') {

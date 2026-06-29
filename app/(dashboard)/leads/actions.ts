@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { LeadSectionRepository, LeadRepository } from '@/lib/repositories/supabase/LeadRepository'
+import { ProfileRepository } from '@/lib/repositories/supabase/ProfileRepository'
 import { LeadService } from '@/lib/services/LeadService'
 import { OpportunityRepository } from '@/lib/repositories/supabase/OpportunityRepository'
 import { OpportunityService } from '@/lib/services/OpportunityService'
@@ -11,7 +12,7 @@ import { OpportunityService } from '@/lib/services/OpportunityService'
 type ActionState = { error: string } | null
 
 function service() {
-  return new LeadService(new LeadSectionRepository(), new LeadRepository())
+  return new LeadService(new LeadSectionRepository(), new LeadRepository(), new ProfileRepository())
 }
 
 async function getUser() {
@@ -19,18 +20,6 @@ async function getUser() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('No autenticado')
   return user
-}
-
-async function getResponsableId(): Promise<string | undefined> {
-  const supabase = await createClient()
-  const { data } = await supabase
-    .from('profiles')
-    .select('id')
-    .eq('role', 'direccion_comercial')
-    .eq('is_active', true)
-    .limit(1)
-    .single()
-  return data?.id
 }
 
 function parseVendedor(form: FormData): string | undefined | null {
@@ -79,8 +68,9 @@ export async function deleteSection(id: string): Promise<void> {
 
 export async function createLead(_prev: ActionState, form: FormData): Promise<ActionState> {
   try {
-    const [user, responsableId] = await Promise.all([getUser(), getResponsableId()])
-    await service().createLead({
+    const svc = service()
+    const [user, responsableId] = await Promise.all([getUser(), svc.getResponsableId()])
+    await svc.createLead({
       section_id:     form.get('section_id') as string,
       nombre:         form.get('nombre') as string,
       empresa:        (form.get('empresa') as string) || undefined,
@@ -137,8 +127,9 @@ export async function bulkImportLeads(
   sectionId: string,
 ): Promise<{ count: number } | { error: string }> {
   try {
-    const [user, responsableId] = await Promise.all([getUser(), getResponsableId()])
-    const count = await service().bulkImportLeads(rows, sectionId, user.id, responsableId)
+    const svc = service()
+    const [user, responsableId] = await Promise.all([getUser(), svc.getResponsableId()])
+    const count = await svc.bulkImportLeads(rows, sectionId, user.id, responsableId)
     revalidatePath('/leads')
     return { count }
   } catch (e) {
@@ -150,9 +141,10 @@ export async function createLeadAndReturn(
   form: FormData,
 ): Promise<{ id: string } | { error: string }> {
   try {
-    const [user, responsableId] = await Promise.all([getUser(), getResponsableId()])
+    const svc = service()
+    const [user, responsableId] = await Promise.all([getUser(), svc.getResponsableId()])
     const v = form.get('vendedor_id') as string
-    const lead = await service().createLead({
+    const lead = await svc.createLead({
       section_id:     form.get('section_id') as string,
       nombre:         form.get('nombre') as string,
       empresa:        (form.get('empresa') as string) || undefined,
@@ -193,13 +185,13 @@ export async function convertLeadToOpportunity(
     const oppService = new OpportunityService(new OpportunityRepository())
     const opp = await oppService.create({
       nombre:           form.get('nombre') as string,
-      business_unit:    form.get('business_unit') as never,
-      fuente:           form.get('fuente') as never,
+      business_unit:    form.get('business_unit'),
+      fuente:           form.get('fuente'),
       owner_id:         form.get('owner_id') as string,
       etapa:            'nuevo_lead',
       monto_estimado:   0,
       probabilidad:     0,
-      next_activity_at: form.get('next_activity_at') as string,
+      next_activity_at: (form.get('next_activity_at') as string | null) ?? undefined,
       notas:            (form.get('notas') as string) || undefined,
     })
 

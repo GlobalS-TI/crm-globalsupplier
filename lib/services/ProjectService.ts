@@ -1,5 +1,5 @@
-import { PROJECT_STATUSES, PROJECT_STATUS_ORDER } from '@/lib/types'
-import type { ProjectStatus } from '@/lib/types'
+import { getStatusesForTipo } from '@/lib/types'
+import type { ProjectStatus, ProjectTipo } from '@/lib/types'
 import {
   createProjectSchema,
   updateProjectSchema,
@@ -7,6 +7,7 @@ import {
   handoffSchema,
   decisionLogEntrySchema,
   projectFileSchema,
+  projectUpdateSchema,
   type CreateProjectInput,
   type UpdateProjectInput,
   type BriefInput,
@@ -20,6 +21,7 @@ import type {
   ProjectBriefRow,
   ProjectHandoffRow,
   ProjectFileRow,
+  ProjectUpdateRow,
   ProjectFilters,
 } from '@/lib/repositories/interfaces/IProjectRepository'
 
@@ -37,12 +39,15 @@ export class ProjectService {
   async createProject(raw: unknown, userId: string): Promise<ProjectRow> {
     const data = createProjectSchema.parse(raw)
     const project = await this.repo.create({
+      tipo:            data.tipo,
       title:           data.title,
       description:     data.description ?? null,
       brand:           data.brand,
       status:          'INCOMING',
+      is_archived:     false,
       stakeholder_id:  data.stakeholder_id  ?? null,
       requested_by_id: data.requested_by_id ?? null,
+      start_date:      data.start_date      ?? null,
       due_date:        data.due_date        ?? null,
       estimated_hours: data.estimated_hours ?? null,
       created_by:      userId,
@@ -65,31 +70,40 @@ export class ProjectService {
       ...(data.brand           !== undefined && { brand:           data.brand }),
       ...(data.stakeholder_id  !== undefined && { stakeholder_id:  data.stakeholder_id  ?? null }),
       ...(data.requested_by_id !== undefined && { requested_by_id: data.requested_by_id ?? null }),
+      ...(data.tipo            !== undefined && { tipo:            data.tipo }),
+      ...(data.start_date      !== undefined && { start_date:      data.start_date      ?? null }),
       ...(data.due_date        !== undefined && { due_date:        data.due_date        ?? null }),
       ...(data.estimated_hours !== undefined && { estimated_hours: data.estimated_hours ?? null }),
     })
   }
 
-  async advanceStatus(id: string, userId: string, comment?: string): Promise<ProjectRow> {
+  async advanceStatus(
+    id: string,
+    userId: string,
+    comment?: string,
+    file?: { label: string; url: string; type: string },
+  ): Promise<ProjectRow> {
     const project = await this.repo.findById(id)
     if (!project) throw new Error('Proyecto no encontrado')
 
-    const currentIdx = PROJECT_STATUS_ORDER[project.status as ProjectStatus]
-    if (currentIdx === PROJECT_STATUSES.length - 1) {
-      throw new Error('El proyecto ya está en el estado final (Delivered)')
+    const tipo     = (project.tipo ?? 'DISENO') as ProjectTipo
+    const statuses = getStatusesForTipo(tipo)
+    const currentIdx = statuses.indexOf(project.status as ProjectStatus)
+    if (currentIdx === statuses.length - 1) {
+      throw new Error('El proyecto ya está en el estado final.')
     }
-    const nextStatus = PROJECT_STATUSES[currentIdx + 1]
+    const nextStatus = statuses[currentIdx + 1]
 
-    // Regla: brief requerido antes de salir de INCOMING
+    // Regla: brief requerido antes de salir de INCOMING (ambos tipos)
     if (project.status === 'INCOMING') {
       const b = project.brief
       if (!b?.what?.trim() || !b?.why?.trim()) {
-        throw new Error('Completa el Brief (Qué y Por qué) antes de avanzar a Analysis.')
+        throw new Error('Completa el Brief (Qué y Por qué) antes de avanzar.')
       }
     }
 
-    // Regla: handoff completo antes de pasar de DESIGN a DEVELOPMENT
-    if (project.status === 'DESIGN') {
+    // Regla: handoff completo antes de pasar de DISEÑO a DESARROLLO (solo proyectos DISENO)
+    if (tipo === 'DISENO' && project.status === 'DESIGN') {
       const h = project.handoff
       if (
         !h?.component_states    ||
@@ -98,7 +112,16 @@ export class ProjectService {
         !h?.assets_exported     ||
         !h?.naming_convention
       ) {
-        throw new Error('El Handoff Checklist debe estar 100% completo antes de pasar a Development.')
+        throw new Error('El Handoff Checklist debe estar 100% completo antes de pasar a Desarrollo.')
+      }
+    }
+
+    // Regla: archivo requerido al pasar a Orden de compra o Facturación
+    const REQUIRES_FILE: ProjectStatus[] = ['ORDEN_COMPRA', 'FACTURACION']
+    if (REQUIRES_FILE.includes(nextStatus as ProjectStatus)) {
+      if (!file?.url?.trim() || !file?.label?.trim()) {
+        const label = nextStatus === 'ORDEN_COMPRA' ? 'Orden de compra' : 'Factura'
+        throw new Error(`Debes adjuntar el archivo de ${label} para avanzar a esta fase.`)
       }
     }
 
@@ -110,6 +133,16 @@ export class ProjectService {
       changed_by:  userId,
       comment:     comment ?? null,
     })
+
+    if (file?.url?.trim() && file?.label?.trim()) {
+      await this.repo.addFile({
+        project_id: id,
+        label:      file.label.trim(),
+        url:        file.url.trim(),
+        type:       (file.type as ProjectFileInput['type']) || 'DOC',
+      })
+    }
+
     return updated
   }
 
@@ -161,5 +194,28 @@ export class ProjectService {
 
   async deleteFile(id: string): Promise<void> {
     return this.repo.deleteFile(id)
+  }
+
+  async deleteProject(id: string): Promise<void> {
+    return this.repo.delete(id)
+  }
+
+  async archiveProject(id: string): Promise<void> {
+    return this.repo.archive(id)
+  }
+
+  async unarchiveProject(id: string): Promise<void> {
+    return this.repo.unarchive(id)
+  }
+
+  async addProjectUpdate(projectId: string, raw: unknown, userId: string): Promise<ProjectUpdateRow> {
+    const data = projectUpdateSchema.parse(raw)
+    return this.repo.addUpdate({
+      project_id: projectId,
+      content:    data.content,
+      file_url:   data.file_url   ?? null,
+      file_label: data.file_label ?? null,
+      author_id:  userId,
+    })
   }
 }

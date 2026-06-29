@@ -67,6 +67,8 @@ export const BUSINESS_UNITS: BusinessUnit[] = [
   'fire_spot',
 ]
 
+export type ProjectTipo = 'DISENO' | 'INDUSTRIAL'
+
 export type ProjectStatus =
   | 'INCOMING'
   | 'ANALYSIS'
@@ -74,24 +76,50 @@ export type ProjectStatus =
   | 'DEVELOPMENT'
   | 'QA'
   | 'DELIVERED'
+  | 'ORDEN_COMPRA'
+  | 'FACTURACION'
+  | 'SEGUIMIENTO'
+  | 'CIERRE'
 
 export type ProjectFileType = 'FIGMA' | 'REPO' | 'ASSET' | 'DOC' | 'OTHER'
 
-export const PROJECT_STATUSES: ProjectStatus[] = [
+export const DISENO_STATUSES: ProjectStatus[] = [
   'INCOMING', 'ANALYSIS', 'DESIGN', 'DEVELOPMENT', 'QA', 'DELIVERED',
+]
+
+export const INDUSTRIAL_STATUSES: ProjectStatus[] = [
+  'INCOMING', 'ORDEN_COMPRA', 'FACTURACION', 'SEGUIMIENTO', 'CIERRE',
+]
+
+export function getStatusesForTipo(tipo: ProjectTipo): ProjectStatus[] {
+  return tipo === 'INDUSTRIAL' ? INDUSTRIAL_STATUSES : DISENO_STATUSES
+}
+
+export const PROJECT_STATUSES: ProjectStatus[] = [
+  ...DISENO_STATUSES, 'ORDEN_COMPRA', 'FACTURACION', 'SEGUIMIENTO', 'CIERRE',
 ]
 
 export const PROJECT_STATUS_ORDER: Record<ProjectStatus, number> = {
   INCOMING: 0, ANALYSIS: 1, DESIGN: 2, DEVELOPMENT: 3, QA: 4, DELIVERED: 5,
+  ORDEN_COMPRA: 1, FACTURACION: 2, SEGUIMIENTO: 3, CIERRE: 4,
 }
 
 export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
-  INCOMING:    'Incoming',
-  ANALYSIS:    'Analysis',
-  DESIGN:      'Design',
-  DEVELOPMENT: 'Development',
-  QA:          'QA',
-  DELIVERED:   'Delivered',
+  INCOMING:     'Entrante',
+  ANALYSIS:     'Análisis',
+  DESIGN:       'Diseño',
+  DEVELOPMENT:  'Desarrollo',
+  QA:           'QA',
+  DELIVERED:    'Entregado',
+  ORDEN_COMPRA: 'Orden de compra',
+  FACTURACION:  'Facturación',
+  SEGUIMIENTO:  'Seguimiento',
+  CIERRE:       'Cierre y entrega',
+}
+
+export const PROJECT_TIPO_LABELS: Record<ProjectTipo, string> = {
+  DISENO:     'Diseño / TI',
+  INDUSTRIAL: 'Industrial',
 }
 
 export const BRAND_LABELS: Record<BusinessUnit, string> = {
@@ -105,3 +133,5 @@ export const BRAND_LABELS: Record<BusinessUnit, string> = {
 }
 
 export const PROJECT_ROLES: UserRole[] = ['marketing', 'director_general', 'administracion']
+
+export const COMISIONES_ROLES: UserRole[] = ['director_general', 'administracion']

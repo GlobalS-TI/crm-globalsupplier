@@ -83,7 +83,7 @@ export async function createItem(_prev: ActionState, form: FormData): Promise<Ac
     const categoryId = form.get('category_id') as string
     await service().createItem({
       category_id:   categoryId,
-      business_unit: form.get('business_unit') as never,
+      business_unit: form.get('business_unit'),
       nombre:        form.get('nombre') as string,
       descripcion:   (form.get('descripcion') as string) || undefined,
     }, user.id)
@@ -103,7 +103,7 @@ export async function createItemAndReturn(
     const user = await getUser()
     const item = await service().createItem({
       category_id:   form.get('category_id') as string,
-      business_unit: form.get('business_unit') as never,
+      business_unit: form.get('business_unit'),
       nombre:        form.get('nombre') as string,
       descripcion:   (form.get('descripcion') as string) || undefined,
     }, user.id)

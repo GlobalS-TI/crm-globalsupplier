@@ -1,6 +1,6 @@
 import type { ITaskRepository, BoardWithColumns, TaskWithValues, TaskBoardColumnRow, TaskGroupRow, TaskRow } from '@/lib/repositories/interfaces/ITaskRepository'
-import type { CreateTaskInput, UpdateTaskInput, CreateBoardColumnInput, UpdateBoardColumnInput, ColumnConfig } from '@/lib/validations/task'
-import { createTaskSchema, updateTaskSchema, createBoardColumnSchema, updateBoardColumnSchema, upsertColumnValueSchema } from '@/lib/validations/task'
+import type { CreateTaskInput, UpdateTaskInput, CreateBoardColumnInput, UpdateBoardColumnInput, ColumnConfig, ImportTasksInput } from '@/lib/validations/task'
+import { createTaskSchema, updateTaskSchema, createBoardColumnSchema, updateBoardColumnSchema, upsertColumnValueSchema, importTasksSchema } from '@/lib/validations/task'
 import type { Json } from '@/lib/types/database'
 
 export class TaskService {
@@ -66,5 +66,10 @@ export class TaskService {
 
   async reorderColumns(boardId: string, orderedIds: string[]): Promise<void> {
     return this.repo.reorderColumns(boardId, orderedIds)
+  }
+
+  async batchImportTasks(raw: ImportTasksInput, userId: string): Promise<number> {
+    const { board_id, group_id, rows } = importTasksSchema.parse(raw)
+    return this.repo.batchCreateTasks(rows, board_id, userId, group_id)
   }
 }

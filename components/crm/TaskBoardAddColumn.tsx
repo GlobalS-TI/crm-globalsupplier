@@ -13,13 +13,16 @@ import type { TaskColumnType, SelectorOption } from '@/lib/validations/task'
 import { addBoardColumn } from '@/app/(dashboard)/actividades/task-actions'
 
 const TIPO_LABELS: Record<TaskColumnType, string> = {
-  text:          'Texto',
-  number:        'Número',
-  date:          'Fecha',
-  selector:      'Selector',
-  person:        'Persona',
-  url:           'URL',
-  business_unit: 'Marca (business unit)',
+  text:           'Texto',
+  number:         'Número',
+  date:           'Fecha',
+  selector:       'Selección simple',
+  multi_selector: 'Selección múltiple',
+  person:         'Persona',
+  url:            'URL',
+  business_unit:  'Marca',
+  archivo:        'Archivo adjunto',
+  priority:       'Prioridad',
 }
 
 const SELECTOR_PALETTE = [
@@ -32,9 +35,10 @@ interface Props {
   boardId:        string
   nextPosition:   number
   onColumnAdded:  (col: TaskBoardColumnRow) => void
+  compact?:       boolean
 }
 
-export function TaskBoardAddColumn({ boardId, nextPosition, onColumnAdded }: Props) {
+export function TaskBoardAddColumn({ boardId, nextPosition, onColumnAdded, compact = false }: Props) {
   const [open,    setOpen]    = useState(false)
   const [nombre,  setNombre]  = useState('')
   const [tipo,    setTipo]    = useState<TaskColumnType>('text')
@@ -62,7 +66,8 @@ export function TaskBoardAddColumn({ boardId, nextPosition, onColumnAdded }: Pro
     const name = nombre.trim()
     if (!name) return
     start(async () => {
-      const config = tipo === 'selector' ? { options } : {}
+      const needsOptions = tipo === 'selector' || tipo === 'multi_selector'
+      const config = needsOptions ? { options } : {}
       const result = await addBoardColumn({ board_id: boardId, nombre: name, tipo, position: nextPosition, config })
       if ('id' in result && result.id) {
         onColumnAdded({
@@ -82,15 +87,25 @@ export function TaskBoardAddColumn({ boardId, nextPosition, onColumnAdded }: Pro
 
   return (
     <>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => { reset(); setOpen(true) }}
-        className="gap-1.5 text-xs"
-      >
-        <Plus className="h-3.5 w-3.5" />
-        Nueva columna
-      </Button>
+      {compact ? (
+        <button
+          onClick={() => { reset(); setOpen(true) }}
+          className="flex items-center justify-center w-full h-full text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+          title="Nueva columna"
+        >
+          <Plus className="h-3.5 w-3.5" />
+        </button>
+      ) : (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => { reset(); setOpen(true) }}
+          className="gap-1.5 text-xs"
+        >
+          <Plus className="h-3.5 w-3.5" />
+          Nueva columna
+        </Button>
+      )}
 
       <Dialog open={open} onOpenChange={v => { if (!v) reset(); setOpen(v) }}>
         <DialogContent className="sm:max-w-[400px]">
@@ -128,8 +143,8 @@ export function TaskBoardAddColumn({ boardId, nextPosition, onColumnAdded }: Pro
               </select>
             </div>
 
-            {/* Options (selector only) */}
-            {tipo === 'selector' && (
+            {/* Options (selector / multi_selector) */}
+            {(tipo === 'selector' || tipo === 'multi_selector') && (
               <div className="space-y-2">
                 <Label>Opciones</Label>
                 <div className="space-y-1.5 max-h-40 overflow-y-auto">

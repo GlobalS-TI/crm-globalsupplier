@@ -6,7 +6,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { BUSINESS_UNITS, BRAND_LABELS } from '@/lib/types'
+import { Badge } from '@/components/ui/badge'
+import { BUSINESS_UNITS, BRAND_LABELS, PROJECT_TIPO_LABELS } from '@/lib/types'
+import type { ProjectTipo } from '@/lib/types'
 import type { ActionState } from '@/app/(dashboard)/proyectos/actions'
 import type { ProjectRow } from '@/lib/repositories/interfaces/IProjectRepository'
 
@@ -34,6 +36,29 @@ export function ProjectForm({ action, project, profiles }: Props) {
         </div>
 
         <div className="space-y-1.5">
+          <Label>Tipo</Label>
+          {project ? (
+            // Edición: tipo bloqueado para evitar cambios accidentales de pipeline
+            <div className="flex items-center gap-2 h-9">
+              <Badge variant="secondary">{PROJECT_TIPO_LABELS[project.tipo as ProjectTipo ?? 'DISENO']}</Badge>
+              <span className="text-xs text-muted-foreground">No editable</span>
+              <input type="hidden" name="tipo" value={project.tipo ?? 'DISENO'} />
+            </div>
+          ) : (
+            <Select name="tipo" defaultValue="DISENO" required>
+              <SelectTrigger id="tipo">
+                <SelectValue placeholder="Tipo de proyecto" />
+              </SelectTrigger>
+              <SelectContent>
+                {(Object.keys(PROJECT_TIPO_LABELS) as ProjectTipo[]).map(t => (
+                  <SelectItem key={t} value={t}>{PROJECT_TIPO_LABELS[t]}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        </div>
+
+        <div className="space-y-1.5">
           <Label htmlFor="brand">Marca *</Label>
           <Select name="brand" defaultValue={project?.brand} required>
             <SelectTrigger id="brand">
@@ -45,6 +70,11 @@ export function ProjectForm({ action, project, profiles }: Props) {
               ))}
             </SelectContent>
           </Select>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="start_date">Fecha de inicio</Label>
+          <Input id="start_date" name="start_date" type="date" defaultValue={project?.start_date ?? ''} />
         </div>
 
         <div className="space-y-1.5">
@@ -80,16 +110,6 @@ export function ProjectForm({ action, project, profiles }: Props) {
               ))}
             </SelectContent>
           </Select>
-        </div>
-
-        <div className="space-y-1.5">
-          <Label htmlFor="estimated_hours">Horas estimadas</Label>
-          <Input
-            id="estimated_hours" name="estimated_hours" type="number"
-            min="0" max="9999" step="0.5"
-            defaultValue={project?.estimated_hours ?? ''}
-            placeholder="0"
-          />
         </div>
 
         <div className="sm:col-span-2 space-y-1.5">

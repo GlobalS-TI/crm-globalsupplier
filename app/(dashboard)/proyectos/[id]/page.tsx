@@ -12,14 +12,17 @@ import { ProjectHandoffForm } from '@/components/crm/ProjectHandoffForm'
 import { ProjectDecisionLog } from '@/components/crm/ProjectDecisionLog'
 import { ProjectFilesPanel } from '@/components/crm/ProjectFilesPanel'
 import { ProjectStageLog } from '@/components/crm/ProjectStageLog'
+import { ProjectDeleteButton } from '@/components/crm/ProjectDeleteButton'
+import { ProjectUpdatesFeed } from '@/components/crm/ProjectUpdatesFeed'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { cn } from '@/lib/utils'
-import { BRAND_LABELS } from '@/lib/types'
-import type { BusinessUnit, ProjectStatus } from '@/lib/types'
+import { BRAND_LABELS, PROJECT_TIPO_LABELS } from '@/lib/types'
+import type { BusinessUnit, ProjectStatus, ProjectTipo } from '@/lib/types'
 import {
   updateProject, advanceStatus, saveBrief, saveHandoff,
-  addDecisionEntry, addFile, deleteFile,
+  addDecisionEntry, addFile, deleteFile, deleteProject, archiveProject,
+  addProjectUpdate,
 } from '@/app/(dashboard)/proyectos/actions'
 
 export const dynamic  = 'force-dynamic'
@@ -29,20 +32,11 @@ interface PageProps {
   searchParams: Promise<{ tab?: string }>
 }
 
-const TABS = [
-  { id: 'resumen',    label: 'Resumen' },
-  { id: 'brief',      label: 'Brief' },
-  { id: 'handoff',    label: 'Handoff' },
-  { id: 'decisiones', label: 'Decisiones' },
-  { id: 'archivos',   label: 'Archivos' },
-] as const
-
-type TabId = typeof TABS[number]['id']
+type TabId = 'resumen' | 'brief' | 'handoff' | 'decisiones' | 'archivos' | 'seguimiento'
 
 export default async function ProyectoDetailPage({ params, searchParams }: PageProps) {
   const { id }  = await params
   const { tab } = await searchParams
-  const activeTab: TabId = (TABS.find(t => t.id === tab)?.id) ?? 'resumen'
 
   const [project, supabase] = await Promise.all([
     new ProjectService(new ProjectRepository()).getProjectById(id),
@@ -57,7 +51,21 @@ export default async function ProyectoDetailPage({ params, searchParams }: PageP
     .eq('is_active', true)
     .order('full_name')
 
-  const status = project.status as ProjectStatus
+  const tipo    = (project.tipo ?? 'DISENO') as ProjectTipo
+  const status  = project.status as ProjectStatus
+  const isDiseno = tipo === 'DISENO'
+
+  const showSeguimiento = status !== 'INCOMING'
+
+  const tabs: { id: TabId; label: string }[] = [
+    { id: 'resumen',    label: 'Resumen' },
+    { id: 'brief',      label: 'Brief' },
+    ...(isDiseno ? [{ id: 'handoff' as TabId, label: 'Handoff' }] : []),
+    { id: 'decisiones', label: 'Decisiones' },
+    { id: 'archivos',   label: 'Archivos' },
+    ...(showSeguimiento ? [{ id: 'seguimiento' as TabId, label: 'Seguimiento' }] : []),
+  ]
+  const activeTab: TabId = (tabs.find(t => t.id === tab)?.id) ?? 'resumen'
 
   return (
     <div className="flex flex-col h-full">
@@ -69,30 +77,39 @@ export default async function ProyectoDetailPage({ params, searchParams }: PageP
               <Badge variant="outline" className="text-xs">
                 {BRAND_LABELS[project.brand as BusinessUnit]}
               </Badge>
+              <Badge variant="secondary" className="text-xs">
+                {PROJECT_TIPO_LABELS[tipo]}
+              </Badge>
               <ProjectStatusBadge status={status} />
             </div>
             <h1 className="text-2xl font-bold">{project.title}</h1>
             <div className="flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
               {project.stakeholder   && <span>Aprueba: <strong className="text-foreground">{project.stakeholder.full_name}</strong></span>}
               {project.requested_by  && <span>Solicitado por: <strong className="text-foreground">{project.requested_by.full_name}</strong></span>}
+              {project.start_date    && <span>Inicio: <strong className="text-foreground">{new Date(project.start_date + 'T00:00:00').toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })}</strong></span>}
               {project.due_date      && <span>Límite: <strong className="text-foreground">{new Date(project.due_date + 'T00:00:00').toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' })}</strong></span>}
-              {project.estimated_hours != null && <span>Est: <strong className="text-foreground">{project.estimated_hours}h</strong></span>}
             </div>
           </div>
 
-          {/* Advance status */}
-          <div className="shrink-0">
+          {/* Acciones */}
+          <div className="shrink-0 flex items-center gap-2">
             <ProjectStageTransition
               projectId={project.id}
+              tipo={tipo}
               status={status}
               action={advanceStatus.bind(null, project.id)}
+            />
+            <ProjectDeleteButton
+              projectId={project.id}
+              projectTitle={project.title}
+              action={deleteProject}
             />
           </div>
         </div>
 
         {/* Tab nav */}
         <div className="flex gap-1 border-b -mx-8 px-8 overflow-x-auto">
-          {TABS.map(t => (
+          {tabs.map(t => (
             <Link
               key={t.id}
               href={`/proyectos/${id}?tab=${t.id}` as Route}
@@ -157,9 +174,20 @@ export default async function ProyectoDetailPage({ params, searchParams }: PageP
         {activeTab === 'archivos' && (
           <div className="max-w-3xl">
             <ProjectFilesPanel
+              projectId={project.id}
               addAction={addFile.bind(null, project.id)}
               deleteAction={deleteFile.bind(null, project.id)}
               files={project.files}
+            />
+          </div>
+        )}
+
+        {activeTab === 'seguimiento' && (
+          <div className="max-w-2xl">
+            <ProjectUpdatesFeed
+              projectId={project.id}
+              updates={project.updates}
+              action={addProjectUpdate.bind(null, project.id)}
             />
           </div>
         )}

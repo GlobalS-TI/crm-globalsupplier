@@ -5,7 +5,7 @@ import type {
 } from '@/lib/repositories/interfaces/ITaskRepository'
 import type {
   CreateBoardColumnInput, UpdateBoardColumnInput,
-  CreateTaskInput, UpdateTaskInput,
+  CreateTaskInput, UpdateTaskInput, ImportTaskRow,
 } from '@/lib/validations/task'
 import type { Json } from '@/lib/types/database'
 
@@ -231,5 +231,20 @@ export class TaskRepository implements ITaskRepository {
       supabase.from('task_board_columns').update({ position }).eq('id', id).eq('board_id', boardId)
     )
     await Promise.all(updates)
+  }
+
+  async batchCreateTasks(rows: ImportTaskRow[], boardId: string, createdBy: string, groupId?: string): Promise<number> {
+    const supabase = await createClient()
+    const inserts = rows.map((r, i) => ({
+      board_id:      boardId,
+      titulo:        r.titulo,
+      fecha_entrega: r.fecha_entrega ?? null,
+      created_by:    createdBy,
+      group_id:      groupId ?? null,
+      position:      i,
+    }))
+    const { data, error } = await supabase.from('tasks').insert(inserts).select('id')
+    if (error) throw error
+    return data?.length ?? 0
   }
 }

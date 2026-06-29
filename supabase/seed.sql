@@ -83,6 +83,16 @@ begin
 end $$;
 
 -- ================================================================
+-- Fix roles: handle_new_user() ahora siempre asigna 'vendedor' por
+-- seguridad (no lee metadata). El seed los corrige explícitamente.
+-- ================================================================
+update public.profiles set role = 'director_general'    where id = '00000001-0000-0000-0000-000000000000';
+update public.profiles set role = 'direccion_comercial' where id = '00000002-0000-0000-0000-000000000000';
+update public.profiles set role = 'marketing'           where id = '00000006-0000-0000-0000-000000000000';
+update public.profiles set role = 'administracion'      where id = '00000007-0000-0000-0000-000000000000';
+-- usuarios 3, 4, 5, 8 ya son vendedor — sin cambio necesario
+
+-- ================================================================
 -- Auth identities (required for email/password login via GoTrue)
 -- ================================================================
 insert into auth.identities (id, user_id, identity_data, provider, provider_id, last_sign_in_at, created_at, updated_at) values

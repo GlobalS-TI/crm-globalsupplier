@@ -543,6 +543,45 @@ export type Database = {
           },
         ]
       }
+      opportunity_costs: {
+        Row: {
+          costo: number
+          created_by: string | null
+          notas: string | null
+          opportunity_id: string
+          updated_at: string
+        }
+        Insert: {
+          costo?: number
+          created_by?: string | null
+          notas?: string | null
+          opportunity_id: string
+          updated_at?: string
+        }
+        Update: {
+          costo?: number
+          created_by?: string | null
+          notas?: string | null
+          opportunity_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "opportunity_costs_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opportunity_costs_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: true
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profile_business_units: {
         Row: {
           business_unit: Database["public"]["Enums"]["business_unit"]
@@ -812,6 +851,51 @@ export type Database = {
           },
         ]
       }
+      project_updates: {
+        Row: {
+          author_id: string | null
+          content: string
+          created_at: string
+          file_label: string | null
+          file_url: string | null
+          id: string
+          project_id: string
+        }
+        Insert: {
+          author_id?: string | null
+          content: string
+          created_at?: string
+          file_label?: string | null
+          file_url?: string | null
+          id?: string
+          project_id: string
+        }
+        Update: {
+          author_id?: string | null
+          content?: string
+          created_at?: string
+          file_label?: string | null
+          file_url?: string | null
+          id?: string
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_updates_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "project_updates_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
           brand: string
@@ -821,9 +905,12 @@ export type Database = {
           due_date: string | null
           estimated_hours: number | null
           id: string
+          is_archived: boolean
           requested_by_id: string | null
           stakeholder_id: string | null
+          start_date: string | null
           status: Database["public"]["Enums"]["project_status"]
+          tipo: Database["public"]["Enums"]["project_tipo"]
           title: string
           updated_at: string
         }
@@ -835,9 +922,12 @@ export type Database = {
           due_date?: string | null
           estimated_hours?: number | null
           id?: string
+          is_archived?: boolean
           requested_by_id?: string | null
           stakeholder_id?: string | null
+          start_date?: string | null
           status?: Database["public"]["Enums"]["project_status"]
+          tipo?: Database["public"]["Enums"]["project_tipo"]
           title: string
           updated_at?: string
         }
@@ -849,9 +939,12 @@ export type Database = {
           due_date?: string | null
           estimated_hours?: number | null
           id?: string
+          is_archived?: boolean
           requested_by_id?: string | null
           stakeholder_id?: string | null
+          start_date?: string | null
           status?: Database["public"]["Enums"]["project_status"]
+          tipo?: Database["public"]["Enums"]["project_tipo"]
           title?: string
           updated_at?: string
         }
@@ -1136,9 +1229,12 @@ export type Database = {
     }
     Functions: {
       can_manage_leads: { Args: never; Returns: boolean }
+      is_active_owner: { Args: never; Returns: boolean }
+      is_comisiones_viewer: { Args: never; Returns: boolean }
       is_content_manager: { Args: never; Returns: boolean }
       is_full_access: { Args: never; Returns: boolean }
       is_leads_manager: { Args: never; Returns: boolean }
+      is_project_admin: { Args: never; Returns: boolean }
       is_project_team: { Args: never; Returns: boolean }
       mark_stale_opportunities: { Args: never; Returns: number }
       owns_opportunity: { Args: { opp_id: string }; Returns: boolean }
@@ -1190,6 +1286,11 @@ export type Database = {
         | "DEVELOPMENT"
         | "QA"
         | "DELIVERED"
+        | "ORDEN_COMPRA"
+        | "FACTURACION"
+        | "SEGUIMIENTO"
+        | "CIERRE"
+      project_tipo: "DISENO" | "INDUSTRIAL"
       task_column_type:
         | "text"
         | "number"
@@ -1198,6 +1299,9 @@ export type Database = {
         | "person"
         | "url"
         | "business_unit"
+        | "archivo"
+        | "multi_selector"
+        | "priority"
       user_role:
         | "director_general"
         | "direccion_comercial"
@@ -1380,7 +1484,12 @@ export const Constants = {
         "DEVELOPMENT",
         "QA",
         "DELIVERED",
+        "ORDEN_COMPRA",
+        "FACTURACION",
+        "SEGUIMIENTO",
+        "CIERRE",
       ],
+      project_tipo: ["DISENO", "INDUSTRIAL"],
       task_column_type: [
         "text",
         "number",
@@ -1389,6 +1498,9 @@ export const Constants = {
         "person",
         "url",
         "business_unit",
+        "archivo",
+        "multi_selector",
+        "priority",
       ],
       user_role: [
         "director_general",

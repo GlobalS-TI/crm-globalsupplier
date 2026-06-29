@@ -1,8 +1,11 @@
 import { z } from 'zod'
 import { businessUnitSchema } from './opportunity'
 
+export const projectTipoSchema = z.enum(['DISENO', 'INDUSTRIAL'])
+
 export const projectStatusSchema = z.enum([
   'INCOMING', 'ANALYSIS', 'DESIGN', 'DEVELOPMENT', 'QA', 'DELIVERED',
+  'ORDEN_COMPRA', 'FACTURACION', 'SEGUIMIENTO', 'CIERRE',
 ])
 
 export const projectFileTypeSchema = z.enum(['FIGMA', 'REPO', 'ASSET', 'DOC', 'OTHER'])
@@ -10,9 +13,11 @@ export const projectFileTypeSchema = z.enum(['FIGMA', 'REPO', 'ASSET', 'DOC', 'O
 export const createProjectSchema = z.object({
   title:           z.string().min(1, 'El título es requerido').max(200),
   description:     z.string().max(2000).optional(),
+  tipo:            projectTipoSchema.default('DISENO'),
   brand:           businessUnitSchema,
   stakeholder_id:  z.string().uuid().optional(),
   requested_by_id: z.string().uuid().optional(),
+  start_date:      z.string().date().optional(),
   due_date:        z.string().date().optional(),
   estimated_hours: z.coerce.number().min(0).max(9999).optional(),
 })
@@ -54,6 +59,13 @@ export const advanceStatusSchema = z.object({
   comment: z.string().max(1000).optional(),
 })
 
+export const projectUpdateSchema = z.object({
+  content:    z.string().min(1, 'La actualización no puede estar vacía').max(5000),
+  file_url:   z.string().url().optional(),
+  file_label: z.string().max(200).optional(),
+})
+
+export type ProjectTipoInput      = z.infer<typeof projectTipoSchema>
 export type CreateProjectInput    = z.infer<typeof createProjectSchema>
 export type UpdateProjectInput    = z.infer<typeof updateProjectSchema>
 export type BriefInput            = z.infer<typeof briefSchema>

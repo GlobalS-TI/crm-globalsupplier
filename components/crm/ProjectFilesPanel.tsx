@@ -1,12 +1,15 @@
 'use client'
 
-import { useActionState } from 'react'
+import { useActionState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { ExternalLink, Trash2, Figma, Github, FileText, Box, Link2 } from 'lucide-react'
+import { ProjectFileDropzone } from '@/components/crm/ProjectFileDropzone'
+import { saveProjectFile } from '@/app/(dashboard)/proyectos/actions'
 import type { ActionState } from '@/app/(dashboard)/proyectos/actions'
 import type { ProjectFileRow } from '@/lib/repositories/interfaces/IProjectRepository'
 import type { ProjectFileType } from '@/lib/types'
@@ -20,13 +23,23 @@ const FILE_TYPE_ICON: Record<ProjectFileType, React.ComponentType<{ className?: 
 }
 
 interface Props {
+  projectId:    string
   addAction:    (prev: ActionState, form: FormData) => Promise<ActionState>
   deleteAction: (fileId: string) => Promise<void>
   files:        ProjectFileRow[]
 }
 
-export function ProjectFilesPanel({ addAction, deleteAction, files }: Props) {
-  const [state, dispatch, pending] = useActionState(addAction, null)
+export function ProjectFilesPanel({ projectId, addAction, deleteAction, files }: Props) {
+  const router                     = useRouter()
+  const [urlState, dispatch, urlPending] = useActionState(addAction, null)
+  const [, startSave]              = useTransition()
+
+  function handleUploaded(url: string, label: string) {
+    startSave(async () => {
+      await saveProjectFile(projectId, { label, url, type: 'DOC' })
+      router.refresh()
+    })
+  }
 
   return (
     <div className="space-y-6">
@@ -68,41 +81,55 @@ export function ProjectFilesPanel({ addAction, deleteAction, files }: Props) {
         </div>
       )}
 
-      {/* Formulario de nuevo archivo */}
-      <form action={dispatch} className="space-y-4 pt-4 border-t">
-        <p className="text-sm font-medium">Vincular archivo</p>
-        <div className="grid gap-3 sm:grid-cols-3">
-          <div className="space-y-1.5">
-            <Label htmlFor="label">Label *</Label>
-            <Input id="label" name="label" required placeholder="ej. Diseño v2" />
+      {/* Upload */}
+      <div className="space-y-4 pt-2 border-t">
+        <p className="text-sm font-medium">Subir archivo</p>
+        <ProjectFileDropzone
+          projectId={projectId}
+          onUploaded={handleUploaded}
+        />
+      </div>
+
+      {/* URL externa */}
+      <details className="group">
+        <summary className="cursor-pointer text-xs text-muted-foreground hover:text-foreground list-none flex items-center gap-1.5">
+          <Link2 className="h-3.5 w-3.5" />
+          O vincula una URL externa
+        </summary>
+        <form action={dispatch} className="space-y-3 mt-3 pl-1">
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="label" className="text-xs">Label *</Label>
+              <Input id="label" name="label" required placeholder="ej. Diseño v2" className="h-8 text-sm" />
+            </div>
+            <div className="sm:col-span-2 space-y-1.5">
+              <Label htmlFor="url" className="text-xs">URL *</Label>
+              <Input id="url" name="url" type="url" required placeholder="https://…" className="h-8 text-sm" />
+            </div>
           </div>
-          <div className="sm:col-span-2 space-y-1.5">
-            <Label htmlFor="url">URL *</Label>
-            <Input id="url" name="url" type="url" required placeholder="https://…" />
+          <div className="flex items-end gap-3">
+            <div className="space-y-1.5 flex-1">
+              <Label htmlFor="type" className="text-xs">Tipo</Label>
+              <Select name="type" defaultValue="OTHER">
+                <SelectTrigger id="type" className="h-8 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(FILE_TYPE_LABELS).map(([v, l]) => (
+                    <SelectItem key={v} value={v}>{l}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button type="submit" size="sm" disabled={urlPending}>
+              {urlPending ? 'Agregando…' : 'Agregar'}
+            </Button>
           </div>
-        </div>
-        <div className="flex items-end gap-3">
-          <div className="space-y-1.5 flex-1">
-            <Label htmlFor="type">Tipo</Label>
-            <Select name="type" defaultValue="OTHER">
-              <SelectTrigger id="type">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(FILE_TYPE_LABELS).map(([v, l]) => (
-                  <SelectItem key={v} value={v}>{l}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <Button type="submit" size="sm" disabled={pending}>
-            {pending ? 'Agregando…' : 'Agregar'}
-          </Button>
-        </div>
-        {state?.error && (
-          <p className="text-sm text-destructive">{state.error}</p>
-        )}
-      </form>
+          {urlState?.error && (
+            <p className="text-xs text-destructive">{urlState.error}</p>
+          )}
+        </form>
+      </details>
     </div>
   )
 }

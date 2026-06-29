@@ -14,13 +14,6 @@ import {
   updateContentItemSchema,
   createContentFileSchema,
 } from '@/lib/validations/content'
-import type {
-  CreateContentCategoryInput,
-  UpdateContentCategoryInput,
-  CreateContentItemInput,
-  UpdateContentItemInput,
-  CreateContentFileInput,
-} from '@/lib/validations/content'
 
 export class ContentService {
   constructor(
@@ -41,12 +34,12 @@ export class ContentService {
     return cat
   }
 
-  async createCategory(raw: CreateContentCategoryInput): Promise<ContentCategoryRow> {
+  async createCategory(raw: unknown): Promise<ContentCategoryRow> {
     const data = createContentCategorySchema.parse(raw)
     return this.categories.create(data)
   }
 
-  async updateCategory(id: string, raw: UpdateContentCategoryInput): Promise<ContentCategoryRow> {
+  async updateCategory(id: string, raw: unknown): Promise<ContentCategoryRow> {
     await this.getCategoryById(id)
     const data = updateContentCategorySchema.parse(raw)
     return this.categories.update(id, data)
@@ -69,7 +62,7 @@ export class ContentService {
     return item
   }
 
-  async createItem(raw: CreateContentItemInput, ownerId: string): Promise<ContentItemWithRelations> {
+  async createItem(raw: unknown, ownerId: string): Promise<ContentItemWithRelations> {
     const data = createContentItemSchema.parse(raw)
     const created = await this.items.create({ ...data, owner_id: ownerId })
     const full = await this.items.findById(created.id)
@@ -77,7 +70,7 @@ export class ContentService {
     return full
   }
 
-  async updateItem(id: string, raw: UpdateContentItemInput): Promise<ContentItemWithRelations> {
+  async updateItem(id: string, raw: unknown): Promise<ContentItemWithRelations> {
     await this.getItemById(id)
     const data = updateContentItemSchema.parse(raw)
     const updated = await this.items.update(id, data)
@@ -97,7 +90,7 @@ export class ContentService {
     return this.files.listByItem(itemId)
   }
 
-  async addFile(raw: CreateContentFileInput, ownerId: string): Promise<ContentFileRow> {
+  async addFile(raw: unknown, ownerId: string): Promise<ContentFileRow> {
     const data = createContentFileSchema.parse(raw)
     return this.files.create({ ...data, owner_id: ownerId })
   }

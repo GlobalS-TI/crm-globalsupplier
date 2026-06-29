@@ -8,7 +8,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
-import { CreateSectionButton, EditSectionButton } from '@/components/crm/LeadSectionModal'
+import { EditSectionButton } from '@/components/crm/LeadSectionModal'
 import { deleteSection } from '@/app/(dashboard)/leads/actions'
 import type { LeadSectionWithCount } from '@/lib/repositories/interfaces/ILeadRepository'
 
@@ -99,11 +99,6 @@ export function LeadSectionNav({ sections, selectedId, isLeadsManager }: Props) 
         })}
       </div>
 
-      {isLeadsManager && (
-        <div className="border-t px-3 py-2">
-          <CreateSectionButton />
-        </div>
-      )}
     </aside>
   )
 }

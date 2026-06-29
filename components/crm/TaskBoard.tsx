@@ -9,6 +9,7 @@ import {
 } from '@/app/(dashboard)/actividades/task-actions'
 import { TaskBoardCell } from '@/components/crm/TaskBoardCell'
 import { TaskBoardAddColumn } from '@/components/crm/TaskBoardAddColumn'
+import { TaskImportButton } from '@/components/crm/TaskImportButton'
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
@@ -162,6 +163,7 @@ function TaskRow({ task, columns, users, onTituloSave, onDelete, onCellChange, o
             column={col}
             value={task.column_values[col.id] ?? null}
             users={users}
+            taskId={task.id}
             onChange={val => onCellChange(col.id, val)}
             onOptionsUpdate={onOptionsUpdate}
           />
@@ -218,7 +220,7 @@ function TaskGroup({
   group, tasks, columns, users, boardId,
   collapsed, onToggle,
   onTaskAdd, onTaskTitleUpdate, onTaskDelete, onCellChange,
-  onGroupRename, onGroupDelete, onColumnDelete, onOptionsUpdate,
+  onGroupRename, onGroupDelete, onColumnDelete, onColumnAdded, onOptionsUpdate,
 }: {
   group:               TaskGroupRow
   tasks:               TaskWithValues[]
@@ -234,6 +236,7 @@ function TaskGroup({
   onGroupRename:       (groupId: string, nombre: string) => void
   onGroupDelete:       (groupId: string) => void
   onColumnDelete:      (colId: string) => void
+  onColumnAdded:       (col: TaskBoardColumnRow) => void
   onOptionsUpdate:     (columnId: string, opts: import('@/lib/validations/task').SelectorOption[]) => void
 }) {
   const [editingName, setEditingName] = useState(false)
@@ -309,7 +312,14 @@ function TaskGroup({
                 {columns.map(col => (
                   <ColHeader key={col.id} col={col} onDelete={onColumnDelete} />
                 ))}
-                <th className="w-8" />
+                <th className="w-8 px-1 border-l border-border/20">
+                  <TaskBoardAddColumn
+                    boardId={boardId}
+                    nextPosition={columns.length}
+                    onColumnAdded={onColumnAdded}
+                    compact
+                  />
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -487,10 +497,9 @@ export function TaskBoard({ board, initialGroups, initialTasks, users }: Props) 
             {tasks.length} tarea{tasks.length !== 1 ? 's' : ''} · {groups.length} grupo{groups.length !== 1 ? 's' : ''}
           </p>
         </div>
-        <TaskBoardAddColumn
+        <TaskImportButton
           boardId={board.id}
-          nextPosition={columns.length}
-          onColumnAdded={col => setColumns(prev => [...prev, col])}
+          onImported={() => window.location.reload()}
         />
       </div>
 
@@ -520,6 +529,7 @@ export function TaskBoard({ board, initialGroups, initialTasks, users }: Props) 
             onGroupRename={handleGroupRename}
             onGroupDelete={id => setDeleteGroupId(id)}
             onColumnDelete={id => setDeleteColId(id)}
+            onColumnAdded={col => setColumns(prev => [...prev, col])}
             onOptionsUpdate={handleOptionsUpdate}
           />
         ))}
@@ -543,7 +553,14 @@ export function TaskBoard({ board, initialGroups, initialTasks, users }: Props) 
                     {columns.map(col => (
                       <ColHeader key={col.id} col={col} onDelete={id => setDeleteColId(id)} />
                     ))}
-                    <th className="w-8" />
+                    <th className="w-8 px-1 border-l border-border/20">
+                      <TaskBoardAddColumn
+                        boardId={board.id}
+                        nextPosition={columns.length}
+                        onColumnAdded={col => setColumns(prev => [...prev, col])}
+                        compact
+                      />
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -558,6 +575,7 @@ export function TaskBoard({ board, initialGroups, initialTasks, users }: Props) 
                       onCellChange={(colId, val) => handleCellChange(task.id, colId, val)}
                       onOptionsUpdate={handleOptionsUpdate}
                     />
+
                   ))}
                 </tbody>
               </table>

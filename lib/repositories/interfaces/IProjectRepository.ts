@@ -1,4 +1,4 @@
-import type { BusinessUnit, ProjectStatus, ProjectFileType } from '@/lib/types'
+import type { BusinessUnit, ProjectStatus, ProjectTipo, ProjectFileType } from '@/lib/types'
 
 // ----------------------------------------------------------------
 // Row types (espejo del schema de DB)
@@ -7,10 +7,13 @@ export interface ProjectRow {
   id:              string
   title:           string
   description:     string | null
+  tipo:            ProjectTipo
   brand:           BusinessUnit
   status:          ProjectStatus
+  is_archived:     boolean
   stakeholder_id:  string | null
   requested_by_id: string | null
+  start_date:      string | null
   due_date:        string | null
   estimated_hours: number | null
   created_by:      string | null
@@ -74,6 +77,17 @@ export interface ProjectFileRow {
   created_at: string
 }
 
+export interface ProjectUpdateRow {
+  id:         string
+  project_id: string
+  content:    string
+  file_url:   string | null
+  file_label: string | null
+  author_id:  string | null
+  created_at: string
+  author:     { full_name: string } | null
+}
+
 // ----------------------------------------------------------------
 // Aggregado completo para la vista de detalle
 // ----------------------------------------------------------------
@@ -86,14 +100,16 @@ export interface ProjectWithRelations extends ProjectRow {
   stage_logs:    ProjectStageLogRow[]
   decision_logs: ProjectDecisionLogRow[]
   files:         ProjectFileRow[]
+  updates:       ProjectUpdateRow[]
 }
 
 // ----------------------------------------------------------------
 // Filters para listado
 // ----------------------------------------------------------------
 export interface ProjectFilters {
-  brand?:  BusinessUnit
-  status?: ProjectStatus
+  brand?:      BusinessUnit
+  status?:     ProjectStatus
+  archived?:   boolean
 }
 
 // ----------------------------------------------------------------
@@ -104,6 +120,9 @@ export interface IProjectRepository {
   findById(id: string): Promise<ProjectWithRelations | null>
   create(data: Omit<ProjectRow, 'id' | 'created_at' | 'updated_at'>): Promise<ProjectRow>
   update(id: string, data: Partial<Omit<ProjectRow, 'id' | 'created_at'>>): Promise<ProjectRow>
+  delete(id: string): Promise<void>
+  archive(id: string): Promise<void>
+  unarchive(id: string): Promise<void>
 
   upsertBrief(projectId: string, data: Omit<ProjectBriefRow, 'id' | 'project_id' | 'updated_at'>): Promise<ProjectBriefRow>
   upsertHandoff(projectId: string, data: Omit<ProjectHandoffRow, 'id' | 'project_id' | 'updated_at'>): Promise<ProjectHandoffRow>
@@ -113,4 +132,6 @@ export interface IProjectRepository {
 
   addFile(data: Omit<ProjectFileRow, 'id' | 'created_at'>): Promise<ProjectFileRow>
   deleteFile(id: string): Promise<void>
+
+  addUpdate(data: Omit<ProjectUpdateRow, 'id' | 'created_at' | 'author'>): Promise<ProjectUpdateRow>
 }
