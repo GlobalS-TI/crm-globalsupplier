@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { TaskRepository } from '@/lib/repositories/supabase/TaskRepository'
 import { TaskService } from '@/lib/services/TaskService'
-import type { UpdateTaskInput, CreateBoardColumnInput, UpdateBoardColumnInput, ColumnConfig } from '@/lib/validations/task'
+import type { UpdateTaskInput, CreateBoardColumnInput, UpdateBoardColumnInput, ColumnConfig, ImportTaskRow } from '@/lib/validations/task'
 
 function makeService() {
   return new TaskService(new TaskRepository())
@@ -135,6 +135,21 @@ export async function reorderBoardColumns(boardId: string, orderedIds: string[])
   try {
     await makeService().reorderColumns(boardId, orderedIds)
     return {}
+  } catch (e) {
+    return { error: (e as Error).message }
+  }
+}
+
+export async function importTasks(
+  boardId: string,
+  rows: ImportTaskRow[],
+  groupId?: string,
+): Promise<{ count: number } | { error: string }> {
+  try {
+    const userId = await getCurrentUserId()
+    const count = await makeService().batchImportTasks({ board_id: boardId, group_id: groupId, rows }, userId)
+    revalidatePath('/actividades')
+    return { count }
   } catch (e) {
     return { error: (e as Error).message }
   }

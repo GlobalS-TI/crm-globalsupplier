@@ -1,7 +1,7 @@
 import type { Database, Json } from '@/lib/types/database'
 import type {
   CreateBoardColumnInput, UpdateBoardColumnInput,
-  CreateTaskInput, UpdateTaskInput,
+  CreateTaskInput, UpdateTaskInput, ImportTaskRow,
 } from '@/lib/validations/task'
 
 export type TaskBoardRow        = Database['public']['Tables']['task_boards']['Row']
@@ -34,4 +34,5 @@ export interface ITaskRepository {
   updateColumn(id: string, data: { nombre?: string; position?: number; config?: Json }): Promise<TaskBoardColumnRow>
   deleteColumn(id: string): Promise<void>
   reorderColumns(boardId: string, orderedIds: string[]): Promise<void>
+  batchCreateTasks(rows: ImportTaskRow[], boardId: string, createdBy: string, groupId?: string): Promise<number>
 }
