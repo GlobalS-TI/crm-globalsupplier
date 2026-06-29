@@ -32,9 +32,10 @@ interface Props {
   boardId:        string
   nextPosition:   number
   onColumnAdded:  (col: TaskBoardColumnRow) => void
+  compact?:       boolean
 }
 
-export function TaskBoardAddColumn({ boardId, nextPosition, onColumnAdded }: Props) {
+export function TaskBoardAddColumn({ boardId, nextPosition, onColumnAdded, compact = false }: Props) {
   const [open,    setOpen]    = useState(false)
   const [nombre,  setNombre]  = useState('')
   const [tipo,    setTipo]    = useState<TaskColumnType>('text')
@@ -82,15 +83,25 @@ export function TaskBoardAddColumn({ boardId, nextPosition, onColumnAdded }: Pro
 
   return (
     <>
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => { reset(); setOpen(true) }}
-        className="gap-1.5 text-xs"
-      >
-        <Plus className="h-3.5 w-3.5" />
-        Nueva columna
-      </Button>
+      {compact ? (
+        <button
+          onClick={() => { reset(); setOpen(true) }}
+          className="flex items-center justify-center w-full h-full text-muted-foreground/40 hover:text-muted-foreground transition-colors"
+          title="Nueva columna"
+        >
+          <Plus className="h-3.5 w-3.5" />
+        </button>
+      ) : (
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => { reset(); setOpen(true) }}
+          className="gap-1.5 text-xs"
+        >
+          <Plus className="h-3.5 w-3.5" />
+          Nueva columna
+        </Button>
+      )}
 
       <Dialog open={open} onOpenChange={v => { if (!v) reset(); setOpen(v) }}>
         <DialogContent className="sm:max-w-[400px]">
