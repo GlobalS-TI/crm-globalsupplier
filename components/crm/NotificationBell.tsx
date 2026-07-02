@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import type { Route } from 'next'
 import { Bell } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -98,7 +99,7 @@ export function NotificationBell({ userId }: Props) {
       setUnread(c => Math.max(0, c - 1))
     }
     setOpen(false)
-    if (notif.href) router.push(notif.href)
+    if (notif.href) router.push(notif.href as Route)
   }
 
   async function handleMarkAllRead() {
