@@ -34,29 +34,38 @@ function timeAgo(iso: string): string {
 
 export function NotificationBell({ userId }: Props) {
   const router = useRouter()
-  const supabase = createClient()
+  // Stable client — createBrowserClient is a singleton but useState ensures
+  // the same reference is used in all effects and cleanup functions.
+  const [supabase] = useState(() => createClient())
   const [open, setOpen]             = useState(false)
   const [notifications, setNotifs]  = useState<Notification[]>([])
   const [unreadCount, setUnread]    = useState(0)
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
 
+  async function load() {
+    const { data } = await supabase
+      .from('notifications')
+      .select('id, title, body, href, read_at, created_at')
+      .eq('recipient_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(20)
+    if (data) {
+      setNotifs(data)
+      setUnread(data.filter(n => !n.read_at).length)
+    }
+  }
+
   // Fetch inicial
   useEffect(() => {
-    async function load() {
-      const { data } = await supabase
-        .from('notifications')
-        .select('id, title, body, href, read_at, created_at')
-        .eq('recipient_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(20)
-      if (data) {
-        setNotifs(data)
-        setUnread(data.filter(n => !n.read_at).length)
-      }
-    }
     void load()
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId])
+
+  // Refetch cada vez que se abre el panel — fallback si Realtime no llega
+  useEffect(() => {
+    if (open) void load()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
 
   // Realtime: escuchar INSERTs para actualizar badge
   useEffect(() => {
