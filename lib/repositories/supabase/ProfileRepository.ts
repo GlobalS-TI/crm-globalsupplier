@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
-import type { IProfileRepository, ProfileRow } from '@/lib/repositories/interfaces/IProfileRepository'
+import type { IProfileRepository, ProfileRow, ProfileTableUpdate } from '@/lib/repositories/interfaces/IProfileRepository'
 import type { UserRole, BusinessUnit } from '@/lib/types'
-import type { UpdateProfileInput } from '@/lib/validations/profile'
 
 export class ProfileRepository implements IProfileRepository {
   async findFirstByRole(role: UserRole): Promise<{ id: string } | null> {
@@ -34,7 +33,7 @@ export class ProfileRepository implements IProfileRepository {
     }))
   }
 
-  async update(id: string, data: Partial<UpdateProfileInput>): Promise<void> {
+  async update(id: string, data: ProfileTableUpdate): Promise<void> {
     const supabase = await createClient()
     await supabase.from('profiles').update(data).eq('id', id)
   }
