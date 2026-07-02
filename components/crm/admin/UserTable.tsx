@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
-import { useToast } from '@/components/ui/use-toast'
+import { useToast } from '@/hooks/use-toast'
 import { EditUserDialog } from './EditUserDialog'
 import { toggleUserActive } from '@/app/(dashboard)/admin/actions'
 import type { ProfileRow } from '@/lib/repositories/interfaces/IProfileRepository'
