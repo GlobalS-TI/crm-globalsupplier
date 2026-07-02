@@ -1,19 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
-import { useToast } from '@/components/ui/use-toast'
+import { Label } from '@/components/ui/label'
+import { useToast } from '@/hooks/use-toast'
 import { CreateUserSchema } from '@/lib/validations/profile'
-import type { CreateUserInput } from '@/lib/validations/profile'
 import { createUser } from '@/app/(dashboard)/admin/actions'
 import { UserPlus } from 'lucide-react'
+import type { UserRole } from '@/lib/types'
 
 const ROLE_LABELS: Record<string, string> = {
   director_general:    'Director General',
@@ -26,30 +24,41 @@ const ROLE_LABELS: Record<string, string> = {
 export function CreateUserDialog() {
   const router = useRouter()
   const { toast } = useToast()
-  const [open, setOpen] = useState(false)
-  const [loading, setLoading] = useState(false)
+  const [, startTransition] = useTransition()
+  const [open, setOpen]       = useState(false)
+  const [fullName, setFullName] = useState('')
+  const [email, setEmail]       = useState('')
+  const [password, setPassword] = useState('')
+  const [role, setRole]         = useState<UserRole>('vendedor')
+  const [error, setError]       = useState<string | null>(null)
 
-  const form = useForm<CreateUserInput>({
-    resolver: zodResolver(CreateUserSchema),
-    defaultValues: { email: '', full_name: '', password: '', role: 'vendedor' },
-  })
+  function reset() {
+    setFullName(''); setEmail(''); setPassword(''); setRole('vendedor'); setError(null)
+  }
 
-  async function onSubmit(data: CreateUserInput) {
-    setLoading(true)
-    const result = await createUser(data)
-    setLoading(false)
-    if (result.error) {
-      toast({ title: 'Error al crear usuario', description: result.error, variant: 'destructive' })
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    const parsed = CreateUserSchema.safeParse({ email, full_name: fullName, password, role })
+    if (!parsed.success) {
+      setError(parsed.error.errors[0]?.message ?? 'Datos inválidos')
       return
     }
-    toast({ title: 'Usuario creado', description: `${data.full_name} puede iniciar sesión con sus credenciales.` })
-    form.reset()
-    setOpen(false)
-    router.refresh()
+    setError(null)
+    startTransition(async () => {
+      const result = await createUser(parsed.data)
+      if (result.error) {
+        setError(result.error)
+        return
+      }
+      toast({ title: 'Usuario creado', description: `${fullName} ya puede iniciar sesión.` })
+      reset()
+      setOpen(false)
+      router.refresh()
+    })
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={v => { setOpen(v); if (!v) reset() }}>
       <DialogTrigger asChild>
         <Button size="sm">
           <UserPlus className="h-4 w-4 mr-2" />
@@ -62,57 +71,41 @@ export function CreateUserDialog() {
           <DialogTitle>Crear usuario</DialogTitle>
         </DialogHeader>
 
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField control={form.control} name="full_name" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Nombre completo</FormLabel>
-                <FormControl><Input placeholder="Ej: María Hernández" {...field} /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="full_name">Nombre completo</Label>
+            <Input id="full_name" placeholder="Ej: María Hernández" value={fullName} onChange={e => setFullName(e.target.value)} />
+          </div>
 
-            <FormField control={form.control} name="email" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl><Input type="email" placeholder="usuario@empresa.com" {...field} /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
+          <div className="space-y-1.5">
+            <Label htmlFor="email">Email</Label>
+            <Input id="email" type="email" placeholder="usuario@empresa.com" value={email} onChange={e => setEmail(e.target.value)} />
+          </div>
 
-            <FormField control={form.control} name="password" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Contraseña temporal</FormLabel>
-                <FormControl><Input type="password" placeholder="Mínimo 8 caracteres" {...field} /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )} />
+          <div className="space-y-1.5">
+            <Label htmlFor="password">Contraseña temporal</Label>
+            <Input id="password" type="password" placeholder="Mínimo 8 caracteres" value={password} onChange={e => setPassword(e.target.value)} />
+          </div>
 
-            <FormField control={form.control} name="role" render={({ field }) => (
-              <FormItem>
-                <FormLabel>Rol</FormLabel>
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <FormControl>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {Object.entries(ROLE_LABELS).map(([value, label]) => (
-                      <SelectItem key={value} value={value}>{label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )} />
+          <div className="space-y-1.5">
+            <Label>Rol</Label>
+            <Select value={role} onValueChange={v => setRole(v as UserRole)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {Object.entries(ROLE_LABELS).map(([value, label]) => (
+                  <SelectItem key={value} value={value}>{label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
-            <div className="flex justify-end gap-2 pt-2">
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>Cancelar</Button>
-              <Button type="submit" disabled={loading}>
-                {loading ? 'Creando…' : 'Crear usuario'}
-              </Button>
-            </div>
-          </form>
-        </Form>
+          {error && <p className="text-sm text-destructive">{error}</p>}
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button type="button" variant="outline" onClick={() => { setOpen(false); reset() }}>Cancelar</Button>
+            <Button type="submit">Crear usuario</Button>
+          </div>
+        </form>
       </DialogContent>
     </Dialog>
   )
