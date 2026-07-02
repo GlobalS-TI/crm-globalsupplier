@@ -454,43 +454,43 @@ export type Database = {
       }
       notifications: {
         Row: {
-          id:            string
-          recipient_id:  string
-          type:          string
-          title:         string
-          body:          string
-          href:          string | null
-          read_at:       string | null
+          body: string
+          created_at: string
+          email_error: string | null
           email_sent_at: string | null
-          email_error:   string | null
-          payload:       Json
-          created_at:    string
+          href: string | null
+          id: string
+          payload: Json
+          read_at: string | null
+          recipient_id: string
+          title: string
+          type: string
         }
         Insert: {
-          id?:           string
-          recipient_id:  string
-          type:          string
-          title:         string
-          body:          string
-          href?:         string | null
-          read_at?:      string | null
-          email_sent_at?:string | null
-          email_error?:  string | null
-          payload?:      Json
-          created_at?:   string
+          body: string
+          created_at?: string
+          email_error?: string | null
+          email_sent_at?: string | null
+          href?: string | null
+          id?: string
+          payload?: Json
+          read_at?: string | null
+          recipient_id: string
+          title: string
+          type: string
         }
         Update: {
-          id?:           string
+          body?: string
+          created_at?: string
+          email_error?: string | null
+          email_sent_at?: string | null
+          href?: string | null
+          id?: string
+          payload?: Json
+          read_at?: string | null
           recipient_id?: string
-          type?:         string
-          title?:        string
-          body?:         string
-          href?:         string | null
-          read_at?:      string | null
-          email_sent_at?:string | null
-          email_error?:  string | null
-          payload?:      Json
-          created_at?:   string
+          title?: string
+          type?: string
         }
         Relationships: [
           {
