@@ -1,5 +1,4 @@
 import type { UserRole, BusinessUnit } from '@/lib/types'
-import type { UpdateProfileInput } from '@/lib/validations/profile'
 
 export interface ProfileRow {
   id:             string
@@ -11,8 +10,15 @@ export interface ProfileRow {
   business_units: BusinessUnit[]
 }
 
+export interface ProfileTableUpdate {
+  full_name?: string
+  role?:      UserRole
+  is_active?: boolean
+  email?:     string
+}
+
 export interface IProfileRepository {
   findFirstByRole(role: UserRole): Promise<{ id: string } | null>
   findAll(): Promise<ProfileRow[]>
-  update(id: string, data: Partial<UpdateProfileInput>): Promise<void>
+  update(id: string, data: ProfileTableUpdate): Promise<void>
 }
