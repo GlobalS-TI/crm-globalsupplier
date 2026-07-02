@@ -135,3 +135,5 @@ export const BRAND_LABELS: Record<BusinessUnit, string> = {
 export const PROJECT_ROLES: UserRole[] = ['marketing', 'director_general', 'administracion']
 
 export const COMISIONES_ROLES: UserRole[] = ['director_general', 'administracion']
+
+export const ADMIN_ROLES: UserRole[] = ['administracion']

@@ -16,6 +16,7 @@ import {
   Target,
   FolderKanban,
   BarChart2,
+  Shield,
   LogOut,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
@@ -26,7 +27,7 @@ import { Separator } from '@/components/ui/separator'
 import { logout } from '@/app/(dashboard)/actions'
 import { ThemeToggle } from './ThemeToggle'
 import { NotificationBell } from './NotificationBell'
-import { PROJECT_ROLES, COMISIONES_ROLES } from '@/lib/types'
+import { PROJECT_ROLES, COMISIONES_ROLES, ADMIN_ROLES } from '@/lib/types'
 import type { UserRole } from '@/lib/types'
 
 const NAV_ITEMS: { href: Route; label: string; icon: LucideIcon }[] = [
@@ -139,6 +140,26 @@ export function AppSidebar({ userFullName, userEmail, userRole, userId }: AppSid
             >
               <BarChart2 className="h-4 w-4 shrink-0" />
               Comisiones
+            </span>
+          </Link>
+        )}
+
+        {/* Admin — solo administracion (RLS es la seguridad real) */}
+        {ADMIN_ROLES.includes(userRole) && (
+          <Link href={'/admin/usuarios' as Route}>
+            <span
+              key={`admin-${bouncing}`}
+              className={cn(
+                'flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors',
+                bouncing && 'nav-bounce-item',
+                pathname.startsWith('/admin')
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+              )}
+              style={{ '--nav-i': NAV_ITEMS.length + 2 } as React.CSSProperties}
+            >
+              <Shield className="h-4 w-4 shrink-0" />
+              Admin
             </span>
           </Link>
         )}
