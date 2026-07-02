@@ -1279,9 +1279,12 @@ export type Database = {
     }
     Functions: {
       can_manage_leads: { Args: never; Returns: boolean }
+      can_manage_projects: { Args: never; Returns: boolean }
       is_active_owner: { Args: never; Returns: boolean }
+      is_admin: { Args: never; Returns: boolean }
       is_comisiones_viewer: { Args: never; Returns: boolean }
       is_content_manager: { Args: never; Returns: boolean }
+      is_content_team: { Args: never; Returns: boolean }
       is_full_access: { Args: never; Returns: boolean }
       is_leads_manager: { Args: never; Returns: boolean }
       is_project_admin: { Args: never; Returns: boolean }
