@@ -6,6 +6,7 @@ import { useDraggable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
 import { Card, CardContent } from '@/components/ui/card'
 import { StaleBadge } from '@/components/crm/StaleBadge'
+import { BRAND_COLORS } from '@/lib/types'
 import type { OpportunityWithRelations } from '@/lib/repositories/interfaces/IOpportunityRepository'
 
 const fmt = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 })
@@ -29,7 +30,10 @@ export function OpportunityKanbanCard({ opportunity: opp, draggable = true }: Op
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="touch-none">
       <Link href={`/oportunidades/${opp.id}` as Route} draggable={false}>
-        <Card className="cursor-grab active:cursor-grabbing hover:shadow-md hover:-translate-y-0.5 transition-all duration-200">
+        <Card
+          className="cursor-grab active:cursor-grabbing hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 border-l-4"
+          style={{ borderLeftColor: BRAND_COLORS[opp.business_unit] }}
+        >
           <CardContent className="p-3 space-y-1.5">
             <div className="flex items-start justify-between gap-2">
               <p className="text-sm font-medium leading-tight line-clamp-2 select-none">{opp.nombre}</p>

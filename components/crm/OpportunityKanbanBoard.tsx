@@ -33,6 +33,17 @@ const COLUMNS: { stage: OpportunityStage; label: string }[] = [
   { stage: 'perdido',            label: 'Perdido' },
 ]
 
+const STAGE_STRIPE: Record<OpportunityStage, string> = {
+  nuevo_lead:         'bg-sky-400 dark:bg-sky-500',
+  contactado:         'bg-emerald-400 dark:bg-emerald-500',
+  diagnostico:        'bg-amber-400 dark:bg-amber-500',
+  cotizacion_enviada: 'bg-purple-400 dark:bg-purple-500',
+  seguimiento:        'bg-orange-400 dark:bg-orange-500',
+  negociacion:        'bg-pink-400 dark:bg-pink-500',
+  ganado:             'bg-green-600 dark:bg-green-500',
+  perdido:            'bg-red-300 dark:bg-red-900/70',
+}
+
 const CLOSED: Set<OpportunityStage> = new Set(['ganado', 'perdido'])
 
 type PendingDrop = {
@@ -64,10 +75,12 @@ function KanbanColumn({
   return (
     <div
       ref={setNodeRef}
-      className={`flex flex-col shrink-0 w-60 rounded-lg transition-colors ${
+      className={`flex flex-col shrink-0 w-60 rounded-lg overflow-hidden transition-colors ${
         isOver ? 'bg-primary/10 ring-1 ring-primary/30' : 'bg-muted/50'
       }`}
     >
+      <div className={`h-1.5 shrink-0 ${STAGE_STRIPE[stage]}`} />
+
       <div className="flex items-center justify-between px-3 py-2.5">
         <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           {label}
