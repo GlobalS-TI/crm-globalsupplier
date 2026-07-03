@@ -1,5 +1,6 @@
 'use server'
 
+import { headers } from 'next/headers'
 import { revalidatePath } from 'next/cache'
 import { Resend } from 'resend'
 import { createClient } from '@/lib/supabase/server'
@@ -92,11 +93,14 @@ export async function resetUserPassword(id: string): Promise<{ error?: string }>
   const email = authUser.user.email
   const name  = authUser.user.user_metadata?.full_name as string | undefined
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://crm.globalsupplier.com.mx'
+  const h = await headers()
+  const origin = h.get('origin') ?? h.get('x-forwarded-host')?.split(',')[0]?.trim()
+    ? `https://${h.get('x-forwarded-host')!.split(',')[0].trim()}`
+    : (process.env.NEXT_PUBLIC_APP_URL ?? 'https://crm.globalsupplier.com.mx')
   const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
-    type:       'recovery',
+    type:    'recovery',
     email,
-    options:    { redirectTo: `${appUrl}/restablecer-contrasena` },
+    options: { redirectTo: `${origin}/restablecer-contrasena` },
   })
   if (linkError || !linkData?.properties?.action_link) {
     return { error: linkError?.message ?? 'Error al generar el link' }
