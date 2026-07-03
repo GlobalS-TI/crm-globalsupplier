@@ -132,6 +132,16 @@ export const BRAND_LABELS: Record<BusinessUnit, string> = {
   fire_spot:           'The Fire Spot',
 }
 
+export const BRAND_COLORS: Record<BusinessUnit, string> = {
+  global_supplier_mty: '#16a34a', // verde hoja
+  thunder_safety:      '#eab308', // amarillo (tono 1)
+  thunder_led:         '#f59e0b', // amarillo (tono 2, distinto)
+  got_fresh_breath:    '#3b82f6', // azul
+  gtx_systems:         '#1d4ed8', // azul rey
+  juno_promotional:    '#6b7280', // gris
+  fire_spot:           '#c2410c', // rojo ámbar
+}
+
 export const PROJECT_ROLES: UserRole[] = ['marketing', 'director_general', 'administracion']
 
 export const COMISIONES_ROLES: UserRole[] = ['director_general', 'administracion']
