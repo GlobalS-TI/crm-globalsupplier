@@ -12,57 +12,74 @@ declare
   pwd text := crypt('LocalDev1234!', gen_salt('bf', 10));
 begin
   insert into auth.users (
-    id, aud, role, email, encrypted_password,
+    id, instance_id, aud, role, email, encrypted_password,
     email_confirmed_at, created_at, updated_at,
-    raw_user_meta_data, raw_app_meta_data, is_sso_user
+    raw_user_meta_data, raw_app_meta_data, is_sso_user,
+    confirmation_token, recovery_token, email_change_token_new, email_change
   ) values
     ( '00000001-0000-0000-0000-000000000000',
+      '00000000-0000-0000-0000-000000000000',
       'authenticated', 'authenticated',
       'vpena@globalsupplier.com.mx', pwd, now(), now(), now(),
       '{"full_name":"Vladimir Peña"}',
-      '{"provider":"email","providers":["email"]}', false ),
+      '{"provider":"email","providers":["email"]}', false,
+      '', '', '', '' ),
 
     ( '00000002-0000-0000-0000-000000000000',
+      '00000000-0000-0000-0000-000000000000',
       'authenticated', 'authenticated',
       'karla.saucedo@thundersafetysolutions.com', pwd, now(), now(), now(),
       '{"full_name":"Karla Saucedo"}',
-      '{"provider":"email","providers":["email"]}', false ),
+      '{"provider":"email","providers":["email"]}', false,
+      '', '', '', '' ),
 
     ( '00000003-0000-0000-0000-000000000000',
+      '00000000-0000-0000-0000-000000000000',
       'authenticated', 'authenticated',
       'analucia.garza@thundersafetysolutions.com', pwd, now(), now(), now(),
       '{"full_name":"Ana Lucía Garza"}',
-      '{"provider":"email","providers":["email"]}', false ),
+      '{"provider":"email","providers":["email"]}', false,
+      '', '', '', '' ),
 
     ( '00000004-0000-0000-0000-000000000000',
+      '00000000-0000-0000-0000-000000000000',
       'authenticated', 'authenticated',
       'angel.estrada@thunderledlights.mx', pwd, now(), now(), now(),
       '{"full_name":"Angel Estrada"}',
-      '{"provider":"email","providers":["email"]}', false ),
+      '{"provider":"email","providers":["email"]}', false,
+      '', '', '', '' ),
 
     ( '00000005-0000-0000-0000-000000000000',
+      '00000000-0000-0000-0000-000000000000',
       'authenticated', 'authenticated',
       'rpena@thunderledlights.mx', pwd, now(), now(), now(),
       '{"full_name":"Rodolfo Peña"}',
-      '{"provider":"email","providers":["email"]}', false ),
+      '{"provider":"email","providers":["email"]}', false,
+      '', '', '', '' ),
 
     ( '00000006-0000-0000-0000-000000000000',
+      '00000000-0000-0000-0000-000000000000',
       'authenticated', 'authenticated',
       'gdeleon@globalsupplier.com.mx', pwd, now(), now(), now(),
       '{"full_name":"Gerardo de León"}',
-      '{"provider":"email","providers":["email"]}', false ),
+      '{"provider":"email","providers":["email"]}', false,
+      '', '', '', '' ),
 
     ( '00000007-0000-0000-0000-000000000000',
+      '00000000-0000-0000-0000-000000000000',
       'authenticated', 'authenticated',
       'aespino@globalsupplier.com.mx', pwd, now(), now(), now(),
       '{"full_name":"Alexandro Espino"}',
-      '{"provider":"email","providers":["email"]}', false ),
+      '{"provider":"email","providers":["email"]}', false,
+      '', '', '', '' ),
 
     ( '00000008-0000-0000-0000-000000000000',
+      '00000000-0000-0000-0000-000000000000',
       'authenticated', 'authenticated',
       'erikagzzf@globalsupplier.com.mx', pwd, now(), now(), now(),
       '{"full_name":"Erika González"}',
-      '{"provider":"email","providers":["email"]}', false )
+      '{"provider":"email","providers":["email"]}', false,
+      '', '', '', '' )
 
   on conflict (id) do nothing;
 end $$;
