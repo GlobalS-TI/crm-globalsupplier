@@ -14,17 +14,20 @@ export default function RestablecerContrasenaPage() {
   const [, startTransition] = useTransition()
 
   const [ready,    setReady]    = useState(false)
+  const [expired,  setExpired]  = useState(false)
   const [password, setPassword] = useState('')
   const [confirm,  setConfirm]  = useState('')
   const [error,    setError]    = useState<string | null>(null)
   const [success,  setSuccess]  = useState(false)
 
-  // Supabase escribe la sesión de recovery en el hash → esperamos el evento
+  // Supabase procesa el hash y emite PASSWORD_RECOVERY cuando el token es válido
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'PASSWORD_RECOVERY') setReady(true)
     })
-    return () => subscription.unsubscribe()
+    // Si en 6 s no llega el evento, el token es inválido o ya expiró
+    const timer = setTimeout(() => setExpired(true), 6000)
+    return () => { subscription.unsubscribe(); clearTimeout(timer) }
   }, [supabase])
 
   function handleSubmit(e: React.FormEvent) {
@@ -52,6 +55,13 @@ export default function RestablecerContrasenaPage() {
           <p className="text-sm text-center text-muted-foreground">
             ¡Contraseña actualizada! Redirigiendo…
           </p>
+        ) : expired && !ready ? (
+          <div className="text-center space-y-3">
+            <p className="text-sm text-destructive">El enlace es inválido o ya expiró.</p>
+            <a href="/login" className="text-sm text-primary underline underline-offset-4">
+              Volver al inicio de sesión
+            </a>
+          </div>
         ) : !ready ? (
           <p className="text-sm text-center text-muted-foreground">
             Verificando enlace…

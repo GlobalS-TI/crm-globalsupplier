@@ -1,13 +1,25 @@
 'use client'
 
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { useActionState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { login } from '@/app/(auth)/login/actions'
+import type { Route } from 'next'
 
 export function LoginForm() {
+  const router = useRouter()
   const [state, action, pending] = useActionState(login, null)
+
+  // Supabase redirige recovery links al site URL (login). Detectamos y rebotamos.
+  useEffect(() => {
+    const hash = window.location.hash
+    if (hash.includes('type=recovery')) {
+      router.replace((`/restablecer-contrasena${hash}`) as Route)
+    }
+  }, [router])
 
   return (
     <form action={action} className="space-y-4">
