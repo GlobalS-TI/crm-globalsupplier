@@ -7,7 +7,7 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 import { UpdateProfileSchema, CreateUserSchema } from '@/lib/validations/profile'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
-const FROM   = process.env.RESEND_FROM ?? 'CRM Global Supplier <noreply@globalsupplier.dev>'
+const FROM   = process.env.RESEND_FROM ?? 'CRM Global Supplier <noreply@globalsupplier.com.mx>'
 
 export async function updateUser(id: string, raw: unknown): Promise<{ error?: string }> {
   const parsed = UpdateProfileSchema.safeParse(raw)
