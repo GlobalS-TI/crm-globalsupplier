@@ -2,14 +2,15 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { MoreHorizontal, Pencil, PowerOff, Power } from 'lucide-react'
+import { MoreHorizontal, Pencil, PowerOff, Power, KeyRound } from 'lucide-react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog'
 import { useToast } from '@/hooks/use-toast'
 import { EditUserDialog } from './EditUserDialog'
-import { toggleUserActive } from '@/app/(dashboard)/admin/actions'
+import { toggleUserActive, resetUserPassword } from '@/app/(dashboard)/admin/actions'
 import type { ProfileRow } from '@/lib/repositories/interfaces/IProfileRepository'
 import { BRAND_LABELS } from '@/lib/types'
 
@@ -36,7 +37,8 @@ interface Props {
 export function UserTable({ users }: Props) {
   const router = useRouter()
   const { toast } = useToast()
-  const [editingUser, setEditingUser] = useState<ProfileRow | null>(null)
+  const [editingUser,    setEditingUser]    = useState<ProfileRow | null>(null)
+  const [resetTarget,    setResetTarget]    = useState<ProfileRow | null>(null)
   const [, startTransition] = useTransition()
 
   function handleToggleActive(user: ProfileRow) {
@@ -51,6 +53,20 @@ export function UserTable({ users }: Props) {
         description: user.full_name,
       })
       router.refresh()
+    })
+  }
+
+  function handleResetPassword() {
+    if (!resetTarget) return
+    const user = resetTarget
+    setResetTarget(null)
+    startTransition(async () => {
+      const result = await resetUserPassword(user.id)
+      if (result.error) {
+        toast({ title: 'Error al enviar reset', description: result.error, variant: 'destructive' })
+        return
+      }
+      toast({ title: 'Email enviado', description: `Se mandó el link de reset a ${user.email}` })
     })
   }
 
@@ -107,6 +123,10 @@ export function UserTable({ users }: Props) {
                         <DropdownMenuItem onClick={() => setEditingUser(user)}>
                           <Pencil className="h-4 w-4 mr-2" /> Editar
                         </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setResetTarget(user)}>
+                          <KeyRound className="h-4 w-4 mr-2" /> Resetear contraseña
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => handleToggleActive(user)}>
                           {user.is_active
                             ? <><PowerOff className="h-4 w-4 mr-2" /> Desactivar</>
@@ -130,6 +150,23 @@ export function UserTable({ users }: Props) {
           onClose={() => setEditingUser(null)}
         />
       )}
+
+      <AlertDialog open={!!resetTarget} onOpenChange={v => { if (!v) setResetTarget(null) }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Resetear contraseña?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Se enviará un link de recuperación al correo de{' '}
+              <strong>{resetTarget?.full_name}</strong> ({resetTarget?.email}).
+              El link expira en 24 horas.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleResetPassword}>Enviar link</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   )
 }

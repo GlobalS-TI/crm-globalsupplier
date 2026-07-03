@@ -85,6 +85,41 @@ export async function toggleUserActive(id: string, isActive: boolean): Promise<{
   return {}
 }
 
+export async function resetUserPassword(id: string): Promise<{ error?: string }> {
+  const { data: authUser, error: getUserError } = await supabaseAdmin.auth.admin.getUserById(id)
+  if (getUserError || !authUser?.user?.email) return { error: 'No se pudo obtener el usuario' }
+
+  const email = authUser.user.email
+  const name  = authUser.user.user_metadata?.full_name as string | undefined
+
+  const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+    type:  'recovery',
+    email,
+  })
+  if (linkError || !linkData?.properties?.action_link) {
+    return { error: linkError?.message ?? 'Error al generar el link' }
+  }
+
+  const { error: emailError } = await resend.emails.send({
+    from:    FROM,
+    to:      email,
+    subject: 'Restablece tu contraseña — CRM Global Supplier',
+    html: `
+      <p>Hola${name ? ` ${name}` : ''},</p>
+      <p>El administrador del sistema generó un enlace para que restablezcas tu contraseña en el CRM de Global Supplier.</p>
+      <p style="margin:24px 0;">
+        <a href="${linkData.properties.action_link}" style="display:inline-block;padding:10px 20px;background:#0f172a;color:#fff;border-radius:6px;text-decoration:none;font-weight:600;">
+          Restablecer contraseña
+        </a>
+      </p>
+      <p style="color:#64748b;font-size:13px;">Este enlace expira en 24 horas. Si no solicitaste este cambio, puedes ignorar este correo.</p>
+    `,
+  })
+  if (emailError) return { error: `Email: ${emailError.message}` }
+
+  return {}
+}
+
 export async function createUser(raw: unknown): Promise<{ error?: string }> {
   const parsed = CreateUserSchema.safeParse(raw)
   if (!parsed.success) return { error: parsed.error.errors[0]?.message ?? 'Datos inválidos' }
