@@ -2,14 +2,18 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { MoreHorizontal, Pencil, PowerOff, Power } from 'lucide-react'
+import { MoreHorizontal, Pencil, PowerOff, Power, Trash2 } from 'lucide-react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { useToast } from '@/hooks/use-toast'
 import { EditUserDialog } from './EditUserDialog'
-import { toggleUserActive } from '@/app/(dashboard)/admin/actions'
+import { toggleUserActive, deleteUser } from '@/app/(dashboard)/admin/actions'
 import type { ProfileRow } from '@/lib/repositories/interfaces/IProfileRepository'
 import { BRAND_LABELS } from '@/lib/types'
 
@@ -30,13 +34,15 @@ const ROLE_VARIANTS: Record<string, 'default' | 'secondary' | 'outline' | 'destr
 }
 
 interface Props {
-  users: ProfileRow[]
+  users:         ProfileRow[]
+  currentUserId: string
 }
 
-export function UserTable({ users }: Props) {
+export function UserTable({ users, currentUserId }: Props) {
   const router = useRouter()
   const { toast } = useToast()
   const [editingUser, setEditingUser] = useState<ProfileRow | null>(null)
+  const [deletingUser, setDeletingUser] = useState<ProfileRow | null>(null)
   const [, startTransition] = useTransition()
 
   function handleToggleActive(user: ProfileRow) {
@@ -50,6 +56,21 @@ export function UserTable({ users }: Props) {
         title: user.is_active ? 'Usuario desactivado' : 'Usuario activado',
         description: user.full_name,
       })
+      router.refresh()
+    })
+  }
+
+  function handleDelete() {
+    if (!deletingUser) return
+    const user = deletingUser
+    startTransition(async () => {
+      const result = await deleteUser(user.id)
+      setDeletingUser(null)
+      if (result.error) {
+        toast({ title: 'No se pudo eliminar', description: result.error, variant: 'destructive' })
+        return
+      }
+      toast({ title: 'Usuario eliminado', description: user.full_name })
       router.refresh()
     })
   }
@@ -113,6 +134,14 @@ export function UserTable({ users }: Props) {
                             : <><Power     className="h-4 w-4 mr-2" /> Activar</>
                           }
                         </DropdownMenuItem>
+                        {user.id !== currentUserId && (
+                          <DropdownMenuItem
+                            onClick={() => setDeletingUser(user)}
+                            className="text-destructive focus:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" /> Eliminar
+                          </DropdownMenuItem>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -130,6 +159,25 @@ export function UserTable({ users }: Props) {
           onClose={() => setEditingUser(null)}
         />
       )}
+
+      <AlertDialog open={!!deletingUser} onOpenChange={open => !open && setDeletingUser(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar a {deletingUser?.full_name}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Si el usuario tiene empresas, contactos, oportunidades,
+              leads, actividades, tareas o proyectos a su nombre, no se podrá eliminar — desactívalo en
+              su lugar.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   )
 }
