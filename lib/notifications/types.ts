@@ -4,6 +4,7 @@ export type NotificationType =
   | 'opp_ganada'
   | 'opp_perdida'
   | 'lead_converted'
+  | 'opportunity_assigned'
 
 export interface NotificationRow {
   id:            string
@@ -46,8 +47,15 @@ export interface LeadConvertedPayload {
   opp_nombre: string
 }
 
+export interface OpportunityAssignedPayload {
+  opp_id:     string
+  opp_nombre: string
+  lead_name:  string
+}
+
 export type NotificationPayload =
   | StaleDigestPayload
   | LeadAssignedPayload
   | OppClosedPayload
   | LeadConvertedPayload
+  | OpportunityAssignedPayload

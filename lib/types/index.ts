@@ -147,3 +147,19 @@ export const PROJECT_ROLES: UserRole[] = ['marketing', 'director_general', 'admi
 export const COMISIONES_ROLES: UserRole[] = ['director_general', 'administracion']
 
 export const ADMIN_ROLES: UserRole[] = ['administracion']
+
+export const LEADS_ROLES: UserRole[] = ['marketing', 'director_general', 'direccion_comercial', 'administracion']
+
+export const LEAD_SOURCES: LeadSource[] = [
+  'referido', 'web', 'linkedin', 'llamada_en_frio', 'evento', 'alianza', 'otro',
+]
+
+export const LEAD_SOURCE_LABELS: Record<LeadSource, string> = {
+  referido:        'Referido',
+  web:              'Sitio web',
+  linkedin:         'LinkedIn',
+  llamada_en_frio:  'Llamada en frío',
+  evento:           'Evento',
+  alianza:          'Alianza',
+  otro:             'Otro',
+}

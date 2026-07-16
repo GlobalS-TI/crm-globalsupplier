@@ -1,10 +1,13 @@
 import { z } from 'zod'
+import { businessUnitSchema, leadSourceSchema } from '@/lib/validations/opportunity'
 
 // ── Sections ──────────────────────────────────────────────────────
 
 export const createLeadSectionSchema = z.object({
-  nombre:      z.string().min(1, 'El nombre es requerido').max(100),
-  descripcion: z.string().max(500).optional(),
+  nombre:        z.string().min(1, 'El nombre es requerido').max(100),
+  descripcion:   z.string().max(500).optional(),
+  business_unit: businessUnitSchema,
+  fuente:        leadSourceSchema,
 })
 
 export const updateLeadSectionSchema = createLeadSectionSchema.partial()

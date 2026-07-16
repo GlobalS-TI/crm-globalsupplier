@@ -126,6 +126,25 @@ export async function resetUserPassword(id: string): Promise<{ error?: string }>
   return {}
 }
 
+export async function deleteUser(id: string): Promise<{ error?: string }> {
+  const { error } = await supabaseAdmin.auth.admin.deleteUser(id)
+  if (error) {
+    // profiles.id -> auth.users(id) on delete cascade, pero varias tablas
+    // (opportunities, leads, tasks, projects, etc.) referencian profiles sin
+    // cascade — un usuario con historial no se puede borrar, solo desactivar.
+    // GoTrue no expone el detalle del error de Postgres, solo un mensaje
+    // genérico ("Database error deleting user") — en la práctica esa es la
+    // única forma en que deleteUser falla, así que se traduce directo.
+    if (/foreign key|violat|database error/i.test(error.message)) {
+      return { error: 'No se puede eliminar: este usuario tiene registros asociados (empresas, contactos, oportunidades, leads, actividades, tareas o proyectos). Desactívalo en su lugar.' }
+    }
+    return { error: error.message }
+  }
+
+  revalidatePath('/admin/usuarios')
+  return {}
+}
+
 export async function createUser(raw: unknown): Promise<{ error?: string }> {
   const parsed = CreateUserSchema.safeParse(raw)
   if (!parsed.success) return { error: parsed.error.errors[0]?.message ?? 'Datos inválidos' }

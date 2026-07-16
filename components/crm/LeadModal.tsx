@@ -1,6 +1,8 @@
 'use client'
 
 import { useActionState, useEffect, useRef, useState, useTransition } from 'react'
+import Link from 'next/link'
+import type { Route } from 'next'
 import { Plus, Pencil, Upload, X, Loader2, ExternalLink } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -276,20 +278,31 @@ function SharedFields({ assignableUsers, defaultValues }: SharedProps) {
         </div>
       )}
 
-      {/* Vendedor — asignable por director */}
+      {/* Vendedor — asignable por director. Una vez convertido a oportunidad, la reasignación
+          ya se hace desde /oportunidades, no desde aquí. */}
       <div className="space-y-1.5 col-span-2">
         <Label htmlFor="lf_vendedor">Vendedor asignado</Label>
-        <Select name="vendedor_id" defaultValue={defaultValues?.vendedor_id ?? '__none__'}>
-          <SelectTrigger id="lf_vendedor">
-            <SelectValue placeholder="Sin asignar" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="__none__">Sin asignar</SelectItem>
-            {assignableUsers.map(u => (
-              <SelectItem key={u.id} value={u.id}>{u.full_name}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {defaultValues?.converted_opportunity_id ? (
+          <Link
+            href={`/oportunidades/${defaultValues.converted_opportunity_id}` as Route}
+            className="flex items-center gap-2 rounded-md border border-border bg-muted/40 px-3 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            {defaultValues.vendedor?.full_name ?? 'Sin asignar'}
+            <span className="ml-auto text-xs text-primary">Ver oportunidad →</span>
+          </Link>
+        ) : (
+          <Select name="vendedor_id" defaultValue={defaultValues?.vendedor_id ?? '__none__'}>
+            <SelectTrigger id="lf_vendedor">
+              <SelectValue placeholder="Sin asignar" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none__">Sin asignar</SelectItem>
+              {assignableUsers.map(u => (
+                <SelectItem key={u.id} value={u.id}>{u.full_name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
       </div>
 
       <div className="space-y-1.5 col-span-2">

@@ -9,8 +9,12 @@ import { Textarea } from '@/components/ui/textarea'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from '@/components/ui/dialog'
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select'
 import { createSection, updateSection } from '@/app/(dashboard)/leads/actions'
 import type { LeadSectionRow } from '@/lib/repositories/interfaces/ILeadRepository'
+import { BUSINESS_UNITS, BRAND_LABELS, LEAD_SOURCES, LEAD_SOURCE_LABELS } from '@/lib/types'
 
 type ActionState = { error: string } | null
 
@@ -50,6 +54,37 @@ export function CreateSectionButton() {
             <Label htmlFor="cs_desc">Descripción</Label>
             <Textarea id="cs_desc" name="descripcion" rows={2} placeholder="Opcional" />
           </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="cs_unit">Unidad de negocio *</Label>
+              <Select name="business_unit" required>
+                <SelectTrigger id="cs_unit">
+                  <SelectValue placeholder="Selecciona" />
+                </SelectTrigger>
+                <SelectContent>
+                  {BUSINESS_UNITS.map(u => (
+                    <SelectItem key={u} value={u}>{BRAND_LABELS[u]}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="cs_fuente">Fuente *</Label>
+              <Select name="fuente" defaultValue="otro">
+                <SelectTrigger id="cs_fuente">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {LEAD_SOURCES.map(s => (
+                    <SelectItem key={s} value={s}>{LEAD_SOURCE_LABELS[s]}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <p className="text-xs text-muted-foreground -mt-2">
+            Se usan para crear la oportunidad automáticamente al asignar un vendedor a un lead de esta campaña.
+          </p>
           <div className="flex justify-end">
             <Button type="submit" disabled={pending}>
               {pending ? 'Creando…' : 'Crear sección'}
@@ -96,6 +131,34 @@ export function EditSectionButton({ section }: { section: LeadSectionRow }) {
           <div className="space-y-1.5">
             <Label htmlFor="es_desc">Descripción</Label>
             <Textarea id="es_desc" name="descripcion" rows={2} defaultValue={section.descripcion ?? ''} />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <Label htmlFor="es_unit">Unidad de negocio *</Label>
+              <Select name="business_unit" defaultValue={section.business_unit} required>
+                <SelectTrigger id="es_unit">
+                  <SelectValue placeholder="Selecciona" />
+                </SelectTrigger>
+                <SelectContent>
+                  {BUSINESS_UNITS.map(u => (
+                    <SelectItem key={u} value={u}>{BRAND_LABELS[u]}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="es_fuente">Fuente *</Label>
+              <Select name="fuente" defaultValue={section.fuente}>
+                <SelectTrigger id="es_fuente">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {LEAD_SOURCES.map(s => (
+                    <SelectItem key={s} value={s}>{LEAD_SOURCE_LABELS[s]}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <div className="flex justify-end">
             <Button type="submit" disabled={pending}>

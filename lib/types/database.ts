@@ -335,23 +335,29 @@ export type Database = {
       }
       lead_sections: {
         Row: {
+          business_unit: Database["public"]["Enums"]["business_unit"]
           created_at: string
           created_by: string
           descripcion: string | null
+          fuente: Database["public"]["Enums"]["lead_source"]
           id: string
           nombre: string
         }
         Insert: {
+          business_unit?: Database["public"]["Enums"]["business_unit"]
           created_at?: string
           created_by: string
           descripcion?: string | null
+          fuente?: Database["public"]["Enums"]["lead_source"]
           id?: string
           nombre: string
         }
         Update: {
+          business_unit?: Database["public"]["Enums"]["business_unit"]
           created_at?: string
           created_by?: string
           descripcion?: string | null
+          fuente?: Database["public"]["Enums"]["lead_source"]
           id?: string
           nombre?: string
         }

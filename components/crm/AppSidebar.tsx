@@ -27,7 +27,7 @@ import { Separator } from '@/components/ui/separator'
 import { logout } from '@/app/(dashboard)/actions'
 import { ThemeToggle } from './ThemeToggle'
 import { NotificationBell } from './NotificationBell'
-import { PROJECT_ROLES, COMISIONES_ROLES, ADMIN_ROLES } from '@/lib/types'
+import { PROJECT_ROLES, COMISIONES_ROLES, ADMIN_ROLES, LEADS_ROLES } from '@/lib/types'
 import type { UserRole } from '@/lib/types'
 
 const NAV_ITEMS: { href: Route; label: string; icon: LucideIcon }[] = [
@@ -37,7 +37,6 @@ const NAV_ITEMS: { href: Route; label: string; icon: LucideIcon }[] = [
   { href: '/contactos',     label: 'Contactos',     icon: Users },
   { href: '/actividades',   label: 'Actividades',   icon: Activity },
   { href: '/contenido',     label: 'Contenido',     icon: Library },
-  { href: '/leads',         label: 'Leads',         icon: UserRoundSearch },
   { href: '/metas',         label: 'Metas',         icon: Target },
 ]
 
@@ -104,6 +103,26 @@ export function AppSidebar({ userFullName, userEmail, userRole, userId }: AppSid
           </Link>
         ))}
 
+        {/* Leads — marketing/dirección/administración únicamente (RLS es la seguridad real) */}
+        {LEADS_ROLES.includes(userRole) && (
+          <Link href={'/leads' as Route}>
+            <span
+              key={`leads-${bouncing}`}
+              className={cn(
+                'flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors',
+                bouncing && 'nav-bounce-item',
+                pathname === '/leads' || pathname.startsWith('/leads/')
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+              )}
+              style={{ '--nav-i': NAV_ITEMS.length } as React.CSSProperties}
+            >
+              <UserRoundSearch className="h-4 w-4 shrink-0" />
+              Leads
+            </span>
+          </Link>
+        )}
+
         {/* Proyectos — solo roles autorizados (RLS es la seguridad real) */}
         {PROJECT_ROLES.includes(userRole) && (
           <Link href={'/proyectos' as Route}>
@@ -116,7 +135,7 @@ export function AppSidebar({ userFullName, userEmail, userRole, userId }: AppSid
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
               )}
-              style={{ '--nav-i': NAV_ITEMS.length } as React.CSSProperties}
+              style={{ '--nav-i': NAV_ITEMS.length + 1 } as React.CSSProperties}
             >
               <FolderKanban className="h-4 w-4 shrink-0" />
               Proyectos
@@ -136,7 +155,7 @@ export function AppSidebar({ userFullName, userEmail, userRole, userId }: AppSid
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
               )}
-              style={{ '--nav-i': NAV_ITEMS.length + 1 } as React.CSSProperties}
+              style={{ '--nav-i': NAV_ITEMS.length + 2 } as React.CSSProperties}
             >
               <BarChart2 className="h-4 w-4 shrink-0" />
               Comisiones
@@ -156,7 +175,7 @@ export function AppSidebar({ userFullName, userEmail, userRole, userId }: AppSid
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
               )}
-              style={{ '--nav-i': NAV_ITEMS.length + 2 } as React.CSSProperties}
+              style={{ '--nav-i': NAV_ITEMS.length + 3 } as React.CSSProperties}
             >
               <Shield className="h-4 w-4 shrink-0" />
               Admin
