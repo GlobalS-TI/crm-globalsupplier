@@ -182,6 +182,13 @@ export class TaskRepository implements ITaskRepository {
 
   async upsertColumnValue(taskId: string, columnId: string, value: string | null): Promise<void> {
     const supabase = await createClient()
+
+    const { data: column } = await supabase
+      .from('task_board_columns')
+      .select('tipo')
+      .eq('id', columnId)
+      .single()
+
     if (value === null || value === '') {
       await supabase
         .from('task_column_values')
@@ -192,6 +199,16 @@ export class TaskRepository implements ITaskRepository {
       const { error } = await supabase
         .from('task_column_values')
         .upsert({ task_id: taskId, column_id: columnId, value })
+      if (error) throw error
+    }
+
+    // "Responsable" (columna tipo person) determina visibilidad vía RLS —
+    // se refleja en tasks.assigned_to, no solo en el EAV.
+    if (column?.tipo === 'person') {
+      const { error } = await supabase
+        .from('tasks')
+        .update({ assigned_to: value || null })
+        .eq('id', taskId)
       if (error) throw error
     }
   }
