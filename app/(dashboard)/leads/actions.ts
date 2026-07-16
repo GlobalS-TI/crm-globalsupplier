@@ -9,7 +9,9 @@ import { LeadService } from '@/lib/services/LeadService'
 import { OpportunityRepository } from '@/lib/repositories/supabase/OpportunityRepository'
 import { OpportunityService } from '@/lib/services/OpportunityService'
 import { supabaseAdmin } from '@/lib/supabase/admin'
-import { notifyLeadAssigned, notifyLeadConverted, getManagementProfileIds } from '@/lib/notifications/send'
+import { notifyLeadConverted, notifyOpportunityAssigned, getManagementProfileIds } from '@/lib/notifications/send'
+import type { LeadWithRelations } from '@/lib/repositories/interfaces/ILeadRepository'
+import type { BusinessUnit, LeadSource } from '@/lib/types'
 
 type ActionState = { error: string } | null
 
@@ -24,10 +26,50 @@ async function getUser() {
   return user
 }
 
+async function getFullName(userId: string): Promise<string> {
+  const { data } = await supabaseAdmin.from('profiles').select('full_name').eq('id', userId).single()
+  return data?.full_name ?? ''
+}
+
 function parseVendedor(form: FormData): string | undefined | null {
   const v = form.get('vendedor_id') as string
   if (!v || v === '__none__') return undefined
   return v
+}
+
+/**
+ * Al asignar un vendedor a un lead se crea automáticamente la oportunidad correspondiente
+ * (business_unit/fuente vienen de la campaña) — ventas ya no necesita acceso a /leads.
+ * Idempotente: no-op si el lead no tiene vendedor o ya fue convertido.
+ */
+async function autoConvertLead(lead: LeadWithRelations, assignedByName: string): Promise<void> {
+  if (!lead.vendedor_id || lead.converted_opportunity_id) return
+
+  const tomorrow = new Date()
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  tomorrow.setHours(10, 0, 0, 0)
+
+  const oppService = new OpportunityService(new OpportunityRepository())
+  const opp = await oppService.create({
+    nombre:           lead.empresa ? `${lead.empresa} — ${lead.nombre}` : lead.nombre,
+    business_unit:    lead.section.business_unit,
+    fuente:           lead.section.fuente,
+    owner_id:         lead.vendedor_id,
+    etapa:            'nuevo_lead',
+    next_activity_at: tomorrow.toISOString(),
+    notas:            lead.requerimientos || undefined,
+  })
+
+  await service().updateLead(lead.id, { converted_opportunity_id: opp.id })
+  revalidatePath('/oportunidades')
+
+  void notifyOpportunityAssigned({
+    recipientId:    lead.vendedor_id,
+    oppId:          opp.id,
+    oppNombre:      opp.nombre,
+    leadName:       lead.nombre,
+    assignedByName,
+  }).catch(() => { /* notificaciones no bloquean */ })
 }
 
 // ── Sections ──────────────────────────────────────────────────────
@@ -36,8 +78,10 @@ export async function createSection(_prev: ActionState, form: FormData): Promise
   try {
     const user = await getUser()
     const section = await service().createSection({
-      nombre:      form.get('nombre') as string,
-      descripcion: (form.get('descripcion') as string) || undefined,
+      nombre:        form.get('nombre') as string,
+      descripcion:   (form.get('descripcion') as string) || undefined,
+      business_unit: form.get('business_unit') as BusinessUnit,
+      fuente:        form.get('fuente') as LeadSource,
     }, user.id)
     revalidatePath('/leads')
     redirect(`/leads?sec=${section.id}`)
@@ -50,8 +94,10 @@ export async function createSection(_prev: ActionState, form: FormData): Promise
 export async function updateSection(id: string, _prev: ActionState, form: FormData): Promise<ActionState> {
   try {
     await service().updateSection(id, {
-      nombre:      form.get('nombre') as string,
-      descripcion: (form.get('descripcion') as string) || undefined,
+      nombre:        form.get('nombre') as string,
+      descripcion:   (form.get('descripcion') as string) || undefined,
+      business_unit: form.get('business_unit') as BusinessUnit,
+      fuente:        form.get('fuente') as LeadSource,
     })
     revalidatePath('/leads')
     return null
@@ -72,7 +118,7 @@ export async function createLead(_prev: ActionState, form: FormData): Promise<Ac
   try {
     const svc = service()
     const [user, responsableId] = await Promise.all([getUser(), svc.getResponsableId()])
-    await svc.createLead({
+    const lead = await svc.createLead({
       section_id:     form.get('section_id') as string,
       nombre:         form.get('nombre') as string,
       empresa:        (form.get('empresa') as string) || undefined,
@@ -82,6 +128,12 @@ export async function createLead(_prev: ActionState, form: FormData): Promise<Ac
       responsable_id: responsableId,
       vendedor_id:    parseVendedor(form) ?? undefined,
     }, user.id)
+
+    if (lead.vendedor_id) {
+      const full = await svc.getLeadById(lead.id)
+      if (full) await autoConvertLead(full, await getFullName(user.id))
+    }
+
     revalidatePath('/leads')
     return null
   } catch (e) {
@@ -91,6 +143,7 @@ export async function createLead(_prev: ActionState, form: FormData): Promise<Ac
 
 export async function updateLead(id: string, _prev: ActionState, form: FormData): Promise<ActionState> {
   try {
+    const user = await getUser()
     const v = form.get('vendedor_id') as string
     await service().updateLead(id, {
       nombre:         form.get('nombre') as string,
@@ -100,6 +153,10 @@ export async function updateLead(id: string, _prev: ActionState, form: FormData)
       requerimientos: (form.get('requerimientos') as string) || undefined,
       vendedor_id:    (!v || v === '__none__') ? null : v,
     })
+
+    const lead = await service().getLeadById(id)
+    if (lead) await autoConvertLead(lead, await getFullName(user.id))
+
     revalidatePath('/leads')
     return null
   } catch (e) {
@@ -156,6 +213,12 @@ export async function createLeadAndReturn(
       responsable_id: responsableId,
       vendedor_id:    (!v || v === '__none__') ? undefined : v,
     }, user.id)
+
+    if (lead.vendedor_id) {
+      const full = await svc.getLeadById(lead.id)
+      if (full) await autoConvertLead(full, await getFullName(user.id))
+    }
+
     revalidatePath('/leads')
     return { id: lead.id }
   } catch (e) {
@@ -166,39 +229,6 @@ export async function createLeadAndReturn(
 export async function setLeadRequirementFile(leadId: string, filePath: string): Promise<void> {
   await service().updateLead(leadId, { requirements_file_path: filePath })
   revalidatePath('/leads')
-}
-
-export async function assignVendedor(id: string, vendedorId: string | null): Promise<ActionState> {
-  try {
-    await service().updateLead(id, { vendedor_id: vendedorId })
-    revalidatePath('/leads')
-
-    if (vendedorId) {
-      void (async () => {
-        try {
-          const user = await getUser()
-          const [leadRes, assignerRes] = await Promise.all([
-            supabaseAdmin.from('leads').select('nombre, section:lead_sections(nombre)').eq('id', id).single(),
-            supabaseAdmin.from('profiles').select('full_name').eq('id', user.id).single(),
-          ])
-          if (leadRes.data && assignerRes.data) {
-            const section = leadRes.data.section as { nombre: string } | null
-            await notifyLeadAssigned({
-              recipientId:    vendedorId,
-              leadId:         id,
-              leadName:       leadRes.data.nombre,
-              sectionName:    section?.nombre ?? '',
-              assignedByName: assignerRes.data.full_name,
-            })
-          }
-        } catch { /* notificaciones no bloquean */ }
-      })()
-    }
-
-    return null
-  } catch (e) {
-    return { error: (e as Error).message }
-  }
 }
 
 export async function convertLeadToOpportunity(

@@ -5,17 +5,20 @@ import type {
   UpdateLeadInput,
   ImportLeadRow,
 } from '@/lib/validations/lead'
+import type { BusinessUnit, LeadSource } from '@/lib/types'
 
 // ----------------------------------------------------------------
 // Row types (mirrors DB schema)
 // ----------------------------------------------------------------
 
 export type LeadSectionRow = {
-  id:          string
-  nombre:      string
-  descripcion: string | null
-  created_by:  string
-  created_at:  string
+  id:            string
+  nombre:        string
+  descripcion:   string | null
+  business_unit: BusinessUnit
+  fuente:        LeadSource
+  created_by:    string
+  created_at:    string
 }
 
 export type LeadRow = {
@@ -38,7 +41,7 @@ export type LeadRow = {
 export type LeadWithRelations = LeadRow & {
   responsable: { full_name: string } | null
   vendedor:    { full_name: string } | null
-  section:     { nombre: string }
+  section:     { nombre: string; business_unit: BusinessUnit; fuente: LeadSource }
 }
 
 export type LeadSectionWithCount = LeadSectionRow & {
