@@ -1207,6 +1207,7 @@ export type Database = {
       }
       tasks: {
         Row: {
+          assigned_to: string | null
           board_id: string
           created_at: string
           created_by: string
@@ -1219,6 +1220,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          assigned_to?: string | null
           board_id: string
           created_at?: string
           created_by: string
@@ -1231,6 +1233,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          assigned_to?: string | null
           board_id?: string
           created_at?: string
           created_by?: string
@@ -1243,6 +1246,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "tasks_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "tasks_board_id_fkey"
             columns: ["board_id"]
