@@ -1,13 +1,13 @@
 import { Html, Head, Body, Container, Section, Heading, Text, Button, Hr } from '@react-email/components'
 
 interface Props {
-  leadName:    string
-  sectionName: string
-  assignedBy:  string
-  leadUrl:     string
+  oppNombre:  string
+  leadName:   string
+  assignedBy: string
+  oppUrl:     string
 }
 
-export function LeadAssignedEmail({ leadName, sectionName, assignedBy, leadUrl }: Props) {
+export function OpportunityAssignedEmail({ oppNombre, leadName, assignedBy, oppUrl }: Props) {
   return (
     <Html lang="es">
       <Head />
@@ -20,16 +20,16 @@ export function LeadAssignedEmail({ leadName, sectionName, assignedBy, leadUrl }
           </Section>
           <Section style={{ padding: '28px 24px' }}>
             <Heading as="h2" style={{ margin: '0 0 8px', fontSize: '16px', color: '#111827' }}>
-              Se te asignó un lead
+              Se te asignó una nueva oportunidad
             </Heading>
             <Text style={{ margin: '0 0 20px', color: '#374151' }}>
-              <strong>{assignedBy}</strong> te asignó el lead <strong>"{leadName}"</strong> en la sección <strong>{sectionName}</strong>.
+              <strong>{assignedBy}</strong> te asignó el lead <strong>"{leadName}"</strong>, que ya está listo para trabajar como oportunidad <strong>"{oppNombre}"</strong>.
             </Text>
             <Button
-              href={leadUrl}
+              href={oppUrl}
               style={{ background: '#1d4ed8', color: '#fff', padding: '10px 20px', borderRadius: '6px', fontSize: '14px', textDecoration: 'none', display: 'inline-block' }}
             >
-              Ver lead
+              Ver oportunidad
             </Button>
             <Hr style={{ borderColor: '#e5e7eb', margin: '24px 0 12px' }} />
             <Text style={{ margin: 0, fontSize: '12px', color: '#9ca3af' }}>

@@ -99,7 +99,7 @@ export function ConvertLeadButton({ lead, assignableUsers }: Props) {
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="cl_unit">Unidad de negocio *</Label>
-              <Select name="business_unit" required>
+              <Select name="business_unit" defaultValue={lead.section.business_unit} required>
                 <SelectTrigger id="cl_unit">
                   <SelectValue placeholder="Selecciona" />
                 </SelectTrigger>
@@ -113,7 +113,7 @@ export function ConvertLeadButton({ lead, assignableUsers }: Props) {
 
             <div className="space-y-1.5">
               <Label htmlFor="cl_fuente">Fuente *</Label>
-              <Select name="fuente" defaultValue="otro">
+              <Select name="fuente" defaultValue={lead.section.fuente}>
                 <SelectTrigger id="cl_fuente">
                   <SelectValue />
                 </SelectTrigger>

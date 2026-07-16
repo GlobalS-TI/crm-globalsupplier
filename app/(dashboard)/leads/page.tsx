@@ -1,4 +1,5 @@
 import { UserRoundSearch } from 'lucide-react'
+import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { LeadSectionRepository, LeadRepository } from '@/lib/repositories/supabase/LeadRepository'
 import { ProfileRepository } from '@/lib/repositories/supabase/ProfileRepository'
@@ -7,6 +8,8 @@ import { LeadSectionNav } from '@/components/crm/LeadSectionNav'
 import { LeadTable } from '@/components/crm/LeadTable'
 import { CreateSectionButton } from '@/components/crm/LeadSectionModal'
 import type { AssignableUser } from '@/components/crm/LeadModal'
+import { LEADS_ROLES } from '@/lib/types'
+import type { UserRole } from '@/lib/types'
 
 export const metadata = { title: 'Leads — CRM Global Supplier' }
 export const dynamic  = 'force-dynamic'
@@ -26,7 +29,9 @@ export default async function LeadsPage({ searchParams }: PageProps) {
     .eq('id', user!.id)
     .single()
 
-  const role           = profile?.role ?? ''
+  const role = (profile?.role ?? '') as UserRole
+  if (!LEADS_ROLES.includes(role)) redirect('/dashboard')
+
   const isLeadsManager = ['marketing', 'director_general'].includes(role)
   const canManageLeads = ['marketing', 'director_general', 'direccion_comercial'].includes(role)
 

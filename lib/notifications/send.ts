@@ -4,9 +4,9 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 import type { Json } from '@/lib/types/database'
 import type { NotificationType, NotificationPayload } from './types'
 import { StaleDigestEmail } from './templates/staleDigest'
-import { LeadAssignedEmail } from './templates/leadAssigned'
 import { OppClosedEmail } from './templates/oppClosed'
 import { LeadConvertedEmail } from './templates/leadConverted'
+import { OpportunityAssignedEmail } from './templates/opportunityAssigned'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 const FROM   = process.env.RESEND_FROM ?? 'CRM Global Supplier <noreply@globalsupplier.dev>'
@@ -114,38 +114,6 @@ export async function sendNotification({
 
 // ─── Helpers tipados por evento ───────────────────────────────────────────────
 
-export async function notifyLeadAssigned({
-  recipientId,
-  leadId,
-  leadName,
-  sectionName,
-  assignedByName,
-}: {
-  recipientId:    string
-  leadId:         string
-  leadName:       string
-  sectionName:    string
-  assignedByName: string
-}) {
-  return sendNotification({
-    type:         'lead_assigned',
-    recipientIds: [recipientId],
-    title:        'Se te asignó un lead',
-    body:         `${assignedByName} te asignó "${leadName}" en ${sectionName}`,
-    href:         '/leads',
-    payload:      { lead_id: leadId, lead_name: leadName, section: sectionName },
-    buildEmail:   async appUrl => ({
-      subject: `📋 Lead asignado: ${leadName} — CRM Global Supplier`,
-      html:    await render(LeadAssignedEmail({
-        leadName,
-        sectionName,
-        assignedBy: assignedByName,
-        leadUrl:    `${appUrl}/leads`,
-      })),
-    }),
-  })
-}
-
 export async function notifyLeadConverted({
   recipientIds,
   leadId,
@@ -175,6 +143,38 @@ export async function notifyLeadConverted({
         oppNombre,
         convertedBy: convertedByName,
         oppUrl:      `${appUrl}/oportunidades/${oppId}`,
+      })),
+    }),
+  })
+}
+
+export async function notifyOpportunityAssigned({
+  recipientId,
+  oppId,
+  oppNombre,
+  leadName,
+  assignedByName,
+}: {
+  recipientId:    string
+  oppId:          string
+  oppNombre:      string
+  leadName:       string
+  assignedByName: string
+}) {
+  return sendNotification({
+    type:         'opportunity_assigned',
+    recipientIds: [recipientId],
+    title:        'Se te asignó una nueva oportunidad',
+    body:         `${assignedByName} te asignó "${leadName}" → "${oppNombre}"`,
+    href:         `/oportunidades/${oppId}`,
+    payload:      { opp_id: oppId, opp_nombre: oppNombre, lead_name: leadName },
+    buildEmail:   async appUrl => ({
+      subject: `📋 Nueva oportunidad: ${oppNombre} — CRM Global Supplier`,
+      html:    await render(OpportunityAssignedEmail({
+        oppNombre,
+        leadName,
+        assignedBy: assignedByName,
+        oppUrl:     `${appUrl}/oportunidades/${oppId}`,
       })),
     }),
   })

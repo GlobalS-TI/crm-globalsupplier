@@ -16,7 +16,7 @@ import type {
 } from '@/lib/validations/lead'
 
 const LEAD_WITH_RELATIONS =
-  '*, responsable:profiles!responsable_id(full_name), vendedor:profiles!vendedor_id(full_name), section:lead_sections!section_id(nombre)'
+  '*, responsable:profiles!responsable_id(full_name), vendedor:profiles!vendedor_id(full_name), section:lead_sections!section_id(nombre, business_unit, fuente)'
 
 async function db() {
   return createClient()

@@ -1,6 +1,8 @@
 'use client'
 
 import { useTransition } from 'react'
+import Link from 'next/link'
+import type { Route } from 'next'
 import { ExternalLink, FileDown, Mail, Phone, Trash2 } from 'lucide-react'
 import { LeadImportButton } from '@/components/crm/LeadImportButton'
 import {
@@ -134,7 +136,11 @@ export function LeadTable({ leads, section, sectionId, canManageLeads, isLeadsMa
                       </a>
                     )}
                     {lead.converted_opportunity_id && (
-                      <Badge variant="secondary" className="mt-1 text-xs">Convertido</Badge>
+                      <Link href={`/oportunidades/${lead.converted_opportunity_id}` as Route}>
+                        <Badge variant="secondary" className="mt-1 text-xs hover:bg-secondary/70 transition-colors">
+                          Convertido
+                        </Badge>
+                      </Link>
                     )}
                   </td>
                   <td className="px-4 py-3 text-muted-foreground hidden md:table-cell">
