@@ -1,10 +1,13 @@
 export const dynamic = 'force-dynamic'
 
+import { createClient } from '@/lib/supabase/server'
 import { ProfileRepository } from '@/lib/repositories/supabase/ProfileRepository'
 import { UserTable } from '@/components/crm/admin/UserTable'
 import { CreateUserDialog } from '@/components/crm/admin/CreateUserDialog'
 
 export default async function UsuariosPage() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
   const users = await new ProfileRepository().findAll()
 
   return (
@@ -19,7 +22,7 @@ export default async function UsuariosPage() {
         <CreateUserDialog />
       </div>
 
-      <UserTable users={users} />
+      <UserTable users={users} currentUserId={user!.id} />
     </div>
   )
 }
