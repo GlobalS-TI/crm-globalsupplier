@@ -10,7 +10,29 @@ import { UpdateProfileSchema, CreateUserSchema } from '@/lib/validations/profile
 const resend = new Resend(process.env.RESEND_API_KEY)
 const FROM   = process.env.RESEND_FROM ?? 'CRM Global Supplier <noreply@globalsupplier.com.mx>'
 
+// Estas acciones mutan auth.users vía supabaseAdmin (service role, bypasea RLS).
+// La página /admin/usuarios está gateada a role='administracion' en layout.tsx,
+// pero eso solo protege la navegación — un Server Action es un endpoint aparte
+// que se puede invocar directo, así que cada una revalida el rol aquí.
+async function requireAdmin(): Promise<{ error: string } | null> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'No autenticado' }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role, is_active')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile?.is_active || profile.role !== 'administracion') return { error: 'No autorizado' }
+  return null
+}
+
 export async function updateUser(id: string, raw: unknown): Promise<{ error?: string }> {
+  const adminError = await requireAdmin()
+  if (adminError) return adminError
+
   const parsed = UpdateProfileSchema.safeParse(raw)
   if (!parsed.success) return { error: parsed.error.errors[0]?.message }
 
@@ -78,6 +100,9 @@ export async function updateUser(id: string, raw: unknown): Promise<{ error?: st
 }
 
 export async function toggleUserActive(id: string, isActive: boolean): Promise<{ error?: string }> {
+  const adminError = await requireAdmin()
+  if (adminError) return adminError
+
   const supabase = await createClient()
   const { error } = await supabase.from('profiles').update({ is_active: isActive }).eq('id', id)
   if (error) return { error: error.message }
@@ -87,16 +112,20 @@ export async function toggleUserActive(id: string, isActive: boolean): Promise<{
 }
 
 export async function resetUserPassword(id: string): Promise<{ error?: string }> {
+  const adminError = await requireAdmin()
+  if (adminError) return adminError
+
   const { data: authUser, error: getUserError } = await supabaseAdmin.auth.admin.getUserById(id)
   if (getUserError || !authUser?.user?.email) return { error: 'No se pudo obtener el usuario' }
 
   const email = authUser.user.email
   const name  = authUser.user.user_metadata?.full_name as string | undefined
 
+  // origin viene del header Origin (seteado por el navegador, no falsificable desde
+  // fetch/XHR de otro origen) — nunca de x-forwarded-host, que puede ser controlado
+  // por el cliente dependiendo de la config del proxy/edge.
   const h = await headers()
-  const origin = h.get('origin') ?? h.get('x-forwarded-host')?.split(',')[0]?.trim()
-    ? `https://${h.get('x-forwarded-host')!.split(',')[0].trim()}`
-    : (process.env.NEXT_PUBLIC_APP_URL ?? 'https://crm.globalsupplier.com.mx')
+  const origin = h.get('origin') ?? process.env.NEXT_PUBLIC_APP_URL ?? 'https://crm.globalsupplier.com.mx'
   const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
     type:    'recovery',
     email,
@@ -127,6 +156,9 @@ export async function resetUserPassword(id: string): Promise<{ error?: string }>
 }
 
 export async function deleteUser(id: string): Promise<{ error?: string }> {
+  const adminError = await requireAdmin()
+  if (adminError) return adminError
+
   const { error } = await supabaseAdmin.auth.admin.deleteUser(id)
   if (error) {
     // profiles.id -> auth.users(id) on delete cascade, pero varias tablas
@@ -146,6 +178,9 @@ export async function deleteUser(id: string): Promise<{ error?: string }> {
 }
 
 export async function createUser(raw: unknown): Promise<{ error?: string }> {
+  const adminError = await requireAdmin()
+  if (adminError) return adminError
+
   const parsed = CreateUserSchema.safeParse(raw)
   if (!parsed.success) return { error: parsed.error.errors[0]?.message ?? 'Datos inválidos' }
 
