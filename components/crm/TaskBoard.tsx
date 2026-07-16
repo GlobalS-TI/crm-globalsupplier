@@ -21,11 +21,12 @@ import {
 type User = { id: string; full_name: string; email: string }
 
 interface Props {
-  board:          BoardWithColumns
-  initialGroups:  TaskGroupRow[]
-  initialTasks:   TaskWithValues[]
-  users:          User[]
-  currentUserId:  string
+  board:                BoardWithColumns
+  initialGroups:        TaskGroupRow[]
+  initialTasks:         TaskWithValues[]
+  users:                User[]
+  currentUserId:        string
+  allowedBusinessUnits: string[]
 }
 
 const GROUP_COLORS = [
@@ -145,14 +146,15 @@ function AddTaskRow({ boardId, groupId, columns, onAdd }: {
 // ----------------------------------------------------------------
 // Single task row
 // ----------------------------------------------------------------
-function TaskRow({ task, columns, users, onTituloSave, onDelete, onCellChange, onOptionsUpdate }: {
-  task:            TaskWithValues
-  columns:         TaskBoardColumnRow[]
-  users:           User[]
-  onTituloSave:    (titulo: string) => void
-  onDelete:        () => void
-  onCellChange:    (columnId: string, value: string | null) => void
-  onOptionsUpdate: (columnId: string, opts: import('@/lib/validations/task').SelectorOption[]) => void
+function TaskRow({ task, columns, users, allowedBusinessUnits, onTituloSave, onDelete, onCellChange, onOptionsUpdate }: {
+  task:                 TaskWithValues
+  columns:              TaskBoardColumnRow[]
+  users:                User[]
+  allowedBusinessUnits: string[]
+  onTituloSave:         (titulo: string) => void
+  onDelete:             () => void
+  onCellChange:         (columnId: string, value: string | null) => void
+  onOptionsUpdate:      (columnId: string, opts: import('@/lib/validations/task').SelectorOption[]) => void
 }) {
   const [editing,     setEditing]     = useState(false)
   const [titleValue,  setTitleValue]  = useState(task.titulo)
@@ -200,6 +202,7 @@ function TaskRow({ task, columns, users, onTituloSave, onDelete, onCellChange, o
             value={task.column_values[col.id] ?? null}
             users={users}
             taskId={task.id}
+            allowedBusinessUnits={allowedBusinessUnits}
             onChange={val => onCellChange(col.id, val)}
             onOptionsUpdate={onOptionsUpdate}
           />
@@ -253,7 +256,7 @@ function GroupNameEditor({ group, onSave, onCancel }: {
 // Single group section
 // ----------------------------------------------------------------
 function TaskGroup({
-  group, tasks, columns, users, boardId,
+  group, tasks, columns, users, boardId, allowedBusinessUnits,
   collapsed, onToggle,
   onTaskAdd, onTaskTitleUpdate, onTaskDelete, onCellChange,
   onGroupRename, onGroupDelete, onColumnRename, onColumnDelete, onColumnAdded, onOptionsUpdate,
@@ -263,6 +266,7 @@ function TaskGroup({
   columns:             TaskBoardColumnRow[]
   users:               User[]
   boardId:             string
+  allowedBusinessUnits: string[]
   collapsed:           boolean
   onToggle:            () => void
   onTaskAdd:           (task: TaskWithValues) => void
@@ -366,6 +370,7 @@ function TaskGroup({
                   task={task}
                   columns={columns}
                   users={users}
+                  allowedBusinessUnits={allowedBusinessUnits}
                   onTituloSave={titulo => onTaskTitleUpdate(task.id, titulo)}
                   onDelete={() => onTaskDelete(task.id)}
                   onCellChange={(colId, val) => onCellChange(task.id, colId, val)}
@@ -434,7 +439,7 @@ function AddGroupRow({ onAdd }: { onAdd: (nombre: string) => void }) {
 // ----------------------------------------------------------------
 // Main TaskBoard
 // ----------------------------------------------------------------
-export function TaskBoard({ board, initialGroups, initialTasks, users }: Props) {
+export function TaskBoard({ board, initialGroups, initialTasks, users, allowedBusinessUnits }: Props) {
   const [groups,      setGroups]      = useState<TaskGroupRow[]>(initialGroups)
   const [tasks,       setTasks]       = useState<TaskWithValues[]>(initialTasks)
   const [columns,     setColumns]     = useState(board.columns)
@@ -562,6 +567,7 @@ export function TaskBoard({ board, initialGroups, initialTasks, users }: Props) 
             columns={columns}
             users={users}
             boardId={board.id}
+            allowedBusinessUnits={allowedBusinessUnits}
             collapsed={collapsed.has(group.id)}
             onToggle={() => toggleCollapse(group.id)}
             onTaskAdd={handleTaskAdd}
@@ -613,6 +619,7 @@ export function TaskBoard({ board, initialGroups, initialTasks, users }: Props) 
                       task={task}
                       columns={columns}
                       users={users}
+                      allowedBusinessUnits={allowedBusinessUnits}
                       onTituloSave={titulo => handleTitleUpdate(task.id, titulo)}
                       onDelete={() => setDeleteTaskId(task.id)}
                       onCellChange={(colId, val) => handleCellChange(task.id, colId, val)}

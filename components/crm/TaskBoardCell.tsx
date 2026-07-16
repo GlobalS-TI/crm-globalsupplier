@@ -24,17 +24,17 @@ const BU_LABELS: Record<string, string> = {
   got_fresh_breath:    'GFB',
   gtx_systems:         'GTX',
   juno_promotional:    'Juno',
-  fire_spot:           'FS',
+  fire_spot:           'TFS',
 }
 
 const BU_COLORS: Record<string, string> = {
-  global_supplier_mty: '#2563eb',
-  thunder_safety:      '#ea580c',
-  thunder_led:         '#ca8a04',
-  got_fresh_breath:    '#16a34a',
-  gtx_systems:         '#7c3aed',
-  juno_promotional:    '#db2777',
-  fire_spot:           '#dc2626',
+  global_supplier_mty: '#9ca3af', // gris claro
+  thunder_safety:      '#facc15', // amarillo pollo
+  thunder_led:         '#ca8a04', // amarillo
+  got_fresh_breath:    '#38bdf8', // azul celeste
+  gtx_systems:         '#1d4ed8', // azul rey
+  juno_promotional:    '#6b7280', // gris ratón
+  fire_spot:           '#f97316', // naranja
 }
 
 const ALL_BU = Object.keys(BU_LABELS)
@@ -332,10 +332,18 @@ function SelectorCell({ column, value, options, onChange, onOptionsUpdate }: {
 // ----------------------------------------------------------------
 // Business unit popover
 // ----------------------------------------------------------------
-function BusinessUnitCell({ value, onChange }: { value: string | null; onChange: (v: string | null) => void }) {
+function BusinessUnitCell({ value, onChange, allowedBusinessUnits }: {
+  value:                string | null
+  onChange:             (v: string | null) => void
+  allowedBusinessUnits: string[]
+}) {
   const [open, setOpen] = useState(false)
   let selected: string[] = []
   try { selected = value ? JSON.parse(value) : [] } catch { selected = [] }
+
+  // Solo se pueden marcar las marcas asignadas al usuario actual — las ya
+  // seleccionadas se siguen mostrando aunque ya no estén entre sus asignadas.
+  const selectableBU = ALL_BU.filter(bu => allowedBusinessUnits.includes(bu))
 
   function toggle(bu: string) {
     const next = selected.includes(bu) ? selected.filter(v => v !== bu) : [...selected, bu]
@@ -365,7 +373,10 @@ function BusinessUnitCell({ value, onChange }: { value: string | null; onChange:
       </PopoverTrigger>
       <PopoverContent className={cn(dropdownContent, 'w-56')} align="start">
         <div className="py-1">
-          {ALL_BU.map(bu => (
+          {selectableBU.length === 0 && (
+            <p className="px-3 py-2 text-xs text-muted-foreground">No tienes marcas asignadas.</p>
+          )}
+          {selectableBU.map(bu => (
             <button
               key={bu}
               className="w-full text-left px-3 py-1.5 hover:bg-muted/50 transition-colors flex items-center gap-2"
@@ -781,15 +792,16 @@ function ArchivoCell({ taskId, value, onChange }: {
 // TaskBoardCell — dispatcher
 // ----------------------------------------------------------------
 interface TaskBoardCellProps {
-  column:          TaskBoardColumnRow
-  value:           string | null
-  users:           User[]
-  taskId:          string
-  onChange:        (value: string | null) => void
-  onOptionsUpdate: (columnId: string, opts: SelectorOption[]) => void
+  column:               TaskBoardColumnRow
+  value:                string | null
+  users:                User[]
+  taskId:               string
+  allowedBusinessUnits: string[]
+  onChange:             (value: string | null) => void
+  onOptionsUpdate:      (columnId: string, opts: SelectorOption[]) => void
 }
 
-export function TaskBoardCell({ column, value, users, taskId, onChange, onOptionsUpdate }: TaskBoardCellProps) {
+export function TaskBoardCell({ column, value, users, taskId, allowedBusinessUnits, onChange, onOptionsUpdate }: TaskBoardCellProps) {
   const cfg = parseConfig(column.config)
 
   const handleOptionsUpdate = useCallback((opts: SelectorOption[]) => {
@@ -829,7 +841,7 @@ export function TaskBoardCell({ column, value, users, taskId, onChange, onOption
   }
 
   if (column.tipo === 'business_unit') {
-    return <BusinessUnitCell value={value} onChange={onChange} />
+    return <BusinessUnitCell value={value} onChange={onChange} allowedBusinessUnits={allowedBusinessUnits} />
   }
 
   if (column.tipo === 'person') {
