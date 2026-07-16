@@ -73,7 +73,7 @@ function AddTaskRow({ boardId, groupId, columns, onAdd }: {
         onAdd({
           id: result.id, board_id: boardId, titulo: v,
           fecha_entrega: null, group_id: groupId, opportunity_id: null,
-          created_by: '', position: 0,
+          created_by: '', assigned_to: null, position: 0,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
           column_values: {},
