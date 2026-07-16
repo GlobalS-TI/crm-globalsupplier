@@ -4,7 +4,7 @@ import { useState, useTransition, useRef, useCallback } from 'react'
 import { ChevronDown, ChevronRight, Plus, Loader2, Pencil, Check, X } from 'lucide-react'
 import type { BoardWithColumns, TaskWithValues, TaskBoardColumnRow, TaskGroupRow } from '@/lib/repositories/interfaces/ITaskRepository'
 import {
-  createTask, updateTask, deleteTask, setColumnValue, deleteBoardColumn,
+  createTask, updateTask, deleteTask, setColumnValue, deleteBoardColumn, updateBoardColumn,
   createGroup, updateGroup, deleteGroup,
 } from '@/app/(dashboard)/actividades/task-actions'
 import { TaskBoardCell } from '@/components/crm/TaskBoardCell'
@@ -34,12 +34,48 @@ const GROUP_COLORS = [
 ]
 
 // ----------------------------------------------------------------
-// Column header with delete on hover
+// Column header — nombre editable con clic, eliminar al hover
 // ----------------------------------------------------------------
-function ColHeader({ col, onDelete }: { col: TaskBoardColumnRow; onDelete: (id: string) => void }) {
+function ColHeader({ col, onRename, onDelete }: {
+  col:      TaskBoardColumnRow
+  onRename: (colId: string, nombre: string) => void
+  onDelete: (id: string) => void
+}) {
+  const [editing, setEditing] = useState(false)
+  const [value, setValue] = useState(col.nombre)
+
+  function save() {
+    const v = value.trim()
+    if (!v || v === col.nombre) { setEditing(false); setValue(col.nombre); return }
+    onRename(col.id, v)
+    setEditing(false)
+  }
+
+  function cancel() {
+    setValue(col.nombre)
+    setEditing(false)
+  }
+
   return (
     <th className="px-3 py-2.5 text-left text-xs font-medium text-muted-foreground uppercase tracking-wide whitespace-nowrap border-r border-border/40 last:border-r-0 group/col relative">
-      <span>{col.nombre}</span>
+      {editing ? (
+        <input
+          autoFocus
+          value={value}
+          onChange={e => setValue(e.target.value)}
+          onBlur={save}
+          onKeyDown={e => { if (e.key === 'Enter') save(); if (e.key === 'Escape') cancel() }}
+          className="bg-transparent border-b border-current outline-none w-full normal-case font-medium text-foreground"
+        />
+      ) : (
+        <span
+          className="cursor-pointer hover:underline underline-offset-2"
+          onClick={() => setEditing(true)}
+          title="Clic para renombrar"
+        >
+          {col.nombre}
+        </span>
+      )}
       <button
         onClick={() => onDelete(col.id)}
         className="absolute right-1 top-1/2 -translate-y-1/2 text-muted-foreground/40 hover:text-destructive hidden group-hover/col:block leading-none px-0.5"
@@ -220,7 +256,7 @@ function TaskGroup({
   group, tasks, columns, users, boardId,
   collapsed, onToggle,
   onTaskAdd, onTaskTitleUpdate, onTaskDelete, onCellChange,
-  onGroupRename, onGroupDelete, onColumnDelete, onColumnAdded, onOptionsUpdate,
+  onGroupRename, onGroupDelete, onColumnRename, onColumnDelete, onColumnAdded, onOptionsUpdate,
 }: {
   group:               TaskGroupRow
   tasks:               TaskWithValues[]
@@ -235,6 +271,7 @@ function TaskGroup({
   onCellChange:        (taskId: string, colId: string, val: string | null) => void
   onGroupRename:       (groupId: string, nombre: string) => void
   onGroupDelete:       (groupId: string) => void
+  onColumnRename:      (colId: string, nombre: string) => void
   onColumnDelete:      (colId: string) => void
   onColumnAdded:       (col: TaskBoardColumnRow) => void
   onOptionsUpdate:     (columnId: string, opts: import('@/lib/validations/task').SelectorOption[]) => void
@@ -310,7 +347,7 @@ function TaskGroup({
                   Actividad
                 </th>
                 {columns.map(col => (
-                  <ColHeader key={col.id} col={col} onDelete={onColumnDelete} />
+                  <ColHeader key={col.id} col={col} onRename={onColumnRename} onDelete={onColumnDelete} />
                 ))}
                 <th className="w-8 px-1 border-l border-border/20">
                   <TaskBoardAddColumn
@@ -437,6 +474,11 @@ export function TaskBoard({ board, initialGroups, initialTasks, users }: Props) 
     start(async () => { await updateGroup(groupId, { nombre }) })
   }, [])
 
+  const handleColumnRename = useCallback((colId: string, nombre: string) => {
+    setColumns(prev => prev.map(c => c.id === colId ? { ...c, nombre } : c))
+    start(async () => { await updateBoardColumn(colId, { nombre }) })
+  }, [])
+
   function confirmDeleteGroup() {
     if (!deleteGroupId) return
     const id = deleteGroupId; setDeleteGroupId(null)
@@ -528,6 +570,7 @@ export function TaskBoard({ board, initialGroups, initialTasks, users }: Props) 
             onCellChange={handleCellChange}
             onGroupRename={handleGroupRename}
             onGroupDelete={id => setDeleteGroupId(id)}
+            onColumnRename={handleColumnRename}
             onColumnDelete={id => setDeleteColId(id)}
             onColumnAdded={col => setColumns(prev => [...prev, col])}
             onOptionsUpdate={handleOptionsUpdate}
@@ -551,7 +594,7 @@ export function TaskBoard({ board, initialGroups, initialTasks, users }: Props) 
                     <th className="w-8" />
                     <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wide border-r border-border/30">Actividad</th>
                     {columns.map(col => (
-                      <ColHeader key={col.id} col={col} onDelete={id => setDeleteColId(id)} />
+                      <ColHeader key={col.id} col={col} onRename={handleColumnRename} onDelete={id => setDeleteColId(id)} />
                     ))}
                     <th className="w-8 px-1 border-l border-border/20">
                       <TaskBoardAddColumn
