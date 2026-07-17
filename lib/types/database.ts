@@ -333,6 +333,54 @@ export type Database = {
           },
         ]
       }
+      invoices: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          document_url: string | null
+          folio: string | null
+          id: string
+          monto: number | null
+          order_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          document_url?: string | null
+          folio?: string | null
+          id?: string
+          monto?: number | null
+          order_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          document_url?: string | null
+          folio?: string | null
+          id?: string
+          monto?: number | null
+          order_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_sections: {
         Row: {
           business_unit: Database["public"]["Enums"]["business_unit"]
@@ -634,6 +682,105 @@ export type Database = {
             columns: ["opportunity_id"]
             isOneToOne: true
             referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_providers: {
+        Row: {
+          created_at: string
+          id: string
+          monto: number | null
+          notas: string | null
+          order_id: string
+          proveedor: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          monto?: number | null
+          notas?: string | null
+          order_id: string
+          proveedor: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          monto?: number | null
+          notas?: string | null
+          order_id?: string
+          proveedor?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_providers_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          document_url: string | null
+          external_ref: string | null
+          id: string
+          notas: string | null
+          opportunity_id: string
+          quote_id: string
+          status: Database["public"]["Enums"]["order_status"]
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          document_url?: string | null
+          external_ref?: string | null
+          id?: string
+          notas?: string | null
+          opportunity_id: string
+          quote_id: string
+          status?: Database["public"]["Enums"]["order_status"]
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          document_url?: string | null
+          external_ref?: string | null
+          id?: string
+          notas?: string | null
+          opportunity_id?: string
+          quote_id?: string
+          status?: Database["public"]["Enums"]["order_status"]
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "quotes"
             referencedColumns: ["id"]
           },
         ]
@@ -1028,6 +1175,60 @@ export type Database = {
           },
         ]
       }
+      quotes: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          document_url: string | null
+          external_ref: string | null
+          id: string
+          notas: string | null
+          opportunity_id: string
+          status: Database["public"]["Enums"]["quote_status"]
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          document_url?: string | null
+          external_ref?: string | null
+          id?: string
+          notas?: string | null
+          opportunity_id: string
+          status?: Database["public"]["Enums"]["quote_status"]
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          document_url?: string | null
+          external_ref?: string | null
+          id?: string
+          notas?: string | null
+          opportunity_id?: string
+          status?: Database["public"]["Enums"]["quote_status"]
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quotes_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quotes_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sales_targets: {
         Row: {
           created_at: string
@@ -1347,6 +1548,7 @@ export type Database = {
         | "negociacion"
         | "ganado"
         | "perdido"
+      order_status: "revision_cliente" | "aprobado" | "cancelado"
       project_file_type: "FIGMA" | "REPO" | "ASSET" | "DOC" | "OTHER"
       project_status:
         | "INCOMING"
@@ -1360,6 +1562,7 @@ export type Database = {
         | "SEGUIMIENTO"
         | "CIERRE"
       project_tipo: "DISENO" | "INDUSTRIAL"
+      quote_status: "borrador" | "enviada" | "aceptada" | "rechazada"
       task_column_type:
         | "text"
         | "number"

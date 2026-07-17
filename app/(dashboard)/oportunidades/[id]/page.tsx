@@ -14,11 +14,17 @@ import { ActivityTimeline } from '@/components/crm/ActivityTimeline'
 import { ActivityForm } from '@/components/crm/ActivityForm'
 import { StaleBadge } from '@/components/crm/StaleBadge'
 import { DeleteButton } from '@/components/crm/DeleteButton'
+import { JunoPipelinePanel } from '@/components/crm/JunoPipelinePanel'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { updateOpportunity, moveToStage, deleteOpportunity } from '../actions'
 import { createActivity } from '@/app/(dashboard)/actividades/actions'
+import { QuoteRepository } from '@/lib/repositories/supabase/QuoteRepository'
+import { OrderRepository } from '@/lib/repositories/supabase/OrderRepository'
+import { InvoiceRepository } from '@/lib/repositories/supabase/InvoiceRepository'
 import type { OpportunityStage } from '@/lib/validations/opportunity'
+import type { OrderProviderRow } from '@/lib/repositories/interfaces/IOrderRepository'
+import type { InvoiceRow } from '@/lib/repositories/interfaces/IInvoiceRepository'
 
 export const dynamic = 'force-dynamic'
 
@@ -56,6 +62,38 @@ export default async function OportunidadDetailPage({
   const currentUserId = userResult.data.user?.id ?? ''
   const isClosed      = opp.etapa === 'ganado' || opp.etapa === 'perdido'
   const boundMove     = moveToStage.bind(null, id)
+
+  const isJuno = opp.business_unit === 'juno_promotional'
+  let junoData: {
+    quotes: Awaited<ReturnType<QuoteRepository['findByOpportunity']>>
+    orders: Awaited<ReturnType<OrderRepository['findByOpportunity']>>
+    providersByOrder: Record<string, OrderProviderRow[]>
+    invoicesByOrder: Record<string, InvoiceRow[]>
+  } | null = null
+
+  if (isJuno) {
+    const quoteRepo = new QuoteRepository()
+    const orderRepo = new OrderRepository()
+    const invoiceRepo = new InvoiceRepository()
+
+    const [quotes, orders] = await Promise.all([
+      quoteRepo.findByOpportunity(id),
+      orderRepo.findByOpportunity(id),
+    ])
+
+    const providersByOrder: Record<string, OrderProviderRow[]> = {}
+    const invoicesByOrder: Record<string, InvoiceRow[]> = {}
+    await Promise.all(orders.map(async o => {
+      const [providers, invoices] = await Promise.all([
+        orderRepo.listProviders(o.id),
+        invoiceRepo.findByOrder(o.id),
+      ])
+      providersByOrder[o.id] = providers
+      invoicesByOrder[o.id]  = invoices
+    }))
+
+    junoData = { quotes, orders, providersByOrder, invoicesByOrder }
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-8 space-y-8">
@@ -124,6 +162,19 @@ export default async function OportunidadDetailPage({
           <ActivityTimeline activities={activities} opportunityId={id} />
         </div>
       </div>
+
+      {junoData && (
+        <>
+          <Separator />
+          <JunoPipelinePanel
+            opportunityId={id}
+            quotes={junoData.quotes}
+            orders={junoData.orders}
+            providersByOrder={junoData.providersByOrder}
+            invoicesByOrder={junoData.invoicesByOrder}
+          />
+        </>
+      )}
 
       <Separator />
 
