@@ -140,13 +140,31 @@ export class TaskRepository implements ITaskRepository {
       .order('created_at', { ascending: true })
 
     if (error) throw error
+    return this.mapTasksWithValues(data ?? [])
+  }
 
-    return (data ?? []).map(t => {
-      const raw = (t as typeof t & { raw_values: { column_id: string; value: string | null }[] }).raw_values ?? []
+  async findTasksByBoardAndUser(boardId: string, userId: string): Promise<TaskWithValues[]> {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+      .from('tasks')
+      .select('*, raw_values:task_column_values(column_id, value)')
+      .eq('board_id', boardId)
+      .or(`created_by.eq.${userId},assigned_to.eq.${userId}`)
+      .order('fecha_entrega', { ascending: true, nullsFirst: false })
+      .order('position', { ascending: true })
+      .order('created_at', { ascending: true })
+
+    if (error) throw error
+    return this.mapTasksWithValues(data ?? [])
+  }
+
+  private mapTasksWithValues(rows: Array<Record<string, unknown> & { raw_values?: { column_id: string; value: string | null }[] }>): TaskWithValues[] {
+    return rows.map(t => {
+      const raw = t.raw_values ?? []
       const column_values: Record<string, string | null> = {}
       for (const cv of raw) column_values[cv.column_id] = cv.value
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { raw_values: _, ...task } = t as typeof t & { raw_values: unknown }
+      const { raw_values: _, ...task } = t
       return { ...task, column_values } as TaskWithValues
     })
   }
