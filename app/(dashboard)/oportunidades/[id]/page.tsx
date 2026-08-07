@@ -14,10 +14,13 @@ import { ActivityTimeline } from '@/components/crm/ActivityTimeline'
 import { ActivityForm } from '@/components/crm/ActivityForm'
 import { StaleBadge } from '@/components/crm/StaleBadge'
 import { DeleteButton } from '@/components/crm/DeleteButton'
+import { OpportunityFilesPanel } from '@/components/crm/OpportunityFilesPanel'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { updateOpportunity, moveToStage, deleteOpportunity } from '../actions'
+import { updateOpportunity, moveToStage, deleteOpportunity, deleteOpportunityFile } from '../actions'
 import { createActivity } from '@/app/(dashboard)/actividades/actions'
+import { OpportunityFileRepository } from '@/lib/repositories/supabase/OpportunityFileRepository'
+import { OpportunityFileService } from '@/lib/services/OpportunityFileService'
 import type { OpportunityStage } from '@/lib/validations/opportunity'
 
 export const dynamic = 'force-dynamic'
@@ -41,9 +44,10 @@ export default async function OportunidadDetailPage({
   const { id } = await params
   const supabase = await createClient()
 
-  const [opp, activities, companiesResult, profilesResult, userResult] = await Promise.all([
+  const [opp, activities, opportunityFiles, companiesResult, profilesResult, userResult] = await Promise.all([
     new OpportunityService(new OpportunityRepository()).getById(id).catch(() => null),
     new ActivityService(new ActivityRepository()).getByOpportunity(id),
+    new OpportunityFileService(new OpportunityFileRepository()).listByOpportunity(id),
     supabase.from('companies').select('id, nombre').order('nombre'),
     supabase.from('profiles').select('id, full_name').order('full_name'),
     supabase.auth.getUser(),
@@ -56,6 +60,17 @@ export default async function OportunidadDetailPage({
   const currentUserId = userResult.data.user?.id ?? ''
   const isClosed      = opp.etapa === 'ganado' || opp.etapa === 'perdido'
   const boundMove     = moveToStage.bind(null, id)
+
+  // Signed URLs for the Documentos panel — bucket is private.
+  const fileSignedUrls: Record<string, string> = {}
+  if (opportunityFiles.length > 0) {
+    const { data: signedData } = await supabase.storage
+      .from('media')
+      .createSignedUrls(opportunityFiles.map(f => f.file_path), 3600)
+    signedData?.forEach((item, i) => {
+      if (item.signedUrl) fileSignedUrls[opportunityFiles[i].id] = item.signedUrl
+    })
+  }
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-8 space-y-8">
@@ -82,7 +97,14 @@ export default async function OportunidadDetailPage({
             <div className="flex flex-wrap gap-2">
               {ALL_STAGES.filter(s => s !== opp.etapa).map(stage =>
                 stage === 'ganado' ? (
-                  <GanadoStageButton key="ganado" oppId={id} oppName={opp.nombre} moneda={opp.moneda} />
+                  <GanadoStageButton
+                    key="ganado"
+                    oppId={id}
+                    oppName={opp.nombre}
+                    moneda={opp.moneda}
+                    cotizacionPath={opp.cotizacion_path}
+                    ordenCompraPath={opp.orden_compra_path}
+                  />
                 ) : stage === 'perdido' ? (
                   <StageTransitionModal key="perdido" targetStage="perdido" action={boundMove} moneda={opp.moneda} />
                 ) : (
@@ -123,6 +145,19 @@ export default async function OportunidadDetailPage({
           {/* Timeline */}
           <ActivityTimeline activities={activities} opportunityId={id} />
         </div>
+      </div>
+
+      <Separator />
+
+      {/* Documents */}
+      <div className="space-y-4">
+        <h2 className="text-base font-semibold">Documentos</h2>
+        <OpportunityFilesPanel
+          opportunityId={id}
+          files={opportunityFiles}
+          signedUrls={fileSignedUrls}
+          deleteAction={deleteOpportunityFile.bind(null, id)}
+        />
       </div>
 
       <Separator />

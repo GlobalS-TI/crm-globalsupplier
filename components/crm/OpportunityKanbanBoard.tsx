@@ -242,6 +242,8 @@ export function OpportunityKanbanBoard({ opportunities }: Props) {
           oppId={pendingDrop.card.id}
           oppName={pendingDrop.card.nombre}
           moneda={pendingDrop.card.moneda}
+          cotizacionPath={pendingDrop.card.cotizacion_path}
+          ordenCompraPath={pendingDrop.card.orden_compra_path}
           onConfirm={handleModalConfirm}
           onCancel={handleModalCancel}
         />

@@ -185,6 +185,20 @@ describe('OpportunityService.moveToStage()', () => {
     expect(repo.update).not.toHaveBeenCalled()
   })
 
+  it('throws when transitioning to ganado without cotizacion_path/orden_compra_path (regression — Documentos panel rework must not loosen this)', async () => {
+    const repo    = makeMockRepo()
+    const service = new OpportunityService(repo)
+
+    await expect(
+      service.moveToStage('opp-001', {
+        etapa:       'ganado',
+        monto_final: 50000,
+      }),
+    ).rejects.toThrow()
+
+    expect(repo.update).not.toHaveBeenCalled()
+  })
+
   it('executes successfully when transitioning to ganado with valid monto_final and both documents', async () => {
     const ganadorRow: OpportunityRow = {
       ...BASE_ROW,

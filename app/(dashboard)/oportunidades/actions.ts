@@ -2,15 +2,30 @@
 
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
+import { createClient } from '@/lib/supabase/server'
 import { OpportunityRepository } from '@/lib/repositories/supabase/OpportunityRepository'
 import { OpportunityService } from '@/lib/services/OpportunityService'
+import { OpportunityFileRepository } from '@/lib/repositories/supabase/OpportunityFileRepository'
+import { OpportunityFileService } from '@/lib/services/OpportunityFileService'
 import { createOpportunitySchema, updateOpportunitySchema, stageTransitionSchema } from '@/lib/validations/opportunity'
 import type { OpportunityStage } from '@/lib/validations/opportunity'
+import type { OpportunityFileCategoria } from '@/lib/validations/opportunityFile'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { notifyOppClosed, getManagementProfileIds } from '@/lib/notifications/send'
 
 function makeService() {
   return new OpportunityService(new OpportunityRepository())
+}
+
+function fileService() {
+  return new OpportunityFileService(new OpportunityFileRepository())
+}
+
+async function getUser() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('No autenticado')
+  return user
 }
 
 function parseForm(form: FormData): Record<string, unknown> {
@@ -148,4 +163,37 @@ export async function deleteOpportunity(id: string): Promise<void> {
   await makeService().delete(id)
   revalidatePath('/oportunidades')
   redirect('/oportunidades')
+}
+
+export async function listOpportunityFiles(opportunityId: string) {
+  return fileService().listByOpportunity(opportunityId)
+}
+
+export async function addOpportunityFile(data: {
+  opportunity_id: string
+  nombre:         string
+  file_path:      string
+  mime_type?:     string
+  file_size?:     number
+  categoria?:     OpportunityFileCategoria
+}): Promise<{ error?: string }> {
+  try {
+    const user = await getUser()
+    await fileService().addFile(data, user.id)
+    revalidatePath(`/oportunidades/${data.opportunity_id}`)
+    return {}
+  } catch (e) {
+    return { error: (e as Error).message }
+  }
+}
+
+export async function deleteOpportunityFile(oppId: string, fileId: string): Promise<{ error?: string }> {
+  try {
+    const opp = await makeService().getById(oppId)
+    await fileService().deleteFile(fileId, opp)
+    revalidatePath(`/oportunidades/${oppId}`)
+    return {}
+  } catch (e) {
+    return { error: (e as Error).message }
+  }
 }
