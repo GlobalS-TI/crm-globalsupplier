@@ -282,6 +282,25 @@ export async function setLeadRequirementFile(leadId: string, filePath: string): 
   revalidatePath('/leads')
 }
 
+export async function replaceLeadRequirementFile(
+  leadId: string,
+  newPath: string,
+): Promise<{ error?: string }> {
+  try {
+    const svc = service()
+    const existing = await svc.getLeadById(leadId)
+    if (existing?.requirements_file_path) {
+      // Best-effort: remove the previous file. Row update proceeds regardless.
+      await supabaseAdmin.storage.from('media').remove([existing.requirements_file_path])
+    }
+    await svc.updateLead(leadId, { requirements_file_path: newPath })
+    revalidatePath('/leads')
+    return {}
+  } catch (e) {
+    return { error: (e as Error).message }
+  }
+}
+
 export async function convertLeadToOpportunity(
   leadId: string,
   _prev: ActionState,

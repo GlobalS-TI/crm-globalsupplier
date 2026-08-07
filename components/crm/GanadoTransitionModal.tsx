@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useTransition } from 'react'
-import { CheckCircle2, Loader2, Upload, X } from 'lucide-react'
+import { useEffect, useState, useTransition } from 'react'
+import { CheckCircle2, Loader2 } from 'lucide-react'
 import {
   Dialog, DialogContent, DialogDescription,
   DialogFooter, DialogHeader, DialogTitle,
@@ -9,16 +9,22 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select'
+import { FileDropzone } from '@/components/crm/FileDropzone'
 import { createClient } from '@/lib/supabase/client'
-import { kanbanMoveToStage } from '@/app/(dashboard)/oportunidades/actions'
-
-type DocState = { path: string; name: string } | null
+import { kanbanMoveToStage, listOpportunityFiles, addOpportunityFile } from '@/app/(dashboard)/oportunidades/actions'
+import type { OpportunityFileRow } from '@/lib/repositories/interfaces/IOpportunityFileRepository'
+import type { OpportunityFileCategoria } from '@/lib/validations/opportunityFile'
 
 interface Props {
-  open:     boolean
-  oppId:    string
-  oppName:  string
-  moneda?:  'MXN' | 'USD'
+  open:             boolean
+  oppId:            string
+  oppName:          string
+  moneda?:          'MXN' | 'USD'
+  cotizacionPath?:  string | null
+  ordenCompraPath?: string | null
   onConfirm: () => void
   onCancel:  () => void
 }
@@ -27,57 +33,72 @@ function sanitize(name: string) {
   return name.replace(/[^a-zA-Z0-9._-]/g, '-').replace(/-+/g, '-')
 }
 
-export function GanadoTransitionModal({ open, oppId, oppName, moneda = 'MXN', onConfirm, onCancel }: Props) {
+export function GanadoTransitionModal({
+  open, oppId, oppName, moneda = 'MXN', cotizacionPath, ordenCompraPath, onConfirm, onCancel,
+}: Props) {
   const [monto,      setMonto]      = useState('')
   const [tipoCambio, setTipoCambio] = useState('')
-  const [cotizacion, setCotizacion] = useState<DocState>(null)
-  const [ordenCompra, setOrdenCompra] = useState<DocState>(null)
-  const [uploadingCot, setUploadingCot] = useState(false)
-  const [uploadingOC,  setUploadingOC]  = useState(false)
+  const [files, setFiles]           = useState<OpportunityFileRow[]>([])
+  const [loadingFiles, setLoadingFiles]   = useState(false)
+  const [selectedCotizacion,  setSelectedCotizacion]  = useState<OpportunityFileRow | null>(null)
+  const [selectedOrdenCompra, setSelectedOrdenCompra] = useState<OpportunityFileRow | null>(null)
   const [error, setError]   = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
   const isUsd = moneda === 'USD'
 
+  useEffect(() => {
+    if (!open) return
+    setLoadingFiles(true)
+    listOpportunityFiles(oppId).then(list => {
+      setFiles(list)
+      setSelectedCotizacion(list.find(f => f.file_path === cotizacionPath) ?? null)
+      setSelectedOrdenCompra(list.find(f => f.file_path === ordenCompraPath) ?? null)
+      setLoadingFiles(false)
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, oppId])
+
   const canConfirm =
     monto && parseFloat(monto) > 0
     && (!isUsd || (tipoCambio && parseFloat(tipoCambio) > 0))
-    && cotizacion && ordenCompra && !uploadingCot && !uploadingOC
+    && selectedCotizacion && selectedOrdenCompra
 
-  async function uploadDoc(
+  async function uploadInline(
     file: File,
-    tipo: 'cotizacion' | 'orden-compra',
-    setUploading: (v: boolean) => void,
-    setDoc: (d: DocState) => void,
+    categoria: OpportunityFileCategoria,
+    onDone: (f: OpportunityFileRow) => void,
   ) {
-    setUploading(true)
     setError(null)
     const ext  = file.name.split('.').pop() ?? 'pdf'
     const base = sanitize(file.name.replace(`.${ext}`, ''))
-    const path = `opportunity-docs/${oppId}/${tipo}-${Date.now()}-${base}.${ext}`
+    const path = `opportunity-docs/${oppId}/${categoria}-${Date.now()}-${base}.${ext}`
 
     const supabase = createClient()
     const { error: storageErr } = await supabase.storage
       .from('media')
       .upload(path, file, { cacheControl: '3600', upsert: false })
-
-    setUploading(false)
     if (storageErr) {
       setError(`Error al subir archivo: ${storageErr.message}`)
       return
     }
-    setDoc({ path, name: file.name })
-  }
 
-  function handleFileInput(
-    e: React.ChangeEvent<HTMLInputElement>,
-    tipo: 'cotizacion' | 'orden-compra',
-    setUploading: (v: boolean) => void,
-    setDoc: (d: DocState) => void,
-  ) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    uploadDoc(file, tipo, setUploading, setDoc)
-    e.target.value = ''
+    const result = await addOpportunityFile({
+      opportunity_id: oppId,
+      nombre:         file.name,
+      file_path:      path,
+      mime_type:      file.type || undefined,
+      file_size:      file.size || undefined,
+      categoria,
+    })
+    if (result.error) {
+      setError(result.error)
+      return
+    }
+
+    const list = await listOpportunityFiles(oppId)
+    setFiles(list)
+    const created = list.find(f => f.file_path === path)
+    if (created) onDone(created)
   }
 
   function handleConfirm() {
@@ -87,8 +108,8 @@ export function GanadoTransitionModal({ open, oppId, oppName, moneda = 'MXN', on
       const result = await kanbanMoveToStage(oppId, 'ganado', {
         montoFinal: montoVal,
         ...(isUsd && { tipoCambioFinal: parseFloat(tipoCambio) }),
-        cotizacionPath: cotizacion!.path,
-        ordenCompraPath: ordenCompra!.path,
+        cotizacionPath:  selectedCotizacion!.file_path,
+        ordenCompraPath: selectedOrdenCompra!.file_path,
       })
       if (result.error) {
         setError(result.error)
@@ -102,8 +123,9 @@ export function GanadoTransitionModal({ open, oppId, oppName, moneda = 'MXN', on
   function resetAndClose() {
     setMonto('')
     setTipoCambio('')
-    setCotizacion(null)
-    setOrdenCompra(null)
+    setSelectedCotizacion(null)
+    setSelectedOrdenCompra(null)
+    setFiles([])
     setError(null)
     onCancel()
   }
@@ -115,7 +137,7 @@ export function GanadoTransitionModal({ open, oppId, oppName, moneda = 'MXN', on
           <DialogTitle>Marcar como Ganado</DialogTitle>
           <DialogDescription>
             <span className="font-medium text-foreground">{oppName}</span>
-            {' '}— Sube cotización y orden de compra para confirmar.
+            {' '}— Confirma qué documentos corresponden a la cotización y orden de compra.
           </DialogDescription>
         </DialogHeader>
 
@@ -151,23 +173,31 @@ export function GanadoTransitionModal({ open, oppId, oppName, moneda = 'MXN', on
             </div>
           )}
 
-          {/* Cotización */}
-          <DocUploadField
-            label="Cotización *"
-            doc={cotizacion}
-            uploading={uploadingCot}
-            onClear={() => setCotizacion(null)}
-            onFileChange={e => handleFileInput(e, 'cotizacion', setUploadingCot, setCotizacion)}
-          />
-
-          {/* Orden de compra */}
-          <DocUploadField
-            label="Orden de compra *"
-            doc={ordenCompra}
-            uploading={uploadingOC}
-            onClear={() => setOrdenCompra(null)}
-            onFileChange={e => handleFileInput(e, 'orden-compra', setUploadingOC, setOrdenCompra)}
-          />
+          {loadingFiles ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground py-4">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Cargando documentos…
+            </div>
+          ) : (
+            <>
+              <DocSlot
+                label="Cotización *"
+                categoria="cotizacion"
+                files={files}
+                selected={selectedCotizacion}
+                onSelect={setSelectedCotizacion}
+                onUpload={file => uploadInline(file, 'cotizacion', setSelectedCotizacion)}
+              />
+              <DocSlot
+                label="Orden de compra *"
+                categoria="orden_compra"
+                files={files}
+                selected={selectedOrdenCompra}
+                onSelect={setSelectedOrdenCompra}
+                onUpload={file => uploadInline(file, 'orden_compra', setSelectedOrdenCompra)}
+              />
+            </>
+          )}
 
           {error && <p className="text-sm text-destructive">{error}</p>}
         </div>
@@ -185,43 +215,72 @@ export function GanadoTransitionModal({ open, oppId, oppName, moneda = 'MXN', on
   )
 }
 
-interface DocFieldProps {
-  label:        string
-  doc:          DocState
-  uploading:    boolean
-  onClear:      () => void
-  onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+interface DocSlotProps {
+  label:     string
+  categoria: OpportunityFileCategoria
+  files:     OpportunityFileRow[]
+  selected:  OpportunityFileRow | null
+  onSelect:  (f: OpportunityFileRow | null) => void
+  onUpload:  (file: File) => Promise<void>
 }
 
-function DocUploadField({ label, doc, uploading, onClear, onFileChange }: DocFieldProps) {
+function DocSlot({ label, categoria, files, selected, onSelect, onUpload }: DocSlotProps) {
+  const [uploading, setUploading] = useState(false)
+
+  async function handleUpload(newFiles: File[]) {
+    const file = newFiles[0]
+    if (!file) return
+    setUploading(true)
+    await onUpload(file)
+    setUploading(false)
+  }
+
+  if (selected) {
+    return (
+      <div className="space-y-1.5">
+        <Label>{label}</Label>
+        <div className="flex items-center gap-2 rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-300">
+          <CheckCircle2 className="h-4 w-4 shrink-0" />
+          <span className="flex-1 truncate">{selected.nombre}</span>
+          <button
+            type="button"
+            onClick={() => onSelect(null)}
+            className="shrink-0 text-xs underline hover:text-foreground"
+          >
+            Cambiar
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // Archivos ya subidos, con los de la categoría sugerida primero.
+  const sorted = [...files].sort(
+    (a, b) => Number(b.categoria === categoria) - Number(a.categoria === categoria),
+  )
+
   return (
     <div className="space-y-1.5">
       <Label>{label}</Label>
-      {doc ? (
-        <div className="flex items-center gap-2 rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-300">
-          <CheckCircle2 className="h-4 w-4 shrink-0" />
-          <span className="flex-1 truncate">{doc.name}</span>
-          <button type="button" onClick={onClear} className="shrink-0 hover:text-destructive">
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-      ) : (
-        <label className="flex cursor-pointer items-center gap-2 rounded-md border border-dashed border-border bg-muted/30 px-3 py-3 text-sm text-muted-foreground transition-colors hover:border-primary/50 hover:bg-muted/60">
-          {uploading ? (
-            <Loader2 className="h-4 w-4 animate-spin shrink-0" />
-          ) : (
-            <Upload className="h-4 w-4 shrink-0" />
-          )}
-          {uploading ? 'Subiendo…' : 'Haz clic para seleccionar archivo'}
-          <input
-            type="file"
-            className="hidden"
-            accept=".pdf,.jpg,.jpeg,.png,.xlsx,.xls,.docx"
-            disabled={uploading}
-            onChange={onFileChange}
-          />
-        </label>
+      {sorted.length > 0 && (
+        <Select onValueChange={id => onSelect(files.find(f => f.id === id) ?? null)}>
+          <SelectTrigger>
+            <SelectValue placeholder="Selecciona un archivo ya subido…" />
+          </SelectTrigger>
+          <SelectContent>
+            {sorted.map(f => (
+              <SelectItem key={f.id} value={f.id}>{f.nombre}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       )}
+      <FileDropzone
+        multiple={false}
+        compact
+        uploading={uploading}
+        helperText="o sube uno nuevo"
+        onFilesSelected={handleUpload}
+      />
     </div>
   )
 }

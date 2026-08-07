@@ -2,7 +2,7 @@
 
 import { useRef, useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, Upload, X, Loader2 } from 'lucide-react'
+import { Plus, Loader2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { createItemAndReturn, addUploadedFile } from '@/app/(dashboard)/contenido/actions'
 import {
@@ -15,6 +15,7 @@ import { Textarea } from '@/components/ui/textarea'
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
+import { FileDropzone } from '@/components/crm/FileDropzone'
 
 const BUSINESS_UNITS = [
   { value: 'global_supplier_mty', label: 'Global Supplier MTY' },
@@ -31,9 +32,8 @@ interface Props {
 }
 
 export function NewItemModal({ categoryId }: Props) {
-  const router       = useRouter()
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const formRef      = useRef<HTMLFormElement>(null)
+  const router  = useRouter()
+  const formRef = useRef<HTMLFormElement>(null)
 
   const [open, setOpen]   = useState(false)
   const [file, setFile]   = useState<File | null>(null)
@@ -142,33 +142,11 @@ export function NewItemModal({ categoryId }: Props) {
               <span className="text-muted-foreground font-normal text-xs">(opcional)</span>
             </Label>
 
-            {file ? (
-              <div className="flex items-center gap-2 px-3 py-2 border rounded-md bg-muted/30 text-sm">
-                <span className="flex-1 truncate">{file.name}</span>
-                <button
-                  type="button"
-                  onClick={() => { setFile(null); if (fileInputRef.current) fileInputRef.current.value = '' }}
-                  className="shrink-0 text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full flex items-center justify-center gap-2 border-2 border-dashed rounded-md py-5 text-sm text-muted-foreground hover:border-primary/50 hover:text-foreground transition-colors"
-              >
-                <Upload className="h-4 w-4" />
-                Seleccionar archivo — PDF, imagen, video…
-              </button>
-            )}
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              className="hidden"
-              onChange={e => setFile(e.target.files?.[0] ?? null)}
+            <FileDropzone
+              multiple={false}
+              uploadedLabel={file?.name ?? null}
+              helperText="PDF, imagen, video…"
+              onFilesSelected={files => setFile(files[0] ?? null)}
             />
           </div>
 

@@ -1,9 +1,10 @@
 'use client'
 
 import { useActionState, useEffect, useRef, useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { Route } from 'next'
-import { Plus, Pencil, Upload, X, Loader2, ExternalLink } from 'lucide-react'
+import { Pencil, Plus, ExternalLink, Loader2 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,8 +16,9 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
+import { FileDropzone } from '@/components/crm/FileDropzone'
 import {
-  createLeadAndReturn, setLeadRequirementFile, updateLead,
+  createLeadAndReturn, setLeadRequirementFile, updateLead, replaceLeadRequirementFile,
 } from '@/app/(dashboard)/leads/actions'
 import type { LeadWithRelations } from '@/lib/repositories/interfaces/ILeadRepository'
 
@@ -38,7 +40,6 @@ export function NewLeadButton({ sectionId, assignableUsers }: CreateProps) {
   const [file, setFile]         = useState<File | null>(null)
   const [error, setError]       = useState('')
   const [isPending, start]      = useTransition()
-  const fileInputRef            = useRef<HTMLInputElement>(null)
 
   function handleClose(v: boolean) {
     if (!v) { setFile(null); setError('') }
@@ -99,34 +100,13 @@ export function NewLeadButton({ sectionId, assignableUsers }: CreateProps) {
               Archivo de requerimiento{' '}
               <span className="text-muted-foreground font-normal text-xs">(imagen o PDF, opcional)</span>
             </Label>
-            <input
-              ref={fileInputRef}
-              type="file"
+            <FileDropzone
+              multiple={false}
               accept={ACCEPTED}
-              className="hidden"
-              onChange={e => setFile(e.target.files?.[0] ?? null)}
+              uploadedLabel={file?.name ?? null}
+              helperText="PNG, JPG, PDF…"
+              onFilesSelected={files => setFile(files[0] ?? null)}
             />
-            {file ? (
-              <div className="flex items-center gap-2 px-3 py-2 border rounded-md bg-muted/30 text-sm">
-                <span className="flex-1 truncate text-xs">{file.name}</span>
-                <button
-                  type="button"
-                  onClick={() => { setFile(null); if (fileInputRef.current) fileInputRef.current.value = '' }}
-                  className="shrink-0 text-muted-foreground hover:text-foreground"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full flex items-center justify-center gap-2 border-2 border-dashed rounded-md py-3 text-xs text-muted-foreground hover:border-primary/50 hover:text-foreground transition-colors"
-              >
-                <Upload className="h-3.5 w-3.5" />
-                PNG, JPG, PDF…
-              </button>
-            )}
           </div>
 
           <div className="flex justify-end gap-2 pt-1">
@@ -159,11 +139,34 @@ export function EditLeadButton({ lead, assignableUsers, requirementUrl }: EditPr
   const bound = updateLead.bind(null, lead.id)
   const [state, formAction, pending] = useActionState<ActionState, FormData>(bound, null)
   const wasPending = useRef(false)
+  const router = useRouter()
+  const [replacing, startReplace] = useTransition()
+  const [replaceError, setReplaceError] = useState('')
 
   useEffect(() => {
     if (wasPending.current && !pending && state === null) setOpen(false)
     wasPending.current = pending
   }, [pending, state])
+
+  function handleReplace(files: File[]) {
+    const file = files[0]
+    if (!file) return
+    setReplaceError('')
+    startReplace(async () => {
+      const ext      = file.name.split('.').pop() ?? ''
+      const basename = file.name.replace(`.${ext}`, '').replace(/[^a-zA-Z0-9._-]/g, '-')
+      const path     = `leads/${lead.id}/${Date.now()}-${basename}.${ext}`
+      const supabase = createClient()
+      const { error: storageErr } = await supabase.storage
+        .from('media')
+        .upload(path, file, { cacheControl: '3600' })
+      if (storageErr) { setReplaceError(storageErr.message); return }
+
+      const result = await replaceLeadRequirementFile(lead.id, path)
+      if (result.error) { setReplaceError(result.error); return }
+      router.refresh()
+    })
+  }
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -183,10 +186,10 @@ export function EditLeadButton({ lead, assignableUsers, requirementUrl }: EditPr
 
           <SharedFields assignableUsers={assignableUsers} defaultValues={lead} />
 
-          {/* Show existing requirement file if any */}
-          {(requirementUrl || lead.requirements_file_path) && (
-            <div className="space-y-1.5">
-              <Label>Archivo adjunto</Label>
+          {/* Requirement file — view existing + replace */}
+          <div className="space-y-1.5">
+            <Label>Archivo de requerimiento</Label>
+            {lead.requirements_file_path && (
               <a
                 href={requirementUrl ?? '#'}
                 target="_blank"
@@ -194,13 +197,21 @@ export function EditLeadButton({ lead, assignableUsers, requirementUrl }: EditPr
                 className="flex items-center gap-2 px-3 py-2 border rounded-md text-xs text-primary hover:bg-accent transition-colors"
               >
                 <ExternalLink className="h-3.5 w-3.5 shrink-0" />
-                <span className="truncate">{lead.requirements_file_path?.split('/').pop()}</span>
+                <span className="truncate">{lead.requirements_file_path.split('/').pop()}</span>
               </a>
-              <p className="text-xs text-muted-foreground">
-                Para reemplazar el archivo, usa el botón de nuevo lead o sube desde el detalle.
-              </p>
-            </div>
-          )}
+            )}
+            <FileDropzone
+              multiple={false}
+              accept={ACCEPTED}
+              compact
+              uploading={replacing}
+              helperText={lead.requirements_file_path ? 'Arrastra o haz clic para reemplazar' : 'PNG, JPG, PDF…'}
+              onFilesSelected={handleReplace}
+            />
+            {replaceError && (
+              <p className="text-xs text-destructive">{replaceError}</p>
+            )}
+          </div>
 
           <div className="flex justify-end gap-2 pt-1">
             <Button type="submit" disabled={pending}>

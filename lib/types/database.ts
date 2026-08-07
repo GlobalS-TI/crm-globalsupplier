@@ -662,6 +662,57 @@ export type Database = {
           },
         ]
       }
+      opportunity_files: {
+        Row: {
+          categoria: string
+          created_at: string
+          file_path: string
+          file_size: number | null
+          id: string
+          mime_type: string | null
+          nombre: string
+          opportunity_id: string
+          owner_id: string
+        }
+        Insert: {
+          categoria?: string
+          created_at?: string
+          file_path: string
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          nombre: string
+          opportunity_id: string
+          owner_id: string
+        }
+        Update: {
+          categoria?: string
+          created_at?: string
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          nombre?: string
+          opportunity_id?: string
+          owner_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "opportunity_files_opportunity_id_fkey"
+            columns: ["opportunity_id"]
+            isOneToOne: false
+            referencedRelation: "opportunities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opportunity_files_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profile_business_units: {
         Row: {
           business_unit: Database["public"]["Enums"]["business_unit"]
@@ -1325,6 +1376,7 @@ export type Database = {
       is_comisiones_viewer: { Args: never; Returns: boolean }
       is_content_manager: { Args: never; Returns: boolean }
       is_content_team: { Args: never; Returns: boolean }
+      is_director_general: { Args: never; Returns: boolean }
       is_full_access: { Args: never; Returns: boolean }
       is_leads_manager: { Args: never; Returns: boolean }
       is_project_admin: { Args: never; Returns: boolean }
