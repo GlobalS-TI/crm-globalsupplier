@@ -41,7 +41,7 @@ export class LeadService {
 
   // ── Leads ────────────────────────────────────────────────────────
 
-  listLeadsBySection(sectionId: string)  { return this.leads.listBySection(sectionId) }
+  listLeadsBySection(sectionId: string, search?: string) { return this.leads.listBySection(sectionId, search) }
   getLeadById(id: string)               { return this.leads.findById(id) }
 
   createLead(data: CreateLeadInput, userId: string) {

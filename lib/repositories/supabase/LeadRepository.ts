@@ -82,13 +82,24 @@ export class LeadSectionRepository implements ILeadSectionRepository {
 // ── Leads ─────────────────────────────────────────────────────────
 
 export class LeadRepository implements ILeadRepository {
-  async listBySection(sectionId: string): Promise<LeadWithRelations[]> {
+  async listBySection(sectionId: string, search?: string): Promise<LeadWithRelations[]> {
     const supabase = await db()
-    const { data, error } = await supabase
+    let query = supabase
       .from('leads')
       .select(LEAD_WITH_RELATIONS)
       .eq('section_id', sectionId)
-      .order('created_at', { ascending: false })
+
+    if (search) {
+      // .or() parses commas/parens as filter delimiters — strip them from user input.
+      const term = search.replace(/[,()]/g, ' ').trim()
+      if (term) {
+        query = query.or(
+          `nombre.ilike.%${term}%,empresa.ilike.%${term}%,email.ilike.%${term}%,telefono.ilike.%${term}%`
+        )
+      }
+    }
+
+    const { data, error } = await query.order('created_at', { ascending: false })
     if (error) throw error
     return (data ?? []) as LeadWithRelations[]
   }

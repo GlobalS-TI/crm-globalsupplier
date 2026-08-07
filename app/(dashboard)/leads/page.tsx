@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { UserRoundSearch } from 'lucide-react'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
@@ -7,6 +8,7 @@ import { LeadService } from '@/lib/services/LeadService'
 import { LeadSectionNav } from '@/components/crm/LeadSectionNav'
 import { LeadTable } from '@/components/crm/LeadTable'
 import { CreateSectionButton } from '@/components/crm/LeadSectionModal'
+import { SearchInput } from '@/components/crm/SearchInput'
 import type { AssignableUser } from '@/components/crm/LeadModal'
 import { LEADS_ROLES } from '@/lib/types'
 import type { UserRole } from '@/lib/types'
@@ -15,11 +17,11 @@ export const metadata = { title: 'Leads — CRM Global Supplier' }
 export const dynamic  = 'force-dynamic'
 
 interface PageProps {
-  searchParams: Promise<{ sec?: string }>
+  searchParams: Promise<{ sec?: string; q?: string }>
 }
 
 export default async function LeadsPage({ searchParams }: PageProps) {
-  const { sec } = await searchParams
+  const { sec, q } = await searchParams
 
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -37,7 +39,7 @@ export default async function LeadsPage({ searchParams }: PageProps) {
 
   const svc      = new LeadService(new LeadSectionRepository(), new LeadRepository(), new ProfileRepository())
   const sections = await svc.listSections()
-  const leads    = sec ? await svc.listLeadsBySection(sec) : []
+  const leads    = sec ? await svc.listLeadsBySection(sec, q) : []
 
   // Users that can be assigned leads (direccion_comercial + vendedor)
   const { data: assignableData } = await supabase
@@ -85,15 +87,21 @@ export default async function LeadsPage({ searchParams }: PageProps) {
             <p className="text-sm">Selecciona una sección para ver los leads</p>
           </div>
         ) : (
-          <LeadTable
-            leads={leads}
-            section={selectedSection}
-            sectionId={sec}
-            canManageLeads={canManageLeads}
-            isLeadsManager={isLeadsManager}
-            assignableUsers={assignableUsers}
-            requirementUrls={requirementUrls}
-          />
+          <>
+            <Suspense>
+              <SearchInput placeholder="Buscar por nombre, empresa, correo o teléfono…" />
+            </Suspense>
+            <LeadTable
+              leads={leads}
+              section={selectedSection}
+              sectionId={sec}
+              canManageLeads={canManageLeads}
+              isLeadsManager={isLeadsManager}
+              assignableUsers={assignableUsers}
+              requirementUrls={requirementUrls}
+              search={q}
+            />
+          </>
         )}
       </div>
     </div>
