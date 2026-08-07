@@ -16,6 +16,10 @@ export class ContactService {
     return contact
   }
 
+  async findByEmail(email: string): Promise<ContactRow | null> {
+    return this.repo.findByEmail(email)
+  }
+
   async list(opts?: { search?: string; companyId?: string }): Promise<ContactWithCompany[]> {
     return this.repo.findAll(opts)
   }

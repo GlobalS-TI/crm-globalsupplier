@@ -8,6 +8,11 @@ import { ProfileRepository } from '@/lib/repositories/supabase/ProfileRepository
 import { LeadService } from '@/lib/services/LeadService'
 import { OpportunityRepository } from '@/lib/repositories/supabase/OpportunityRepository'
 import { OpportunityService } from '@/lib/services/OpportunityService'
+import { CompanyRepository } from '@/lib/repositories/supabase/CompanyRepository'
+import { CompanyService } from '@/lib/services/CompanyService'
+import { ContactRepository } from '@/lib/repositories/supabase/ContactRepository'
+import { ContactService } from '@/lib/services/ContactService'
+import { createContactSchema } from '@/lib/validations/contact'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { notifyLeadConverted, notifyOpportunityAssigned, getManagementProfileIds } from '@/lib/notifications/send'
 import type { LeadWithRelations } from '@/lib/repositories/interfaces/ILeadRepository'
@@ -38,6 +43,48 @@ function parseVendedor(form: FormData): string | undefined | null {
 }
 
 /**
+ * Resuelve (o crea) la Company/Contact correspondientes a los datos de contacto de un
+ * lead, para que no se pierdan al convertir a oportunidad. Busca por coincidencia exacta
+ * antes de crear, para no duplicar empresas/contactos ya existentes.
+ *
+ * Un email con formato inválido (p.ej. datos de una importación con columnas swapeadas)
+ * no debe tronar toda la conversión — se omite la creación del contacto en ese caso y
+ * la oportunidad se crea igual, solo sin ese vínculo.
+ */
+async function resolveCompanyContact(opts: {
+  lead:    Pick<LeadWithRelations, 'nombre' | 'empresa' | 'email' | 'telefono'>
+  ownerId: string
+}): Promise<{ company_id?: string; contact_id?: string }> {
+  const { lead, ownerId } = opts
+  const companySvc = new CompanyService(new CompanyRepository())
+  const contactSvc = new ContactService(new ContactRepository())
+
+  let company_id: string | undefined
+  if (lead.empresa) {
+    const matches  = await companySvc.list(lead.empresa)
+    const existing = matches.find(c => c.nombre.toLowerCase() === lead.empresa!.toLowerCase())
+    company_id = existing
+      ? existing.id
+      : (await companySvc.create({ nombre: lead.empresa }, ownerId)).id
+  }
+
+  let contact_id: string | undefined
+  if (lead.email && createContactSchema.shape.email.safeParse(lead.email).success) {
+    const existing = await contactSvc.findByEmail(lead.email)
+    contact_id = existing
+      ? existing.id
+      : (await contactSvc.create({
+          nombre:     lead.nombre,
+          email:      lead.email,
+          telefono:   lead.telefono ?? undefined,
+          company_id,
+        }, ownerId)).id
+  }
+
+  return { company_id, contact_id }
+}
+
+/**
  * Al asignar un vendedor a un lead se crea automáticamente la oportunidad correspondiente
  * (business_unit/fuente vienen de la campaña) — ventas ya no necesita acceso a /leads.
  * Idempotente: no-op si el lead no tiene vendedor o ya fue convertido.
@@ -49,6 +96,8 @@ async function autoConvertLead(lead: LeadWithRelations, assignedByName: string):
   tomorrow.setDate(tomorrow.getDate() + 1)
   tomorrow.setHours(10, 0, 0, 0)
 
+  const { company_id, contact_id } = await resolveCompanyContact({ lead, ownerId: lead.vendedor_id })
+
   const oppService = new OpportunityService(new OpportunityRepository())
   const opp = await oppService.create({
     nombre:           lead.empresa ? `${lead.empresa} — ${lead.nombre}` : lead.nombre,
@@ -58,6 +107,8 @@ async function autoConvertLead(lead: LeadWithRelations, assignedByName: string):
     etapa:            'nuevo_lead',
     next_activity_at: tomorrow.toISOString(),
     notas:            lead.requerimientos || undefined,
+    company_id,
+    contact_id,
   })
 
   await service().updateLead(lead.id, { converted_opportunity_id: opp.id })
@@ -237,18 +288,26 @@ export async function convertLeadToOpportunity(
   form: FormData,
 ): Promise<ActionState> {
   try {
-    const oppNombre = form.get('nombre') as string
+    const oppNombre  = form.get('nombre') as string
+    const ownerId    = form.get('owner_id') as string
+    const lead       = await service().getLeadById(leadId)
+    const { company_id, contact_id } = lead
+      ? await resolveCompanyContact({ lead, ownerId })
+      : {}
+
     const oppService = new OpportunityService(new OpportunityRepository())
     const opp = await oppService.create({
       nombre:           oppNombre,
       business_unit:    form.get('business_unit'),
       fuente:           form.get('fuente'),
-      owner_id:         form.get('owner_id') as string,
+      owner_id:         ownerId,
       etapa:            'nuevo_lead',
       monto_estimado:   0,
       probabilidad:     0,
       next_activity_at: (form.get('next_activity_at') as string | null) ?? undefined,
       notas:            (form.get('notas') as string) || undefined,
+      company_id,
+      contact_id,
     })
 
     await service().updateLead(leadId, { converted_opportunity_id: opp.id })
