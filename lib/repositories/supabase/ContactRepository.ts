@@ -35,6 +35,17 @@ export class ContactRepository implements IContactRepository {
     return data as ContactWithCompany | null
   }
 
+  async findByEmail(email: string): Promise<ContactRow | null> {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+      .from('contacts')
+      .select('*')
+      .ilike('email', email)
+      .limit(1)
+    if (error) throw error
+    return data?.[0] ?? null
+  }
+
   async findAll(opts: { search?: string; companyId?: string } = {}): Promise<ContactWithCompany[]> {
     const supabase = await createClient()
     let query = supabase.from('contacts').select(WITH_COMPANY).order('nombre', { ascending: true })

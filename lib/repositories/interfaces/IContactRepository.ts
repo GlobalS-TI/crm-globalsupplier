@@ -10,6 +10,7 @@ export type ContactWithCompany = ContactRow & {
 export interface IContactRepository {
   findById(id: string): Promise<ContactRow | null>
   findByIdWithCompany(id: string): Promise<ContactWithCompany | null>
+  findByEmail(email: string): Promise<ContactRow | null>
   findAll(opts?: { search?: string; companyId?: string }): Promise<ContactWithCompany[]>
   findByCompany(companyId: string): Promise<ContactRow[]>
   create(data: CreateContactInput & { owner_id: string }): Promise<ContactRow>
