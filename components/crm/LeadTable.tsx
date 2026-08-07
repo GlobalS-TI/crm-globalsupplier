@@ -184,15 +184,17 @@ export function LeadTable({ leads, section, sectionId, canManageLeads, isLeadsMa
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-0.5">
                       {canManageLeads && !lead.converted_opportunity_id && (
-                        <>
-                          <ConvertLeadButton lead={lead} assignableUsers={assignableUsers} />
-                          <EditLeadButton
-                            lead={lead}
-                            assignableUsers={assignableUsers}
-                            requirementUrl={requirementUrls?.[lead.id]}
-                          />
-                          <DeleteLeadButton lead={lead} />
-                        </>
+                        <ConvertLeadButton lead={lead} assignableUsers={assignableUsers} />
+                      )}
+                      {canManageLeads && (
+                        <EditLeadButton
+                          lead={lead}
+                          assignableUsers={assignableUsers}
+                          requirementUrl={requirementUrls?.[lead.id]}
+                        />
+                      )}
+                      {canManageLeads && !lead.converted_opportunity_id && (
+                        <DeleteLeadButton lead={lead} />
                       )}
                     </div>
                   </td>
