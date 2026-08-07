@@ -17,6 +17,8 @@ export const businessUnitSchema = z.enum([
   'gtx_systems', 'juno_promotional', 'fire_spot',
 ])
 
+export const currencySchema = z.enum(['MXN', 'USD'])
+
 // ----------------------------------------------------------------
 // Create — business rules enforced here and in OpportunityService
 // ----------------------------------------------------------------
@@ -34,8 +36,11 @@ const createOpportunityBase = z.object({
   company_id:           z.string().uuid().optional(),
   contact_id:           z.string().uuid().optional(),
   etapa:                opportunityStageSchema.default('nuevo_lead'),
+  moneda:               currencySchema.default('MXN'),
   monto_estimado:       z.number().min(0).default(0),
   monto_final:          z.number().min(0).optional(),
+  tipo_cambio_estimado: z.number().positive().optional(),
+  tipo_cambio_final:    z.number().positive().optional(),
   probabilidad:         z.number().int().min(0).max(100).default(0),
   fecha_cierre_estimada: z.string().date().optional(),
   next_activity_at:     z.preprocess(
@@ -61,6 +66,22 @@ export const createOpportunitySchema = createOpportunityBase.superRefine((d, ctx
       message: 'next_activity_at es requerido para etapas abiertas',
     })
   }
+
+  // Divisa USD: el tipo de cambio se bloquea por separado para estimado y final
+  if (d.moneda === 'USD' && d.tipo_cambio_estimado === undefined) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['tipo_cambio_estimado'],
+      message: 'tipo_cambio_estimado es requerido cuando la moneda es USD',
+    })
+  }
+  if (d.moneda === 'USD' && d.etapa === 'ganado' && d.tipo_cambio_final === undefined) {
+    ctx.addIssue({
+      code: 'custom',
+      path: ['tipo_cambio_final'],
+      message: 'tipo_cambio_final es requerido cuando la moneda es USD',
+    })
+  }
 })
 // Service enforces: monto_final > 0 when etapa = ganado (rule 2)
 
@@ -80,10 +101,11 @@ export const updateOpportunitySchema = createOpportunityBase
 // Stage transition — used by Kanban move action
 // ----------------------------------------------------------------
 export const stageTransitionSchema = z.object({
-  etapa:             opportunityStageSchema,
-  monto_final:       z.number().min(0).optional(),
-  cotizacion_path:   z.string().optional(),
-  orden_compra_path: z.string().optional(),
+  etapa:              opportunityStageSchema,
+  monto_final:        z.number().min(0).optional(),
+  tipo_cambio_final:  z.number().positive().optional(),
+  cotizacion_path:    z.string().optional(),
+  orden_compra_path:  z.string().optional(),
 }).refine(
   (d) => d.etapa !== 'ganado' || (d.monto_final !== undefined && d.monto_final > 0),
   { message: 'monto_final must be > 0 when moving to ganado', path: ['monto_final'] }
@@ -101,3 +123,4 @@ export type StageTransitionInput   = z.infer<typeof stageTransitionSchema>
 export type OpportunityStage       = z.infer<typeof opportunityStageSchema>
 export type LeadSource             = z.infer<typeof leadSourceSchema>
 export type BusinessUnit           = z.infer<typeof businessUnitSchema>
+export type Currency               = z.infer<typeof currencySchema>

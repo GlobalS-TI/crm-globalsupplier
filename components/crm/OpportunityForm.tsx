@@ -1,6 +1,6 @@
 'use client'
 
-import { useActionState, useEffect, useRef } from 'react'
+import { useActionState, useEffect, useRef, useState } from 'react'
 import { useToast } from '@/hooks/use-toast'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -33,6 +33,11 @@ const SOURCES = [
   { value: 'otro',           label: 'Otro' },
 ]
 
+const CURRENCIES = [
+  { value: 'MXN', label: 'MXN — Peso mexicano' },
+  { value: 'USD', label: 'USD — Dólar' },
+]
+
 const UNITS = [
   { value: 'global_supplier_mty', label: 'Global Supplier MTY' },
   { value: 'thunder_safety',      label: 'Thunder Safety' },
@@ -61,6 +66,8 @@ export function OpportunityForm({
   const [state, formAction, pending] = useActionState(action, null)
   const { toast } = useToast()
   const wasPending = useRef(false)
+  const [moneda, setMoneda] = useState(d.moneda ?? 'MXN')
+  const isUsd = moneda === 'USD'
 
   useEffect(() => {
     if (wasPending.current && !pending && state === null) {
@@ -77,7 +84,7 @@ export function OpportunityForm({
         <Input id="nombre" name="nombre" required defaultValue={d.nombre ?? ''} />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-3 gap-4">
         {/* Business unit */}
         <div className="space-y-1.5">
           <Label>Unidad de negocio *</Label>
@@ -96,6 +103,17 @@ export function OpportunityForm({
             <SelectTrigger><SelectValue placeholder="Selecciona…" /></SelectTrigger>
             <SelectContent>
               {SOURCES.map(s => <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Moneda */}
+        <div className="space-y-1.5">
+          <Label>Moneda *</Label>
+          <Select name="moneda" defaultValue={moneda} onValueChange={v => setMoneda(v as 'MXN' | 'USD')} required>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {CURRENCIES.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
@@ -151,21 +169,36 @@ export function OpportunityForm({
       <div className="grid grid-cols-2 gap-4">
         {/* Monto estimado */}
         <div className="space-y-1.5">
-          <Label htmlFor="monto_estimado">Monto estimado (MXN)</Label>
+          <Label htmlFor="monto_estimado">Monto estimado ({moneda})</Label>
           <Input
             id="monto_estimado" name="monto_estimado" type="number"
             min={0} step="0.01" defaultValue={d.monto_estimado ?? 0}
           />
+          {isUsd && (
+            <Input
+              name="tipo_cambio_estimado" type="number"
+              min={0.0001} step="0.0001" placeholder="Tipo de cambio (USD → MXN)"
+              defaultValue={d.tipo_cambio_estimado ?? undefined}
+              required
+            />
+          )}
         </div>
 
         {/* Monto final */}
         <div className="space-y-1.5">
-          <Label htmlFor="monto_final">Monto final (MXN)</Label>
+          <Label htmlFor="monto_final">Monto final ({moneda})</Label>
           <Input
             id="monto_final" name="monto_final" type="number"
             min={0} step="0.01" defaultValue={d.monto_final ?? undefined}
             placeholder="Solo para oportunidades ganadas"
           />
+          {isUsd && (
+            <Input
+              name="tipo_cambio_final" type="number"
+              min={0.0001} step="0.0001" placeholder="Tipo de cambio al cierre (USD → MXN)"
+              defaultValue={d.tipo_cambio_final ?? undefined}
+            />
+          )}
         </div>
       </div>
 

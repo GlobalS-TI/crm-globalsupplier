@@ -81,14 +81,14 @@ export class OpportunityRepository implements IOpportunityRepository {
       lostCount:        opps.filter(o => o.etapa === 'perdido').length,
       staleCount:       opps.filter(o => o.stale).length,
 
-      totalPipeline:    openOpps.reduce((s, o) => s + Number(o.monto_estimado), 0),
+      totalPipeline:    openOpps.reduce((s, o) => s + Number(o.monto_estimado_mxn), 0),
 
       wonThisMonth:     opps
         .filter(o => o.etapa === 'ganado' && o.updated_at >= monthStart)
-        .reduce((s, o) => s + Number(o.monto_final ?? 0), 0),
+        .reduce((s, o) => s + Number(o.monto_final_mxn ?? 0), 0),
 
       weightedForecast: openOpps.reduce(
-        (s, o) => s + Number(o.monto_estimado) * (o.probabilidad / 100),
+        (s, o) => s + Number(o.monto_estimado_mxn) * (o.probabilidad / 100),
         0
       ),
 
@@ -105,7 +105,7 @@ export class OpportunityRepository implements IOpportunityRepository {
     const supabase = await createClient()
 
     const [oppsResult, profilesResult] = await Promise.all([
-      supabase.from('opportunities').select('etapa, business_unit, monto_estimado, monto_final, probabilidad, owner_id, created_at, updated_at'),
+      supabase.from('opportunities').select('etapa, business_unit, monto_estimado_mxn, monto_final_mxn, probabilidad, owner_id, created_at, updated_at'),
       supabase.from('profiles').select('id, full_name'),
     ])
 
@@ -124,16 +124,16 @@ export class OpportunityRepository implements IOpportunityRepository {
     const openOpps = opps.filter(o => o.etapa !== 'ganado' && o.etapa !== 'perdido')
 
     // KPIs
-    const wonThisMonth  = wonOpps.filter(o => o.updated_at >= monthStart).reduce((s, o) => s + Number(o.monto_final ?? 0), 0)
-    const wonLastMonth  = wonOpps.filter(o => o.updated_at >= lastMonthStart && o.updated_at < monthStart).reduce((s, o) => s + Number(o.monto_final ?? 0), 0)
-    const pipelineTotal = openOpps.reduce((s, o) => s + Number(o.monto_estimado ?? 0), 0)
+    const wonThisMonth  = wonOpps.filter(o => o.updated_at >= monthStart).reduce((s, o) => s + Number(o.monto_final_mxn ?? 0), 0)
+    const wonLastMonth  = wonOpps.filter(o => o.updated_at >= lastMonthStart && o.updated_at < monthStart).reduce((s, o) => s + Number(o.monto_final_mxn ?? 0), 0)
+    const pipelineTotal = openOpps.reduce((s, o) => s + Number(o.monto_estimado_mxn ?? 0), 0)
     const newThisMonth  = opps.filter(o => o.created_at >= monthStart).length
 
     // Sales by business unit (only won)
     const unitMap = new Map<BusinessUnit, number>()
     for (const o of wonOpps) {
       const unit = o.business_unit as BusinessUnit
-      unitMap.set(unit, (unitMap.get(unit) ?? 0) + Number(o.monto_final ?? 0))
+      unitMap.set(unit, (unitMap.get(unit) ?? 0) + Number(o.monto_final_mxn ?? 0))
     }
     const salesByUnit: SalesByUnit[] = Array.from(unitMap.entries())
       .map(([unit, amount]) => ({ unit, amount }))
@@ -144,7 +144,7 @@ export class OpportunityRepository implements IOpportunityRepository {
     const ownerMap = new Map<string, { amount: number; count: number; name: string }>()
     for (const o of openOpps) {
       const name    = profileMap.get(o.owner_id) ?? o.owner_id
-      const weighted = Number(o.monto_estimado ?? 0) * ((o.probabilidad ?? 0) / 100)
+      const weighted = Number(o.monto_estimado_mxn ?? 0) * ((o.probabilidad ?? 0) / 100)
       const prev    = ownerMap.get(o.owner_id) ?? { amount: 0, count: 0, name }
       ownerMap.set(o.owner_id, { amount: prev.amount + weighted, count: prev.count + 1, name })
     }
@@ -156,7 +156,7 @@ export class OpportunityRepository implements IOpportunityRepository {
     const stageMap = new Map<OpportunityStage, { amount: number; weighted: number; count: number }>()
     for (const o of openOpps) {
       const stage    = o.etapa as OpportunityStage
-      const amount   = Number(o.monto_estimado ?? 0)
+      const amount   = Number(o.monto_estimado_mxn ?? 0)
       const weighted = amount * ((o.probabilidad ?? 0) / 100)
       const prev     = stageMap.get(stage) ?? { amount: 0, weighted: 0, count: 0 }
       stageMap.set(stage, { amount: prev.amount + amount, weighted: prev.weighted + weighted, count: prev.count + 1 })

@@ -20,7 +20,7 @@ export class SalesTargetRepository implements ISalesTargetRepository {
     const supabase = await createClient()
     const { data, error } = await supabase
       .from('opportunities')
-      .select('monto_final, updated_at')
+      .select('monto_final_mxn, updated_at')
       .eq('owner_id', vendedorId)
       .eq('etapa', 'ganado')
       .not('monto_final', 'is', null)
@@ -32,7 +32,7 @@ export class SalesTargetRepository implements ISalesTargetRepository {
     const totals: Record<number, number> = {}
     for (const row of data ?? []) {
       const m = new Date(row.updated_at).getMonth() + 1
-      totals[m] = (totals[m] ?? 0) + (row.monto_final ?? 0)
+      totals[m] = (totals[m] ?? 0) + (row.monto_final_mxn ?? 0)
     }
     return totals
   }

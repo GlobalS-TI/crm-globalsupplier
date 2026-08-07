@@ -7,9 +7,8 @@ import { CSS } from '@dnd-kit/utilities'
 import { Card, CardContent } from '@/components/ui/card'
 import { StaleBadge } from '@/components/crm/StaleBadge'
 import { BRAND_COLORS } from '@/lib/types'
+import { formatDualCurrency } from '@/lib/utils/currency'
 import type { OpportunityWithRelations } from '@/lib/repositories/interfaces/IOpportunityRepository'
-
-const fmt = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 })
 
 interface OpportunityKanbanCardProps {
   opportunity: OpportunityWithRelations
@@ -47,7 +46,9 @@ export function OpportunityKanbanCard({ opportunity: opp, draggable = true }: Op
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <span className="select-none">{opp.owner?.full_name.split(' ')[0] ?? '—'}</span>
               {opp.monto_estimado > 0 && (
-                <span className="font-medium text-foreground select-none">{fmt.format(opp.monto_estimado)}</span>
+                <span className="font-medium text-foreground select-none">
+                  {formatDualCurrency(opp.monto_estimado, opp.moneda, opp.monto_estimado_mxn ?? opp.monto_estimado)}
+                </span>
               )}
             </div>
           </CardContent>

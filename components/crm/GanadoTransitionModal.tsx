@@ -18,6 +18,7 @@ interface Props {
   open:     boolean
   oppId:    string
   oppName:  string
+  moneda?:  'MXN' | 'USD'
   onConfirm: () => void
   onCancel:  () => void
 }
@@ -26,17 +27,21 @@ function sanitize(name: string) {
   return name.replace(/[^a-zA-Z0-9._-]/g, '-').replace(/-+/g, '-')
 }
 
-export function GanadoTransitionModal({ open, oppId, oppName, onConfirm, onCancel }: Props) {
+export function GanadoTransitionModal({ open, oppId, oppName, moneda = 'MXN', onConfirm, onCancel }: Props) {
   const [monto,      setMonto]      = useState('')
+  const [tipoCambio, setTipoCambio] = useState('')
   const [cotizacion, setCotizacion] = useState<DocState>(null)
   const [ordenCompra, setOrdenCompra] = useState<DocState>(null)
   const [uploadingCot, setUploadingCot] = useState(false)
   const [uploadingOC,  setUploadingOC]  = useState(false)
   const [error, setError]   = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
+  const isUsd = moneda === 'USD'
 
   const canConfirm =
-    monto && parseFloat(monto) > 0 && cotizacion && ordenCompra && !uploadingCot && !uploadingOC
+    monto && parseFloat(monto) > 0
+    && (!isUsd || (tipoCambio && parseFloat(tipoCambio) > 0))
+    && cotizacion && ordenCompra && !uploadingCot && !uploadingOC
 
   async function uploadDoc(
     file: File,
@@ -79,13 +84,12 @@ export function GanadoTransitionModal({ open, oppId, oppName, onConfirm, onCance
     if (!canConfirm) return
     const montoVal = parseFloat(monto)
     startTransition(async () => {
-      const result = await kanbanMoveToStage(
-        oppId,
-        'ganado',
-        montoVal,
-        cotizacion!.path,
-        ordenCompra!.path,
-      )
+      const result = await kanbanMoveToStage(oppId, 'ganado', {
+        montoFinal: montoVal,
+        ...(isUsd && { tipoCambioFinal: parseFloat(tipoCambio) }),
+        cotizacionPath: cotizacion!.path,
+        ordenCompraPath: ordenCompra!.path,
+      })
       if (result.error) {
         setError(result.error)
       } else {
@@ -97,6 +101,7 @@ export function GanadoTransitionModal({ open, oppId, oppName, onConfirm, onCance
 
   function resetAndClose() {
     setMonto('')
+    setTipoCambio('')
     setCotizacion(null)
     setOrdenCompra(null)
     setError(null)
@@ -117,7 +122,7 @@ export function GanadoTransitionModal({ open, oppId, oppName, onConfirm, onCance
         <div className="space-y-4 py-2">
           {/* Monto final */}
           <div className="space-y-1.5">
-            <Label htmlFor="ganado-monto">Monto final (MXN) *</Label>
+            <Label htmlFor="ganado-monto">Monto final ({moneda}) *</Label>
             <Input
               id="ganado-monto"
               type="number"
@@ -129,6 +134,22 @@ export function GanadoTransitionModal({ open, oppId, oppName, onConfirm, onCance
               autoFocus
             />
           </div>
+
+          {/* Tipo de cambio al cierre */}
+          {isUsd && (
+            <div className="space-y-1.5">
+              <Label htmlFor="ganado-tipo-cambio">Tipo de cambio al cierre (USD → MXN) *</Label>
+              <Input
+                id="ganado-tipo-cambio"
+                type="number"
+                min={0.0001}
+                step="0.0001"
+                placeholder="0.0000"
+                value={tipoCambio}
+                onChange={e => setTipoCambio(e.target.value)}
+              />
+            </div>
+          )}
 
           {/* Cotización */}
           <DocUploadField

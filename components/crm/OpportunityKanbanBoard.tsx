@@ -241,6 +241,7 @@ export function OpportunityKanbanBoard({ opportunities }: Props) {
           open
           oppId={pendingDrop.card.id}
           oppName={pendingDrop.card.nombre}
+          moneda={pendingDrop.card.moneda}
           onConfirm={handleModalConfirm}
           onCancel={handleModalCancel}
         />
@@ -252,6 +253,7 @@ export function OpportunityKanbanBoard({ opportunities }: Props) {
           oppId={pendingDrop.card.id}
           oppName={pendingDrop.card.nombre}
           targetStage="perdido"
+          moneda={pendingDrop.card.moneda}
           onConfirm={handleModalConfirm}
           onCancel={handleModalCancel}
         />

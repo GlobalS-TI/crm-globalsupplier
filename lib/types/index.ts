@@ -44,6 +44,8 @@ export type ActivityType =
 
 export type ActivityStatus = 'pendiente' | 'completada' | 'cancelada'
 
+export type Currency = 'MXN' | 'USD'
+
 export const OPPORTUNITY_STAGES: OpportunityStage[] = [
   'nuevo_lead',
   'contactado',
@@ -162,4 +164,11 @@ export const LEAD_SOURCE_LABELS: Record<LeadSource, string> = {
   evento:           'Evento',
   alianza:          'Alianza',
   otro:             'Otro',
+}
+
+export const CURRENCIES: Currency[] = ['MXN', 'USD']
+
+export const CURRENCY_LABELS: Record<Currency, string> = {
+  MXN: 'MXN — Peso mexicano',
+  USD: 'USD — Dólar',
 }

@@ -49,8 +49,9 @@ export class OpportunityService {
     const existing = await this.getById(id)
     const data = updateOpportunitySchema.parse(raw)
 
-    const nextStage = data.etapa ?? existing.etapa
-    const nextMonto = data.monto_final !== undefined ? data.monto_final : existing.monto_final
+    const nextStage  = data.etapa ?? existing.etapa
+    const nextMonto  = data.monto_final !== undefined ? data.monto_final : existing.monto_final
+    const nextMoneda = data.moneda ?? existing.moneda
 
     // Rule 2: cannot save ganado without positive monto_final
     if (nextStage === 'ganado' && (!nextMonto || nextMonto <= 0)) {
@@ -63,6 +64,17 @@ export class OpportunityService {
       throw new Error('next_activity_at cannot be removed from an open opportunity')
     }
 
+    // Rule 4: editing monto_final on a USD opportunity always requires a fresh tipo_cambio_final —
+    // it is never carried over silently from the previous write
+    if (data.monto_final !== undefined && nextMoneda === 'USD' && data.tipo_cambio_final === undefined) {
+      throw new Error('tipo_cambio_final is required when editing monto_final on a USD opportunity')
+    }
+
+    // Rule 5: same discipline for monto_estimado
+    if (data.monto_estimado !== undefined && nextMoneda === 'USD' && data.tipo_cambio_estimado === undefined) {
+      throw new Error('tipo_cambio_estimado is required when editing monto_estimado on a USD opportunity')
+    }
+
     const updated = await this.repo.update(id, data)
     const full = await this.repo.findById(updated.id)
     if (!full) throw new Error('Failed to retrieve updated opportunity')
@@ -70,10 +82,11 @@ export class OpportunityService {
   }
 
   async moveToStage(id: string, raw: StageTransitionInput): Promise<OpportunityWithRelations> {
-    const { etapa, monto_final, cotizacion_path, orden_compra_path } = stageTransitionSchema.parse(raw)
+    const { etapa, monto_final, tipo_cambio_final, cotizacion_path, orden_compra_path } = stageTransitionSchema.parse(raw)
     return this.update(id, {
       etapa,
       ...(monto_final       !== undefined && { monto_final }),
+      ...(tipo_cambio_final !== undefined && { tipo_cambio_final }),
       ...(cotizacion_path   !== undefined && { cotizacion_path }),
       ...(orden_compra_path !== undefined && { orden_compra_path }),
     })

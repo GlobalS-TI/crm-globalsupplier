@@ -1,16 +1,17 @@
 import { Html, Head, Body, Container, Section, Heading, Text, Button, Hr } from '@react-email/components'
+import { formatDualCurrency } from '@/lib/utils/currency'
 
 interface Props {
   outcome:    'ganado' | 'perdido'
   oppNombre:  string
   vendedor:   string
+  moneda?:    'MXN' | 'USD'
   monto?:     number
+  montoMxn?:  number
   oppUrl:     string
 }
 
-const fmtCurrency = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 })
-
-export function OppClosedEmail({ outcome, oppNombre, vendedor, monto, oppUrl }: Props) {
+export function OppClosedEmail({ outcome, oppNombre, vendedor, moneda, monto, montoMxn, oppUrl }: Props) {
   const isWon    = outcome === 'ganado'
   const accentBg = isWon ? '#15803d' : '#b91c1c'
   const emoji    = isWon ? '🎉' : '📉'
@@ -38,7 +39,7 @@ export function OppClosedEmail({ outcome, oppNombre, vendedor, monto, oppUrl }: 
             </Text>
             {isWon && monto !== undefined && (
               <Text style={{ margin: '0 0 20px', color: '#374151' }}>
-                <strong>Monto:</strong> {fmtCurrency.format(monto)}
+                <strong>Monto:</strong> {formatDualCurrency(monto, moneda ?? 'MXN', montoMxn ?? monto)}
               </Text>
             )}
             {!isWon && (

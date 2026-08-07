@@ -102,6 +102,65 @@ describe('createOpportunitySchema', () => {
     })
   })
 
+  // 3b. Divisa USD — superRefine requires tipo_cambio_estimado / tipo_cambio_final
+  describe('superRefine — USD requires tipo_cambio', () => {
+    it('defaults moneda to MXN when omitted', () => {
+      const result = createOpportunitySchema.safeParse(baseCreate())
+      expect(result.success).toBe(true)
+      if (result.success) {
+        expect(result.data.moneda).toBe('MXN')
+      }
+    })
+
+    it('fails when moneda=USD without tipo_cambio_estimado', () => {
+      const result = createOpportunitySchema.safeParse({ ...baseCreate(), moneda: 'USD' })
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        const paths = result.error.issues.map((i) => i.path.join('.'))
+        expect(paths).toContain('tipo_cambio_estimado')
+      }
+    })
+
+    it('passes when moneda=USD with tipo_cambio_estimado', () => {
+      // etapa=perdido: closed (no next_activity_at needed) but not ganado
+      // (which would additionally require tipo_cambio_final) — isolates this rule.
+      const result = createOpportunitySchema.safeParse({
+        ...baseCreate(),
+        etapa: 'perdido',
+        moneda: 'USD',
+        tipo_cambio_estimado: 18.5,
+      })
+      expect(result.success).toBe(true)
+    })
+
+    it('fails when moneda=USD and etapa=ganado without tipo_cambio_final', () => {
+      const result = createOpportunitySchema.safeParse({
+        ...baseCreate(),
+        etapa: 'ganado',
+        moneda: 'USD',
+        tipo_cambio_estimado: 18.5,
+        monto_final: 5000,
+      })
+      expect(result.success).toBe(false)
+      if (!result.success) {
+        const paths = result.error.issues.map((i) => i.path.join('.'))
+        expect(paths).toContain('tipo_cambio_final')
+      }
+    })
+
+    it('passes when moneda=USD and etapa=ganado with both tipo_cambio_estimado and tipo_cambio_final', () => {
+      const result = createOpportunitySchema.safeParse({
+        ...baseCreate(),
+        etapa: 'ganado',
+        moneda: 'USD',
+        tipo_cambio_estimado: 18.5,
+        tipo_cambio_final: 18.7,
+        monto_final: 5000,
+      })
+      expect(result.success).toBe(true)
+    })
+  })
+
   // 4. datetime-local preprocessing — converts to ISO 8601
   describe('next_activity_at preprocessing', () => {
     it('converts HH:MM datetime-local string (16 chars) to UTC ISO 8601', () => {
@@ -210,6 +269,22 @@ describe('stageTransitionSchema', () => {
   it('passes for any open stage without documents', () => {
     const result = stageTransitionSchema.safeParse({ etapa: 'negociacion' })
     expect(result.success).toBe(true)
+  })
+
+  // 9b. tipo_cambio_final is optional here — cross-field "required if USD" lives in the service,
+  // since this schema has no knowledge of the opportunity's existing moneda.
+  it('accepts an optional tipo_cambio_final alongside monto_final', () => {
+    const result = stageTransitionSchema.safeParse({
+      etapa:             'ganado',
+      monto_final:       50000,
+      tipo_cambio_final: 18.7,
+      cotizacion_path:   '/docs/quote.pdf',
+      orden_compra_path: '/docs/po.pdf',
+    })
+    expect(result.success).toBe(true)
+    if (result.success) {
+      expect(result.data.tipo_cambio_final).toBe(18.7)
+    }
   })
 })
 

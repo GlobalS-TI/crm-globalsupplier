@@ -13,10 +13,9 @@ import { CompanyService } from '@/lib/services/CompanyService'
 import { OpportunityRepository } from '@/lib/repositories/supabase/OpportunityRepository'
 import { OpportunityService } from '@/lib/services/OpportunityService'
 import { updateContact, deleteContact } from '../actions'
+import { formatDualCurrency } from '@/lib/utils/currency'
 
 export const dynamic = 'force-dynamic'
-
-const fmtCurrency = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 })
 
 const STAGE_LABELS: Record<string, string> = {
   nuevo_lead:         'Nuevo lead',
@@ -111,7 +110,7 @@ export default async function ContactoDetailPage({ params }: PageProps) {
                       {o.nombre}
                     </Link>
                     <div className="flex items-center gap-2 shrink-0">
-                      <span className="text-xs text-muted-foreground">{fmtCurrency.format(Number(o.monto_estimado))}</span>
+                      <span className="text-xs text-muted-foreground">{formatDualCurrency(Number(o.monto_estimado), o.moneda, Number(o.monto_estimado_mxn ?? o.monto_estimado))}</span>
                       <Badge variant="outline" className="text-xs">{STAGE_LABELS[o.etapa] ?? o.etapa}</Badge>
                     </div>
                   </li>

@@ -19,11 +19,16 @@ async function getCurrentUserId(): Promise<string> {
 export async function saveCosto(
   opportunityId: string,
   costo: number,
+  moneda: 'MXN' | 'USD' = 'MXN',
+  tipoCambio?: number,
   notas?: string | null,
 ): Promise<{ error?: string }> {
   try {
     const userId = await getCurrentUserId()
-    await makeService().saveCosto({ opportunity_id: opportunityId, costo, notas }, userId)
+    await makeService().saveCosto(
+      { opportunity_id: opportunityId, costo, moneda, tipo_cambio: tipoCambio, notas },
+      userId,
+    )
     revalidatePath('/comisiones')
     return {}
   } catch (e) {

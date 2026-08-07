@@ -520,8 +520,11 @@ export type Database = {
           fuente: Database["public"]["Enums"]["lead_source"]
           id: string
           last_activity_at: string
+          moneda: Database["public"]["Enums"]["currency"]
           monto_estimado: number
+          monto_estimado_mxn: number | null
           monto_final: number | null
+          monto_final_mxn: number | null
           next_activity_at: string | null
           nombre: string
           notas: string | null
@@ -529,6 +532,8 @@ export type Database = {
           owner_id: string
           probabilidad: number
           stale: boolean
+          tipo_cambio_estimado: number | null
+          tipo_cambio_final: number | null
           updated_at: string
         }
         Insert: {
@@ -542,8 +547,11 @@ export type Database = {
           fuente: Database["public"]["Enums"]["lead_source"]
           id?: string
           last_activity_at?: string
+          moneda?: Database["public"]["Enums"]["currency"]
           monto_estimado?: number
+          monto_estimado_mxn?: number | null
           monto_final?: number | null
+          monto_final_mxn?: number | null
           next_activity_at?: string | null
           nombre: string
           notas?: string | null
@@ -551,6 +559,8 @@ export type Database = {
           owner_id: string
           probabilidad?: number
           stale?: boolean
+          tipo_cambio_estimado?: number | null
+          tipo_cambio_final?: number | null
           updated_at?: string
         }
         Update: {
@@ -564,8 +574,11 @@ export type Database = {
           fuente?: Database["public"]["Enums"]["lead_source"]
           id?: string
           last_activity_at?: string
+          moneda?: Database["public"]["Enums"]["currency"]
           monto_estimado?: number
+          monto_estimado_mxn?: number | null
           monto_final?: number | null
+          monto_final_mxn?: number | null
           next_activity_at?: string | null
           nombre?: string
           notas?: string | null
@@ -573,6 +586,8 @@ export type Database = {
           owner_id?: string
           probabilidad?: number
           stale?: boolean
+          tipo_cambio_estimado?: number | null
+          tipo_cambio_final?: number | null
           updated_at?: string
         }
         Relationships: [
@@ -602,23 +617,32 @@ export type Database = {
       opportunity_costs: {
         Row: {
           costo: number
+          costo_mxn: number | null
           created_by: string | null
+          moneda: Database["public"]["Enums"]["currency"]
           notas: string | null
           opportunity_id: string
+          tipo_cambio: number | null
           updated_at: string
         }
         Insert: {
           costo?: number
+          costo_mxn?: number | null
           created_by?: string | null
+          moneda?: Database["public"]["Enums"]["currency"]
           notas?: string | null
           opportunity_id: string
+          tipo_cambio?: number | null
           updated_at?: string
         }
         Update: {
           costo?: number
+          costo_mxn?: number | null
           created_by?: string | null
+          moneda?: Database["public"]["Enums"]["currency"]
           notas?: string | null
           opportunity_id?: string
+          tipo_cambio?: number | null
           updated_at?: string
         }
         Relationships: [
@@ -1330,6 +1354,7 @@ export type Database = {
         | "gtx_systems"
         | "juno_promotional"
         | "fire_spot"
+      currency: "MXN" | "USD"
       lead_source:
         | "referido"
         | "web"
@@ -1526,6 +1551,7 @@ export const Constants = {
         "juno_promotional",
         "fire_spot",
       ],
+      currency: ["MXN", "USD"],
       lead_source: [
         "referido",
         "web",

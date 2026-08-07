@@ -20,7 +20,7 @@ function parseForm(form: FormData): Record<string, unknown> {
     obj[key] = value
   }
   // Coerce numeric fields
-  for (const field of ['monto_estimado', 'monto_final', 'probabilidad']) {
+  for (const field of ['monto_estimado', 'monto_final', 'probabilidad', 'tipo_cambio_estimado', 'tipo_cambio_final']) {
     if (obj[field] !== undefined) obj[field] = Number(obj[field])
   }
   return obj
@@ -66,9 +66,7 @@ export async function moveToStage(id: string, _prev: ActionState, form: FormData
     revalidatePath('/oportunidades')
 
     if (raw.data.etapa === 'ganado' || raw.data.etapa === 'perdido') {
-      const etapa = raw.data.etapa
-      const monto = (raw.data as { monto_final?: number }).monto_final
-      void fireOppClosedNotification(id, etapa, monto)
+      void fireOppClosedNotification(id, raw.data.etapa)
     }
 
     return null
@@ -80,13 +78,12 @@ export async function moveToStage(id: string, _prev: ActionState, form: FormData
 async function fireOppClosedNotification(
   id: string,
   etapa: 'ganado' | 'perdido',
-  montoFinal?: number,
 ): Promise<void> {
   try {
     const [oppRes, mgmtIds] = await Promise.all([
       supabaseAdmin
         .from('opportunities')
-        .select('nombre, owner:profiles!owner_id(full_name)')
+        .select('nombre, moneda, monto_final, monto_final_mxn, owner:profiles!owner_id(full_name)')
         .eq('id', id)
         .single(),
       getManagementProfileIds(),
@@ -98,7 +95,9 @@ async function fireOppClosedNotification(
         oppNombre:    oppRes.data.nombre,
         etapa,
         vendedorName: (oppRes.data.owner as { full_name: string } | null)?.full_name ?? 'Sin asignar',
-        montoFinal,
+        moneda:       oppRes.data.moneda,
+        montoFinal:   oppRes.data.monto_final ?? undefined,
+        montoFinalMxn: oppRes.data.monto_final_mxn ?? undefined,
       })
     }
   } catch { /* notificaciones no bloquean */ }
@@ -107,14 +106,14 @@ async function fireOppClosedNotification(
 export async function kanbanMoveToStage(
   id: string,
   stage: OpportunityStage,
-  montoFinal?: number,
-  cotizacionPath?: string,
-  ordenCompraPath?: string,
+  payload?: { montoFinal?: number; tipoCambioFinal?: number; cotizacionPath?: string; ordenCompraPath?: string },
 ): Promise<{ error?: string }> {
   try {
+    const { montoFinal, tipoCambioFinal, cotizacionPath, ordenCompraPath } = payload ?? {}
     await makeService().moveToStage(id, {
       etapa: stage,
       ...(montoFinal       !== undefined && { monto_final: montoFinal }),
+      ...(tipoCambioFinal  !== undefined && { tipo_cambio_final: tipoCambioFinal }),
       ...(cotizacionPath   !== undefined && { cotizacion_path: cotizacionPath }),
       ...(ordenCompraPath  !== undefined && { orden_compra_path: ordenCompraPath }),
     })
@@ -122,7 +121,7 @@ export async function kanbanMoveToStage(
     revalidatePath(`/oportunidades/${id}`)
 
     if (stage === 'ganado' || stage === 'perdido') {
-      void fireOppClosedNotification(id, stage, montoFinal)
+      void fireOppClosedNotification(id, stage)
     }
 
     return {}
