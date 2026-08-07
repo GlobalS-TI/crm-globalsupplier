@@ -22,7 +22,7 @@ type OppUpdate = Database['public']['Tables']['opportunities']['Update']
 const toInsert = (d: CreateOpportunityInput): OppInsert => d as unknown as OppInsert
 const toUpdate = (d: UpdateOpportunityInput): OppUpdate => d as unknown as OppUpdate
 
-const WITH_RELATIONS = '*, company:companies(nombre), contact:contacts(nombre, apellido), owner:profiles!owner_id(full_name)'
+const WITH_RELATIONS = '*, company:companies(nombre), contact:contacts(nombre, apellido, email, telefono), owner:profiles!owner_id(full_name)'
 
 export class OpportunityRepository implements IOpportunityRepository {
   async findById(id: string): Promise<OpportunityWithRelations | null> {

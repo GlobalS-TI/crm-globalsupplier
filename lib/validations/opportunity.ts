@@ -92,9 +92,11 @@ export const updateOpportunitySchema = createOpportunityBase
   .omit({ owner_id: true })
   .partial()
   .extend({
-    monto_final:       z.number().min(0).nullable().optional(),
-    cotizacion_path:   z.string().optional(),
-    orden_compra_path: z.string().optional(),
+    monto_final:          z.number().min(0).nullable().optional(),
+    tipo_cambio_estimado: z.number().positive().nullable().optional(),
+    tipo_cambio_final:    z.number().positive().nullable().optional(),
+    cotizacion_path:      z.string().optional(),
+    orden_compra_path:    z.string().optional(),
   })
 
 // ----------------------------------------------------------------

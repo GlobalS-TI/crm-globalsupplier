@@ -75,6 +75,33 @@ export class OpportunityService {
       throw new Error('tipo_cambio_estimado is required when editing monto_estimado on a USD opportunity')
     }
 
+    // Rule 6: red de seguridad — la combinación FINAL de moneda + tipo_cambio_estimado/final
+    // (existing + este request, sin importar qué campos cambiaron aquí) debe cumplir lo que
+    // exige la DB (chk_opp_estimado_currency / chk_opp_final_currency). Rules 4/5 solo
+    // disparan cuando se toca monto_estimado/monto_final directamente; esta regla cubre
+    // además el caso de cambiar moneda sola (p.ej. MXN → USD sin tocar los montos en el
+    // mismo request), para que el constraint nunca truene en crudo contra la DB.
+    if (nextMoneda === 'MXN') {
+      // La UI oculta los campos de tipo de cambio cuando la moneda es MXN — si la
+      // oportunidad estaba en USD antes, nunca se debe arrastrar un valor viejo.
+      data.tipo_cambio_estimado = null
+      data.tipo_cambio_final    = null
+    } else {
+      const nextTipoCambioEstimado = data.tipo_cambio_estimado !== undefined
+        ? data.tipo_cambio_estimado
+        : existing.tipo_cambio_estimado
+      if (!nextTipoCambioEstimado || nextTipoCambioEstimado <= 0) {
+        throw new Error('tipo_cambio_estimado is required when moneda is USD')
+      }
+
+      const nextTipoCambioFinal = data.tipo_cambio_final !== undefined
+        ? data.tipo_cambio_final
+        : existing.tipo_cambio_final
+      if (nextMonto && (!nextTipoCambioFinal || nextTipoCambioFinal <= 0)) {
+        throw new Error('tipo_cambio_final is required when moneda is USD and monto_final is set')
+      }
+    }
+
     const updated = await this.repo.update(id, data)
     const full = await this.repo.findById(updated.id)
     if (!full) throw new Error('Failed to retrieve updated opportunity')

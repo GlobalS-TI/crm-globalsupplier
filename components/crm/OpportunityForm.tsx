@@ -110,7 +110,7 @@ export function OpportunityForm({
         {/* Moneda */}
         <div className="space-y-1.5">
           <Label>Moneda *</Label>
-          <Select name="moneda" defaultValue={moneda} onValueChange={v => setMoneda(v as 'MXN' | 'USD')} required>
+          <Select name="moneda" value={moneda} onValueChange={v => setMoneda(v as 'MXN' | 'USD')} required>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
               {CURRENCIES.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
