@@ -8,9 +8,10 @@ import { GanadoTransitionModal } from '@/components/crm/GanadoTransitionModal'
 interface Props {
   oppId:   string
   oppName: string
+  moneda?: 'MXN' | 'USD'
 }
 
-export function GanadoStageButton({ oppId, oppName }: Props) {
+export function GanadoStageButton({ oppId, oppName, moneda = 'MXN' }: Props) {
   const [open, setOpen] = useState(false)
   const router = useRouter()
 
@@ -21,6 +22,7 @@ export function GanadoStageButton({ oppId, oppName }: Props) {
         open={open}
         oppId={oppId}
         oppName={oppName}
+        moneda={moneda}
         onConfirm={() => { setOpen(false); router.refresh() }}
         onCancel={() => setOpen(false)}
       />

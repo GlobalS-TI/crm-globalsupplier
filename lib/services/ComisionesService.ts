@@ -20,14 +20,14 @@ export class ComisionesService {
     const won = await this.repo.findWonOpportunities(year)
 
     const rows: ComisionRow[] = won.map(row => {
-      const costo     = row.costo ?? 0
-      const utilidad  = row.monto_final - costo
-      const margen    = row.monto_final > 0 ? (utilidad / row.monto_final) * 100 : null
+      const costoMxn  = row.costo_mxn ?? 0
+      const utilidad  = row.monto_final_mxn - costoMxn
+      const margen    = row.monto_final_mxn > 0 ? (utilidad / row.monto_final_mxn) * 100 : null
       return { ...row, utilidad, margen }
     })
 
-    const total_venta  = rows.reduce((s, r) => s + r.monto_final, 0)
-    const total_costo  = rows.reduce((s, r) => s + (r.costo ?? 0), 0)
+    const total_venta  = rows.reduce((s, r) => s + r.monto_final_mxn, 0)
+    const total_costo  = rows.reduce((s, r) => s + (r.costo_mxn ?? 0), 0)
     const utilidad_bruta = total_venta - total_costo
     const margen_promedio = total_venta > 0
       ? (utilidad_bruta / total_venta) * 100

@@ -12,11 +12,14 @@ export class ComisionesRepository implements IComisionesRepository {
         id,
         nombre,
         monto_final,
+        monto_final_mxn,
+        moneda,
+        tipo_cambio_final,
         business_unit,
         updated_at,
         company:companies ( nombre ),
         owner:profiles!owner_id ( full_name ),
-        opportunity_costs ( costo, notas )
+        opportunity_costs ( costo, costo_mxn, moneda, notas )
       `)
       .eq('etapa', 'ganado')
       .not('monto_final', 'is', null)
@@ -26,17 +29,25 @@ export class ComisionesRepository implements IComisionesRepository {
 
     if (error) throw error
 
-    return (data ?? []).map(row => ({
-      id:             row.id,
-      nombre:         row.nombre,
-      monto_final:    row.monto_final ?? 0,
-      business_unit:  row.business_unit,
-      updated_at:     row.updated_at,
-      company_nombre: (row.company as { nombre: string } | null)?.nombre ?? null,
-      owner_full_name:(row.owner as { full_name: string } | null)?.full_name ?? null,
-      costo:          (row.opportunity_costs as { costo: number } | null)?.costo ?? null,
-      notas:          (row.opportunity_costs as { notas: string | null } | null)?.notas ?? null,
-    }))
+    return (data ?? []).map(row => {
+      const cost = row.opportunity_costs as { costo: number; costo_mxn: number; moneda: string; notas: string | null } | null
+      return {
+        id:                row.id,
+        nombre:            row.nombre,
+        monto_final:       row.monto_final ?? 0,
+        monto_final_mxn:   row.monto_final_mxn ?? 0,
+        moneda:            row.moneda,
+        tipo_cambio_final: row.tipo_cambio_final,
+        business_unit:     row.business_unit,
+        updated_at:        row.updated_at,
+        company_nombre:    (row.company as { nombre: string } | null)?.nombre ?? null,
+        owner_full_name:   (row.owner as { full_name: string } | null)?.full_name ?? null,
+        costo:             cost?.costo ?? null,
+        costo_mxn:         cost?.costo_mxn ?? null,
+        costo_moneda:      cost?.moneda ?? null,
+        notas:             cost?.notas ?? null,
+      }
+    }) as WonOpportunityRow[]
   }
 
   async upsertCost(data: UpsertOpportunityCostInput, createdBy: string): Promise<void> {
@@ -48,6 +59,8 @@ export class ComisionesRepository implements IComisionesRepository {
         {
           opportunity_id: data.opportunity_id,
           costo:          data.costo,
+          moneda:         data.moneda,
+          tipo_cambio:    data.tipo_cambio ?? null,
           notas:          data.notas ?? null,
           created_by:     createdBy,
           updated_at:     new Date().toISOString(),

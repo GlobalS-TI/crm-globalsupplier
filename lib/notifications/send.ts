@@ -186,14 +186,18 @@ export async function notifyOppClosed({
   oppNombre,
   etapa,
   vendedorName,
+  moneda,
   montoFinal,
+  montoFinalMxn,
 }: {
-  recipientIds: string[]
-  oppId:        string
-  oppNombre:    string
-  etapa:        'ganado' | 'perdido'
-  vendedorName: string
-  montoFinal?:  number
+  recipientIds:   string[]
+  oppId:          string
+  oppNombre:      string
+  etapa:          'ganado' | 'perdido'
+  vendedorName:   string
+  moneda?:        'MXN' | 'USD'
+  montoFinal?:    number
+  montoFinalMxn?: number
 }) {
   const isWon = etapa === 'ganado'
   return sendNotification({
@@ -211,7 +215,9 @@ export async function notifyOppClosed({
         outcome:   etapa,
         oppNombre,
         vendedor:  vendedorName,
+        moneda,
         monto:     montoFinal,
+        montoMxn:  montoFinalMxn,
         oppUrl:    `${appUrl}/oportunidades/${oppId}`,
       })),
     }),

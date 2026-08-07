@@ -43,7 +43,8 @@ export default async function DashboardPage() {
     .eq('id', user?.id ?? '')
     .single()
 
-  const canNotify    = FULL_ACCESS.includes(profile?.role ?? '')
+  const isFullAccess = FULL_ACCESS.includes(profile?.role ?? '')
+  const canNotify    = isFullAccess
   const salesTrend   = pctChange(exec.kpis.wonThisMonth, exec.kpis.wonLastMonth)
   const overdueCount = globalActivities.filter(a => new Date(a.fecha) < new Date()).length
 
@@ -93,7 +94,7 @@ export default async function DashboardPage() {
       </section>
 
       {/* Gráficas */}
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <section className={isFullAccess ? 'grid grid-cols-1 lg:grid-cols-2 gap-6' : 'grid grid-cols-1 gap-6'}>
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold">Ventas por unidad de negocio</CardTitle>
@@ -103,14 +104,16 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold">Pipeline ponderado por vendedor</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <PipelineByOwnerChart data={exec.pipelineByOwner} />
-          </CardContent>
-        </Card>
+        {isFullAccess && (
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-semibold">Pipeline ponderado por vendedor</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <PipelineByOwnerChart data={exec.pipelineByOwner} />
+            </CardContent>
+          </Card>
+        )}
       </section>
 
       {/* Forecast por etapa */}

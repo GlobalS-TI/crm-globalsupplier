@@ -21,13 +21,15 @@ const STAGE_LABELS: Record<OpportunityStage, string> = {
 interface StageTransitionModalProps {
   targetStage: OpportunityStage
   action: (prev: ActionState, form: FormData) => Promise<ActionState>
+  moneda?: 'MXN' | 'USD'
 }
 
-export function StageTransitionModal({ targetStage, action }: StageTransitionModalProps) {
+export function StageTransitionModal({ targetStage, action, moneda = 'MXN' }: StageTransitionModalProps) {
   const [open, setOpen] = useState(false)
   const [state, formAction, pending] = useActionState(action, null)
   const submitted = useRef(false)
   const needsMonto = targetStage === 'ganado'
+  const isUsd = moneda === 'USD'
 
   useEffect(() => {
     if (submitted.current && state === null && !pending) {
@@ -57,8 +59,14 @@ export function StageTransitionModal({ targetStage, action }: StageTransitionMod
           <input type="hidden" name="etapa" value={targetStage} />
           {needsMonto && (
             <div className="space-y-1.5">
-              <Label htmlFor="monto_final">Monto final (MXN) *</Label>
+              <Label htmlFor="monto_final">Monto final ({moneda}) *</Label>
               <Input id="monto_final" name="monto_final" type="number" min={0.01} step="0.01" required />
+            </div>
+          )}
+          {needsMonto && isUsd && (
+            <div className="space-y-1.5">
+              <Label htmlFor="tipo_cambio_final">Tipo de cambio al cierre (USD → MXN) *</Label>
+              <Input id="tipo_cambio_final" name="tipo_cambio_final" type="number" min={0.0001} step="0.0001" required />
             </div>
           )}
           {state?.error && (

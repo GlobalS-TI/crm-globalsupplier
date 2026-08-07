@@ -16,14 +16,17 @@ interface Props {
   oppId:       string
   oppName:     string
   targetStage: 'ganado' | 'perdido'
+  moneda?:     'MXN' | 'USD'
   onConfirm:   () => void
   onCancel:    () => void
 }
 
-export function KanbanStageModal({ open, oppId, oppName, targetStage, onConfirm, onCancel }: Props) {
+export function KanbanStageModal({ open, oppId, oppName, targetStage, moneda = 'MXN', onConfirm, onCancel }: Props) {
   const [monto, setMonto] = useState('')
+  const [tipoCambio, setTipoCambio] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
+  const isUsd = moneda === 'USD'
 
   function handleConfirm() {
     if (targetStage === 'ganado') {
@@ -32,18 +35,28 @@ export function KanbanStageModal({ open, oppId, oppName, targetStage, onConfirm,
         setError('El monto final debe ser mayor a 0')
         return
       }
+      if (isUsd) {
+        const tc = parseFloat(tipoCambio)
+        if (!tipoCambio || isNaN(tc) || tc <= 0) {
+          setError('El tipo de cambio debe ser mayor a 0')
+          return
+        }
+      }
     }
     setError(null)
     startTransition(async () => {
       const result = await kanbanMoveToStage(
         oppId,
         targetStage as OpportunityStage,
-        targetStage === 'ganado' ? parseFloat(monto) : undefined,
+        targetStage === 'ganado'
+          ? { montoFinal: parseFloat(monto), ...(isUsd && { tipoCambioFinal: parseFloat(tipoCambio) }) }
+          : undefined,
       )
       if (result.error) {
         setError(result.error)
       } else {
         setMonto('')
+        setTipoCambio('')
         onConfirm()
       }
     })
@@ -51,6 +64,7 @@ export function KanbanStageModal({ open, oppId, oppName, targetStage, onConfirm,
 
   function handleCancel() {
     setMonto('')
+    setTipoCambio('')
     setError(null)
     onCancel()
   }
@@ -72,7 +86,7 @@ export function KanbanStageModal({ open, oppId, oppName, targetStage, onConfirm,
 
         {targetStage === 'ganado' && (
           <div className="space-y-1.5 py-2">
-            <Label htmlFor="kanban-monto">Monto final (MXN) *</Label>
+            <Label htmlFor="kanban-monto">Monto final ({moneda}) *</Label>
             <Input
               id="kanban-monto"
               type="number"
@@ -82,6 +96,21 @@ export function KanbanStageModal({ open, oppId, oppName, targetStage, onConfirm,
               value={monto}
               onChange={e => setMonto(e.target.value)}
               autoFocus
+            />
+          </div>
+        )}
+
+        {targetStage === 'ganado' && isUsd && (
+          <div className="space-y-1.5 py-2">
+            <Label htmlFor="kanban-tipo-cambio">Tipo de cambio al cierre (USD → MXN) *</Label>
+            <Input
+              id="kanban-tipo-cambio"
+              type="number"
+              min={0.0001}
+              step="0.0001"
+              placeholder="0.0000"
+              value={tipoCambio}
+              onChange={e => setTipoCambio(e.target.value)}
             />
           </div>
         )}

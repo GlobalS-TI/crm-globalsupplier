@@ -6,11 +6,14 @@ import { TrendingUp, TrendingDown, DollarSign, Percent } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
 import { saveCosto } from '@/app/(dashboard)/comisiones/actions'
+import { formatMXN, formatDualCurrency } from '@/lib/utils/currency'
 import type { ComisionRow, ComisionesSummary } from '@/lib/services/ComisionesService'
 
-const MXN = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 2 })
 const PCT = new Intl.NumberFormat('es-MX', { style: 'percent', minimumFractionDigits: 1, maximumFractionDigits: 1 })
 
 const BRAND_LABELS: Record<string, string> = {
@@ -49,6 +52,8 @@ function KpiCard({ title, value, icon: Icon, sub, highlight }: {
 function CostoCell({ row }: { row: ComisionRow }) {
   const [editing, setEditing] = useState(false)
   const [value, setValue] = useState(String(row.costo ?? ''))
+  const [moneda, setMoneda] = useState<'MXN' | 'USD'>(row.costo_moneda ?? 'MXN')
+  const [tipoCambio, setTipoCambio] = useState(String(row.tipo_cambio_final ?? ''))
   const inputRef = useRef<HTMLInputElement>(null)
   const [isPending, startTransition] = useTransition()
   const { toast } = useToast()
@@ -56,26 +61,38 @@ function CostoCell({ row }: { row: ComisionRow }) {
 
   function startEdit() {
     setValue(String(row.costo ?? ''))
+    setMoneda(row.costo_moneda ?? 'MXN')
+    setTipoCambio(String(row.tipo_cambio_final ?? ''))
     setEditing(true)
     setTimeout(() => inputRef.current?.select(), 0)
+  }
+
+  function cancelEdit() {
+    setValue(String(row.costo ?? ''))
+    setMoneda(row.costo_moneda ?? 'MXN')
+    setEditing(false)
   }
 
   async function commit() {
     const num = parseFloat(value.replace(/,/g, ''))
     if (isNaN(num) || num < 0) {
-      setValue(String(row.costo ?? ''))
-      setEditing(false)
+      cancelEdit()
       return
     }
-    if (num === (row.costo ?? 0)) {
+    const tc = moneda === 'USD' ? parseFloat(tipoCambio) : undefined
+    if (moneda === 'USD' && (tipoCambio === '' || isNaN(tc as number) || (tc as number) <= 0)) {
+      toast({ title: 'Falta el tipo de cambio', variant: 'destructive' })
+      return
+    }
+    if (num === (row.costo ?? 0) && moneda === (row.costo_moneda ?? 'MXN') && tc === (row.tipo_cambio_final ?? undefined)) {
       setEditing(false)
       return
     }
     startTransition(async () => {
-      const res = await saveCosto(row.id, num)
+      const res = await saveCosto(row.id, num, moneda, tc)
       if (res.error) {
         toast({ title: 'Error al guardar', description: res.error, variant: 'destructive' })
-        setValue(String(row.costo ?? ''))
+        cancelEdit()
       } else {
         router.refresh()
       }
@@ -85,19 +102,41 @@ function CostoCell({ row }: { row: ComisionRow }) {
 
   if (editing) {
     return (
-      <Input
-        ref={inputRef}
-        type="number"
-        min={0}
-        step={0.01}
-        value={value}
-        onChange={e => setValue(e.target.value)}
-        onBlur={commit}
-        onKeyDown={e => { if (e.key === 'Enter') commit(); if (e.key === 'Escape') { setValue(String(row.costo ?? '')); setEditing(false) } }}
-        className="h-7 w-36 text-right text-sm"
-        disabled={isPending}
-        autoFocus
-      />
+      <div className="flex items-center justify-end gap-1">
+        <Select value={moneda} onValueChange={v => setMoneda(v as 'MXN' | 'USD')}>
+          <SelectTrigger className="h-7 w-16 text-xs"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="MXN">MXN</SelectItem>
+            <SelectItem value="USD">USD</SelectItem>
+          </SelectContent>
+        </Select>
+        <Input
+          ref={inputRef}
+          type="number"
+          min={0}
+          step={0.01}
+          value={value}
+          onChange={e => setValue(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') commit(); if (e.key === 'Escape') cancelEdit() }}
+          className="h-7 w-24 text-right text-sm"
+          disabled={isPending}
+          autoFocus
+        />
+        {moneda === 'USD' && (
+          <Input
+            type="number"
+            min={0.0001}
+            step="0.0001"
+            placeholder="T.C."
+            value={tipoCambio}
+            onChange={e => setTipoCambio(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') commit(); if (e.key === 'Escape') cancelEdit() }}
+            className="h-7 w-20 text-right text-sm"
+            disabled={isPending}
+          />
+        )}
+        <button onClick={commit} className="text-xs text-primary px-1" disabled={isPending}>OK</button>
+      </div>
     )
   }
 
@@ -107,7 +146,9 @@ function CostoCell({ row }: { row: ComisionRow }) {
       className="w-full text-right text-sm rounded px-2 py-0.5 hover:bg-accent transition-colors min-w-[7rem] inline-block"
       title="Click para editar"
     >
-      {row.costo != null ? MXN.format(row.costo) : <span className="text-muted-foreground italic">— añadir</span>}
+      {row.costo != null
+        ? formatDualCurrency(row.costo, row.costo_moneda ?? 'MXN', row.costo_mxn ?? row.costo)
+        : <span className="text-muted-foreground italic">— añadir</span>}
     </button>
   )
 }
@@ -144,19 +185,19 @@ export function ComisionesTable({ rows, summary, year, years }: Props) {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard
           title="Total Ventas"
-          value={MXN.format(summary.total_venta)}
+          value={formatMXN(summary.total_venta)}
           icon={DollarSign}
           sub={`${rows.length} oportunidades ganadas`}
         />
         <KpiCard
           title="Total Costos"
-          value={MXN.format(summary.total_costo)}
+          value={formatMXN(summary.total_costo)}
           icon={DollarSign}
           sub={`${rows.filter(r => r.costo != null).length} con costo registrado`}
         />
         <KpiCard
           title="Utilidad Bruta"
-          value={MXN.format(summary.utilidad_bruta)}
+          value={formatMXN(summary.utilidad_bruta)}
           icon={summary.utilidad_bruta >= 0 ? TrendingUp : TrendingDown}
           highlight={summary.utilidad_bruta >= 0 ? 'positive' : 'negative'}
         />
@@ -209,12 +250,12 @@ export function ComisionesTable({ rows, summary, year, years }: Props) {
                       </Badge>
                     </td>
                     <td className="px-4 py-3 text-muted-foreground capitalize">{month}</td>
-                    <td className="px-4 py-3 text-right font-mono">{MXN.format(row.monto_final)}</td>
+                    <td className="px-4 py-3 text-right font-mono">{formatDualCurrency(row.monto_final, row.moneda, row.monto_final_mxn)}</td>
                     <td className="px-4 py-3 text-right">
                       <CostoCell row={row} />
                     </td>
                     <td className={`px-4 py-3 text-right font-mono ${utilidad == null ? 'text-muted-foreground' : utilidad >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                      {utilidad != null ? MXN.format(utilidad) : '—'}
+                      {utilidad != null ? formatMXN(utilidad) : '—'}
                     </td>
                     <td className={`px-4 py-3 text-right ${margen == null ? 'text-muted-foreground' : margen >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                       {margen != null ? PCT.format(margen / 100) : '—'}
@@ -227,10 +268,10 @@ export function ComisionesTable({ rows, summary, year, years }: Props) {
               <tfoot>
                 <tr className="border-t bg-muted/30 font-semibold">
                   <td colSpan={5} className="px-4 py-3 text-sm">Total</td>
-                  <td className="px-4 py-3 text-right font-mono">{MXN.format(summary.total_venta)}</td>
-                  <td className="px-4 py-3 text-right font-mono">{MXN.format(summary.total_costo)}</td>
+                  <td className="px-4 py-3 text-right font-mono">{formatMXN(summary.total_venta)}</td>
+                  <td className="px-4 py-3 text-right font-mono">{formatMXN(summary.total_costo)}</td>
                   <td className={`px-4 py-3 text-right font-mono ${summary.utilidad_bruta >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                    {MXN.format(summary.utilidad_bruta)}
+                    {formatMXN(summary.utilidad_bruta)}
                   </td>
                   <td className={`px-4 py-3 text-right ${(summary.margen_promedio ?? 0) >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                     {summary.margen_promedio != null ? PCT.format(summary.margen_promedio / 100) : '—'}

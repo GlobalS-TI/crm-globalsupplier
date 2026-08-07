@@ -15,8 +15,13 @@ const BASE_ROW: OpportunityRow = {
   company_id:            null,
   contact_id:            null,
   etapa:                 'contactado',
+  moneda:                'MXN',
   monto_estimado:        10000,
   monto_final:           null,
+  monto_estimado_mxn:    10000,
+  monto_final_mxn:       null,
+  tipo_cambio_estimado:  null,
+  tipo_cambio_final:     null,
   probabilidad:          40,
   fecha_cierre_estimada: null,
   next_activity_at:      '2026-07-01T09:00:00.000Z',
@@ -119,6 +124,40 @@ describe('OpportunityService.update()', () => {
         next_activity_at: null as any,   // explicit removal — invalid per schema
       }),
     ).rejects.toThrow()   // ZodError: "Expected string, received null"
+
+    expect(repo.update).not.toHaveBeenCalled()
+  })
+
+  it('throws when editing monto_final on a USD opportunity without tipo_cambio_final (Rule 4)', async () => {
+    const usdRow: OpportunityWithRelations = { ...BASE_WITH_RELATIONS, moneda: 'USD' }
+    const repo    = makeMockRepo({ findById: vi.fn().mockResolvedValue(usdRow) })
+    const service = new OpportunityService(repo)
+
+    await expect(
+      service.update('opp-001', { monto_final: 5000 }),
+    ).rejects.toThrow('tipo_cambio_final is required when editing monto_final on a USD opportunity')
+
+    expect(repo.update).not.toHaveBeenCalled()
+  })
+
+  it('succeeds when editing monto_final on a USD opportunity with tipo_cambio_final', async () => {
+    const usdRow: OpportunityWithRelations = { ...BASE_WITH_RELATIONS, moneda: 'USD' }
+    const repo    = makeMockRepo({ findById: vi.fn().mockResolvedValue(usdRow) })
+    const service = new OpportunityService(repo)
+
+    await service.update('opp-001', { monto_final: 5000, tipo_cambio_final: 18.5 })
+
+    expect(repo.update).toHaveBeenCalledOnce()
+  })
+
+  it('throws when editing monto_estimado on a USD opportunity without tipo_cambio_estimado (Rule 5)', async () => {
+    const usdRow: OpportunityWithRelations = { ...BASE_WITH_RELATIONS, moneda: 'USD' }
+    const repo    = makeMockRepo({ findById: vi.fn().mockResolvedValue(usdRow) })
+    const service = new OpportunityService(repo)
+
+    await expect(
+      service.update('opp-001', { monto_estimado: 5000 }),
+    ).rejects.toThrow('tipo_cambio_estimado is required when editing monto_estimado on a USD opportunity')
 
     expect(repo.update).not.toHaveBeenCalled()
   })

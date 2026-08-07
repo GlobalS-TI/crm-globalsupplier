@@ -82,9 +82,9 @@ export default async function OportunidadDetailPage({
             <div className="flex flex-wrap gap-2">
               {ALL_STAGES.filter(s => s !== opp.etapa).map(stage =>
                 stage === 'ganado' ? (
-                  <GanadoStageButton key="ganado" oppId={id} oppName={opp.nombre} />
+                  <GanadoStageButton key="ganado" oppId={id} oppName={opp.nombre} moneda={opp.moneda} />
                 ) : stage === 'perdido' ? (
-                  <StageTransitionModal key="perdido" targetStage="perdido" action={boundMove} />
+                  <StageTransitionModal key="perdido" targetStage="perdido" action={boundMove} moneda={opp.moneda} />
                 ) : (
                   <QuickStageButton key={stage} label={STAGE_LABELS[stage]} stage={stage} action={boundMove} />
                 )

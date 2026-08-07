@@ -5,10 +5,9 @@ import {
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
 import { StaleBadge } from '@/components/crm/StaleBadge'
+import { formatDualCurrency } from '@/lib/utils/currency'
 import type { OpportunityWithRelations } from '@/lib/repositories/interfaces/IOpportunityRepository'
 import type { OpportunityStage } from '@/lib/validations/opportunity'
-
-const fmt = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 })
 
 const STAGE_LABELS: Record<OpportunityStage, string> = {
   nuevo_lead: 'Nuevo lead', contactado: 'Contactado', diagnostico: 'Diagnóstico',
@@ -72,7 +71,9 @@ export function OpportunityTable({ opportunities }: OpportunityTableProps) {
                   {opp.owner?.full_name ?? '—'}
                 </TableCell>
                 <TableCell className="text-right font-medium">
-                  {opp.monto_estimado > 0 ? fmt.format(opp.monto_estimado) : '—'}
+                  {opp.monto_estimado > 0
+                    ? formatDualCurrency(opp.monto_estimado, opp.moneda, opp.monto_estimado_mxn ?? opp.monto_estimado)
+                    : '—'}
                 </TableCell>
                 <TableCell className="text-right text-muted-foreground">
                   {opp.probabilidad}%
