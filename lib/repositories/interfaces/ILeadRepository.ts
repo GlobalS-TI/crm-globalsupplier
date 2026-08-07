@@ -61,7 +61,7 @@ export interface ILeadSectionRepository {
 }
 
 export interface ILeadRepository {
-  listBySection(sectionId: string): Promise<LeadWithRelations[]>
+  listBySection(sectionId: string, search?: string): Promise<LeadWithRelations[]>
   findById(id: string): Promise<LeadWithRelations | null>
   create(data: CreateLeadInput, createdBy: string): Promise<LeadRow>
   update(id: string, data: UpdateLeadInput): Promise<LeadRow>

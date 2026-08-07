@@ -58,9 +58,10 @@ interface Props {
   isLeadsManager:   boolean
   assignableUsers:  AssignableUser[]
   requirementUrls?: Record<string, string>
+  search?:          string
 }
 
-export function LeadTable({ leads, section, sectionId, canManageLeads, isLeadsManager, assignableUsers, requirementUrls }: Props) {
+export function LeadTable({ leads, section, sectionId, canManageLeads, isLeadsManager, assignableUsers, requirementUrls, search }: Props) {
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -82,8 +83,8 @@ export function LeadTable({ leads, section, sectionId, canManageLeads, isLeadsMa
       {/* Table */}
       {leads.length === 0 ? (
         <div className="text-center py-16 text-muted-foreground text-sm">
-          Sin leads en esta sección.
-          {canManageLeads && (
+          {search ? `Sin resultados para "${search}".` : 'Sin leads en esta sección.'}
+          {!search && canManageLeads && (
             <span className="block mt-2 text-primary text-xs">
               Usa &quot;Nuevo lead&quot; o importa desde un archivo CSV/XLSX.
             </span>
