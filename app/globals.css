@@ -101,7 +101,13 @@
 }
 
 .nav-bounce-item {
-  animation: nav-item-bounce 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  /* backwards (not both/forwards): a transform left "on" after the animation ends —
+     even an identity one like translateX(0) — makes this element a CSS containing
+     block for any position:fixed descendant (e.g. @dnd-kit's DragOverlay), which
+     throws off fixed-position elements elsewhere in the app. The resting keyframe
+     here is already visually identical to "no transform", so backwards-only fill
+     looks the same and lets the transform actually clear once the animation ends. */
+  animation: nav-item-bounce 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
   animation-delay: calc(var(--nav-i, 0) * 45ms);
 }
 
@@ -113,7 +119,11 @@
 }
 
 .animate-page-enter {
-  animation: page-enter 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+  /* backwards, not both/forwards — see comment on .nav-bounce-item above.
+     This one wraps every dashboard page's content, so a lingering transform here
+     was throwing off the position of @dnd-kit's DragOverlay on the Kanban board
+     (the dragged card rendered offset from the cursor instead of following it). */
+  animation: page-enter 0.22s cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 
 @keyframes fade-up {
@@ -122,6 +132,7 @@
 }
 
 .animate-fade-up {
-  animation: fade-up 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+  /* backwards, not both/forwards — see comment on .nav-bounce-item above. */
+  animation: fade-up 0.3s cubic-bezier(0.16, 1, 0.3, 1) backwards;
   animation-delay: var(--stagger, 0ms);
 }
