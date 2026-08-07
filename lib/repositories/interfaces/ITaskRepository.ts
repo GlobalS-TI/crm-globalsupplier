@@ -22,6 +22,7 @@ export interface ITaskRepository {
   findOrCreateDefaultBoard(createdBy: string): Promise<BoardWithColumns>
   findGroupsByBoard(boardId: string): Promise<TaskGroupRow[]>
   findTasksByBoard(boardId: string): Promise<TaskWithValues[]>
+  findTasksByBoardAndUser(boardId: string, userId: string): Promise<TaskWithValues[]>
   createGroup(boardId: string, nombre: string, color: string, position: number): Promise<TaskGroupRow>
   updateGroup(id: string, data: { nombre?: string; color?: string; position?: number }): Promise<TaskGroupRow>
   deleteGroup(id: string): Promise<void>

@@ -18,6 +18,10 @@ export class TaskService {
     return this.repo.findTasksByBoard(boardId)
   }
 
+  async getTasksByBoardAndUser(boardId: string, userId: string): Promise<TaskWithValues[]> {
+    return this.repo.findTasksByBoardAndUser(boardId, userId)
+  }
+
   async createGroup(boardId: string, nombre: string, color: string, position: number): Promise<TaskGroupRow> {
     return this.repo.createGroup(boardId, nombre.trim(), color, position)
   }

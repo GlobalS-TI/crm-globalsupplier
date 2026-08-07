@@ -74,7 +74,7 @@ const dropdownContent = 'p-0 w-52 shadow-lg'
 // ----------------------------------------------------------------
 // Display renderers
 // ----------------------------------------------------------------
-function DisplayValue({ col, value, users }: { col: TaskBoardColumnRow; value: string | null; users: User[] }) {
+export function DisplayValue({ col, value, users }: { col: TaskBoardColumnRow; value: string | null; users: User[] }) {
   if (!value) return <span className="text-muted-foreground/30 text-xs select-none">—</span>
 
   const cfg = parseConfig(col.config)
