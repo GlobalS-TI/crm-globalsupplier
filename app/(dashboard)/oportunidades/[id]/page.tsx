@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Route } from 'next'
+import { Mail, Phone } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { OpportunityRepository } from '@/lib/repositories/supabase/OpportunityRepository'
 import { OpportunityService } from '@/lib/services/OpportunityService'
@@ -87,6 +88,31 @@ export default async function OportunidadDetailPage({
           {opp.stale && <StaleBadge />}
         </div>
         {opp.company && <p className="text-muted-foreground">{opp.company.nombre}</p>}
+        {opp.contact && (
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+            <span>
+              {opp.contact.nombre}{opp.contact.apellido ? ` ${opp.contact.apellido}` : ''}
+            </span>
+            {opp.contact.email && (
+              <a
+                href={`mailto:${opp.contact.email}`}
+                className="flex items-center gap-1 hover:text-foreground transition-colors"
+              >
+                <Mail className="h-3.5 w-3.5" />
+                {opp.contact.email}
+              </a>
+            )}
+            {opp.contact.telefono && (
+              <a
+                href={`tel:${opp.contact.telefono}`}
+                className="flex items-center gap-1 hover:text-foreground transition-colors"
+              >
+                <Phone className="h-3.5 w-3.5" />
+                {opp.contact.telefono}
+              </a>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Stage transitions */}

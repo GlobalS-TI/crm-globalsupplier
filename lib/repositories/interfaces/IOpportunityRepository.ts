@@ -5,7 +5,7 @@ export type OpportunityRow = Database['public']['Tables']['opportunities']['Row'
 
 export type OpportunityWithRelations = OpportunityRow & {
   company: { nombre: string } | null
-  contact: { nombre: string; apellido: string | null } | null
+  contact: { nombre: string; apellido: string | null; email: string | null; telefono: string | null } | null
   owner:   { full_name: string } | null
 }
 

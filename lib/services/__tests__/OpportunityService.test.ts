@@ -141,7 +141,9 @@ describe('OpportunityService.update()', () => {
   })
 
   it('succeeds when editing monto_final on a USD opportunity with tipo_cambio_final', async () => {
-    const usdRow: OpportunityWithRelations = { ...BASE_WITH_RELATIONS, moneda: 'USD' }
+    // A real USD row always already has a valid tipo_cambio_estimado — the DB
+    // constraint guarantees it could never have been persisted otherwise.
+    const usdRow: OpportunityWithRelations = { ...BASE_WITH_RELATIONS, moneda: 'USD', tipo_cambio_estimado: 18.0 }
     const repo    = makeMockRepo({ findById: vi.fn().mockResolvedValue(usdRow) })
     const service = new OpportunityService(repo)
 
@@ -160,6 +162,37 @@ describe('OpportunityService.update()', () => {
     ).rejects.toThrow('tipo_cambio_estimado is required when editing monto_estimado on a USD opportunity')
 
     expect(repo.update).not.toHaveBeenCalled()
+  })
+
+  it('throws when switching moneda to USD without a tipo_cambio_estimado, even if monto_estimado is untouched (Rule 6 — regression for the raw DB constraint bug)', async () => {
+    // BASE_WITH_RELATIONS is moneda: 'MXN' with tipo_cambio_estimado: null.
+    const repo    = makeMockRepo()
+    const service = new OpportunityService(repo)
+
+    await expect(
+      service.update('opp-001', { moneda: 'USD' }),
+    ).rejects.toThrow('tipo_cambio_estimado is required when moneda is USD')
+
+    expect(repo.update).not.toHaveBeenCalled()
+  })
+
+  it('nulls out tipo_cambio_estimado/tipo_cambio_final when switching moneda back to MXN (Rule 6)', async () => {
+    const usdRow: OpportunityWithRelations = {
+      ...BASE_WITH_RELATIONS,
+      moneda: 'USD',
+      tipo_cambio_estimado: 18.0,
+      tipo_cambio_final: 18.5,
+    }
+    const repo    = makeMockRepo({ findById: vi.fn().mockResolvedValue(usdRow) })
+    const service = new OpportunityService(repo)
+
+    await service.update('opp-001', { moneda: 'MXN' })
+
+    expect(repo.update).toHaveBeenCalledWith('opp-001', expect.objectContaining({
+      moneda: 'MXN',
+      tipo_cambio_estimado: null,
+      tipo_cambio_final: null,
+    }))
   })
 })
 
