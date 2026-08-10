@@ -12,7 +12,6 @@ import {
   type DragStartEvent,
   type DragOverEvent,
 } from '@dnd-kit/core'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
 import { OpportunityKanbanCard } from '@/components/crm/OpportunityKanbanCard'
 import { KanbanStageModal } from '@/components/crm/KanbanStageModal'
@@ -100,7 +99,7 @@ function KanbanColumn({
         </Badge>
       </div>
 
-      <ScrollArea className="flex-1 px-2.5 pb-2.5">
+      <div className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden px-2.5 pb-2.5">
         <div className="space-y-2.5">
           {cards.map(opp => (
             <OpportunityKanbanCard
@@ -116,7 +115,7 @@ function KanbanColumn({
             </p>
           )}
         </div>
-      </ScrollArea>
+      </div>
     </div>
   )
 }
