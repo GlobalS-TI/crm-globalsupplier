@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useRef, useEffect, useCallback } from 'react'
 import {
   DndContext,
   DragOverlay,
@@ -86,7 +86,7 @@ function KanbanColumn({
   return (
     <div
       ref={setNodeRef}
-      className={`flex flex-col shrink-0 snap-start w-[calc(100vw-3rem)] sm:w-72 rounded-xl overflow-hidden transition-colors ${
+      className={`flex flex-col shrink-0 snap-start w-[calc(100vw-3rem)] md:w-72 rounded-xl overflow-hidden transition-colors ${
         isOver ? 'bg-primary/10 ring-1 ring-primary/30' : 'bg-muted/40'
       }`}
     >
@@ -135,6 +135,23 @@ export function OpportunityKanbanBoard({ opportunities }: Props) {
       activationConstraint: { distance: 8 },
     })
   )
+
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const [canScrollLeft, setCanScrollLeft]   = useState(false)
+  const [canScrollRight, setCanScrollRight] = useState(false)
+
+  const updateScrollFades = useCallback(() => {
+    const el = scrollRef.current
+    if (!el) return
+    setCanScrollLeft(el.scrollLeft > 4)
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4)
+  }, [])
+
+  useEffect(() => {
+    updateScrollFades()
+    window.addEventListener('resize', updateScrollFades)
+    return () => window.removeEventListener('resize', updateScrollFades)
+  }, [updateScrollFades, items])
 
   const byStage = Object.fromEntries(
     COLUMNS.map(({ stage }) => [stage, items.filter(o => o.etapa === stage)])
@@ -225,16 +242,26 @@ export function OpportunityKanbanBoard({ opportunities }: Props) {
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
-        <div className={`flex gap-4 h-full overflow-x-auto snap-x snap-mandatory pb-4 px-6 transition-opacity ${pending ? 'opacity-80' : ''}`}>
-          {COLUMNS.map(({ stage, label }) => (
-            <KanbanColumn
-              key={stage}
-              stage={stage}
-              label={label}
-              cards={byStage[stage]}
-              isOver={overId === stage && !CLOSED.has(stage)}
-            />
-          ))}
+        <div className="relative h-full">
+          <div
+            ref={scrollRef}
+            onScroll={updateScrollFades}
+            className={`flex gap-4 h-full overflow-x-auto snap-x snap-mandatory pb-4 px-6 transition-opacity ${pending ? 'opacity-80' : ''}`}
+          >
+            {COLUMNS.map(({ stage, label }) => (
+              <KanbanColumn
+                key={stage}
+                stage={stage}
+                label={label}
+                cards={byStage[stage]}
+                isOver={overId === stage && !CLOSED.has(stage)}
+              />
+            ))}
+          </div>
+
+          {/* Degradados que insinúan que hay más columnas para scrollear */}
+          <div className={`pointer-events-none absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-background to-transparent transition-opacity ${canScrollLeft ? 'opacity-100' : 'opacity-0'}`} />
+          <div className={`pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-background to-transparent transition-opacity ${canScrollRight ? 'opacity-100' : 'opacity-0'}`} />
         </div>
 
         <DragOverlay dropAnimation={null}>
