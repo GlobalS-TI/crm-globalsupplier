@@ -44,6 +44,7 @@ export type ExecutiveDashboard = {
     wonThisMonth:     number
     wonLastMonth:     number
     pipelineTotal:    number
+    pipelineTotalUSD: number
     opportunitiesOpen: number
     newThisMonth:     number
   }

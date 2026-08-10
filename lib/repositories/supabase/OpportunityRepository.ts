@@ -105,7 +105,7 @@ export class OpportunityRepository implements IOpportunityRepository {
     const supabase = await createClient()
 
     const [oppsResult, profilesResult] = await Promise.all([
-      supabase.from('opportunities').select('etapa, business_unit, monto_estimado_mxn, monto_final_mxn, probabilidad, owner_id, created_at, updated_at'),
+      supabase.from('opportunities').select('etapa, business_unit, moneda, monto_estimado, monto_estimado_mxn, monto_final_mxn, probabilidad, owner_id, created_at, updated_at'),
       supabase.from('profiles').select('id, full_name'),
     ])
 
@@ -127,6 +127,9 @@ export class OpportunityRepository implements IOpportunityRepository {
     const wonThisMonth  = wonOpps.filter(o => o.updated_at >= monthStart).reduce((s, o) => s + Number(o.monto_final_mxn ?? 0), 0)
     const wonLastMonth  = wonOpps.filter(o => o.updated_at >= lastMonthStart && o.updated_at < monthStart).reduce((s, o) => s + Number(o.monto_final_mxn ?? 0), 0)
     const pipelineTotal = openOpps.reduce((s, o) => s + Number(o.monto_estimado_mxn ?? 0), 0)
+    const pipelineTotalUSD = openOpps
+      .filter(o => o.moneda === 'USD')
+      .reduce((s, o) => s + Number(o.monto_estimado ?? 0), 0)
     const newThisMonth  = opps.filter(o => o.created_at >= monthStart).length
 
     // Sales by business unit (only won)
@@ -171,7 +174,7 @@ export class OpportunityRepository implements IOpportunityRepository {
       .map(stage => ({ stage, ...stageMap.get(stage)! }))
 
     return {
-      kpis: { wonThisMonth, wonLastMonth, pipelineTotal, opportunitiesOpen: openOpps.length, newThisMonth },
+      kpis: { wonThisMonth, wonLastMonth, pipelineTotal, pipelineTotalUSD, opportunitiesOpen: openOpps.length, newThisMonth },
       salesByUnit,
       pipelineByOwner,
       forecastByStage,
