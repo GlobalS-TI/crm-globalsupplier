@@ -15,7 +15,7 @@ import { formatCurrency, formatMXN } from '@/lib/utils/currency'
 const fmtCurrency = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 })
 const FULL_ACCESS = ['director_general', 'direccion_comercial']
 
-export const metadata = { title: 'Dashboard — CRM Global Supplier' }
+export const metadata = { title: 'Dashboard — Supply' }
 export const dynamic  = 'force-dynamic'
 
 function pctChange(current: number, previous: number): number | undefined {

@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { OpportunityForm } from '@/components/crm/OpportunityForm'
 import { createOpportunity } from '../actions'
 
-export const metadata = { title: 'Nueva oportunidad — CRM Global Supplier' }
+export const metadata = { title: 'Nueva oportunidad — Supply' }
 export const dynamic = 'force-dynamic'
 
 export default async function NuevaOportunidadPage() {

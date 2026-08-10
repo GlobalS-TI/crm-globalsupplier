@@ -48,7 +48,7 @@ export default function RestablecerContrasenaPage() {
     <Card className="w-full max-w-sm">
       <CardHeader>
         <CardTitle>Restablecer contraseña</CardTitle>
-        <CardDescription>CRM Global Supplier</CardDescription>
+        <CardDescription>Supply</CardDescription>
       </CardHeader>
       <CardContent>
         {success ? (

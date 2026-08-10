@@ -11,7 +11,7 @@ import { BUSINESS_UNITS, BRAND_LABELS, PROJECT_STATUSES, PROJECT_STATUS_LABELS, 
 import type { BusinessUnit, ProjectStatus, ProjectTipo } from '@/lib/types'
 import { deleteProject, archiveProject } from '@/app/(dashboard)/proyectos/actions'
 
-export const metadata = { title: 'Proyectos — CRM Global Supplier' }
+export const metadata = { title: 'Proyectos — Supply' }
 export const dynamic  = 'force-dynamic'
 
 interface PageProps {

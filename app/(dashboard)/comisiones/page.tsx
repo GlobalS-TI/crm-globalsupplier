@@ -4,7 +4,7 @@ import { ComisionesRepository } from '@/lib/repositories/supabase/ComisionesRepo
 import { ComisionesService } from '@/lib/services/ComisionesService'
 import { ComisionesTable } from '@/components/crm/ComisionesTable'
 
-export const metadata = { title: 'Comisiones — CRM Global Supplier' }
+export const metadata = { title: 'Comisiones — Supply' }
 export const dynamic  = 'force-dynamic'
 
 const ALLOWED_ROLES = ['director_general', 'administracion']

@@ -12,7 +12,7 @@ export function StaleDigestEmail({ opps }: Props) {
         <Container style={{ maxWidth: '600px', background: '#fff', borderRadius: '8px', border: '1px solid #e5e7eb', overflow: 'hidden' }}>
           <Section style={{ background: '#1d4ed8', padding: '20px 24px' }}>
             <Heading as="h1" style={{ color: '#fff', margin: 0, fontSize: '18px' }}>
-              CRM Global Supplier
+              Supply
             </Heading>
             <Text style={{ color: '#bfdbfe', margin: '4px 0 0', fontSize: '13px' }}>
               Resumen de oportunidades sin actividad

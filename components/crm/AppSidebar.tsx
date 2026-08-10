@@ -77,7 +77,7 @@ export function AppSidebar({ userFullName, userEmail, userRole, userId }: AppSid
     <aside className="flex flex-col w-60 h-screen bg-card border-r shrink-0">
       {/* Brand */}
       <div className="px-4 py-5">
-        <span className="font-semibold text-sm tracking-tight">Global Supplier CRM</span>
+        <span className="font-semibold text-sm tracking-tight">Supply</span>
       </div>
 
       <Separator />

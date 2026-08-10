@@ -7,7 +7,7 @@ import { CompanyRepository } from '@/lib/repositories/supabase/CompanyRepository
 import { CompanyService } from '@/lib/services/CompanyService'
 import { createContact } from '../actions'
 
-export const metadata = { title: 'Nuevo contacto — CRM Global Supplier' }
+export const metadata = { title: 'Nuevo contacto — Supply' }
 
 interface PageProps {
   searchParams: Promise<{ company_id?: string }>

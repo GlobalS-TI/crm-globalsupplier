@@ -1,4 +1,4 @@
-# CRM Global Supplier
+# Supply
 
 Internal CRM replacing Monday.com. Next.js 14 App Router · TypeScript · Supabase · Tailwind · shadcn/ui · Zod · Resend · Vercel.
 
