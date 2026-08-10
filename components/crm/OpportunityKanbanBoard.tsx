@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useRef, useEffect, useCallback } from 'react'
 import {
   DndContext,
   DragOverlay,
@@ -12,7 +12,6 @@ import {
   type DragStartEvent,
   type DragOverEvent,
 } from '@dnd-kit/core'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
 import { OpportunityKanbanCard } from '@/components/crm/OpportunityKanbanCard'
 import { KanbanStageModal } from '@/components/crm/KanbanStageModal'
@@ -86,7 +85,7 @@ function KanbanColumn({
   return (
     <div
       ref={setNodeRef}
-      className={`flex flex-col shrink-0 snap-start w-[calc(100vw-3rem)] sm:w-72 rounded-xl overflow-hidden transition-colors ${
+      className={`flex flex-col shrink-0 snap-start w-[calc(100vw-3rem)] md:w-72 rounded-xl overflow-hidden transition-colors ${
         isOver ? 'bg-primary/10 ring-1 ring-primary/30' : 'bg-muted/40'
       }`}
     >
@@ -100,7 +99,7 @@ function KanbanColumn({
         </Badge>
       </div>
 
-      <ScrollArea className="flex-1 px-2.5 pb-2.5">
+      <div className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden px-2.5 pb-2.5">
         <div className="space-y-2.5">
           {cards.map(opp => (
             <OpportunityKanbanCard
@@ -116,7 +115,7 @@ function KanbanColumn({
             </p>
           )}
         </div>
-      </ScrollArea>
+      </div>
     </div>
   )
 }
@@ -135,6 +134,23 @@ export function OpportunityKanbanBoard({ opportunities }: Props) {
       activationConstraint: { distance: 8 },
     })
   )
+
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const [canScrollLeft, setCanScrollLeft]   = useState(false)
+  const [canScrollRight, setCanScrollRight] = useState(false)
+
+  const updateScrollFades = useCallback(() => {
+    const el = scrollRef.current
+    if (!el) return
+    setCanScrollLeft(el.scrollLeft > 4)
+    setCanScrollRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 4)
+  }, [])
+
+  useEffect(() => {
+    updateScrollFades()
+    window.addEventListener('resize', updateScrollFades)
+    return () => window.removeEventListener('resize', updateScrollFades)
+  }, [updateScrollFades, items])
 
   const byStage = Object.fromEntries(
     COLUMNS.map(({ stage }) => [stage, items.filter(o => o.etapa === stage)])
@@ -225,16 +241,26 @@ export function OpportunityKanbanBoard({ opportunities }: Props) {
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
-        <div className={`flex gap-4 h-full overflow-x-auto snap-x snap-mandatory pb-4 px-6 transition-opacity ${pending ? 'opacity-80' : ''}`}>
-          {COLUMNS.map(({ stage, label }) => (
-            <KanbanColumn
-              key={stage}
-              stage={stage}
-              label={label}
-              cards={byStage[stage]}
-              isOver={overId === stage && !CLOSED.has(stage)}
-            />
-          ))}
+        <div className="relative h-full">
+          <div
+            ref={scrollRef}
+            onScroll={updateScrollFades}
+            className={`flex gap-4 h-full overflow-x-auto snap-x snap-mandatory pb-4 px-6 transition-opacity ${pending ? 'opacity-80' : ''}`}
+          >
+            {COLUMNS.map(({ stage, label }) => (
+              <KanbanColumn
+                key={stage}
+                stage={stage}
+                label={label}
+                cards={byStage[stage]}
+                isOver={overId === stage && !CLOSED.has(stage)}
+              />
+            ))}
+          </div>
+
+          {/* Degradados que insinúan que hay más columnas para scrollear */}
+          <div className={`pointer-events-none absolute inset-y-0 left-0 w-10 bg-gradient-to-r from-background to-transparent transition-opacity ${canScrollLeft ? 'opacity-100' : 'opacity-0'}`} />
+          <div className={`pointer-events-none absolute inset-y-0 right-0 w-10 bg-gradient-to-l from-background to-transparent transition-opacity ${canScrollRight ? 'opacity-100' : 'opacity-0'}`} />
         </div>
 
         <DragOverlay dropAnimation={null}>
