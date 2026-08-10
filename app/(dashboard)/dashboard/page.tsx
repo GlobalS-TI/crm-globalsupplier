@@ -10,6 +10,7 @@ import { SalesByUnitChart } from '@/components/crm/dashboard/SalesByUnitChart'
 import { PipelineByOwnerChart } from '@/components/crm/dashboard/PipelineByOwnerChart'
 import { ForecastChart } from '@/components/crm/dashboard/ForecastChart'
 import { GlobalActivitiesPanel } from '@/components/crm/dashboard/GlobalActivitiesPanel'
+import { formatCurrency, formatMXN } from '@/lib/utils/currency'
 
 const fmtCurrency = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 })
 const FULL_ACCESS = ['director_general', 'direccion_comercial']
@@ -70,7 +71,8 @@ export default async function DashboardPage() {
           />
           <StatCard
             title="Pipeline total"
-            value={fmtCurrency.format(exec.kpis.pipelineTotal)}
+            value={formatCurrency(exec.kpis.pipelineTotalUSD, 'USD')}
+            sub={`${formatMXN(exec.kpis.pipelineTotal)} MXN total (todas las divisas)`}
             delay={60}
           />
           <StatCard
