@@ -8,6 +8,15 @@ Do NOT write React components, TypeScript services, or infra config.
 - Never modify an already-applied migration — create a new one
 - Every migration starts with: -- Migration: description / -- Sprint: N
 - Mark workarounds: -- DEUDA: description
+- `auto_expose_new_tables = false` (supabase/config.toml) — every `create table` in
+  `public` MUST be followed, in the same migration, by both:
+  1. `alter table public.<name> enable row level security;` + policies
+  2. `grant select, insert, update, delete on public.<name> to authenticated, service_role;`
+  Forgetting the grant has shipped 3 times already (opportunity_costs, project_updates,
+  notifications, opportunity_files) — it doesn't fail loudly until someone hits the
+  feature, since RLS policies are silently unreachable without the base grant first.
+  Do NOT "fix" this by flipping auto_expose_new_tables to true — that auto-grants
+  every future table with no RLS, which fails open instead of closed. Not a real fix.
 
 ## Roles for RLS
 Access role via: (select role from profiles where id = auth.uid())
