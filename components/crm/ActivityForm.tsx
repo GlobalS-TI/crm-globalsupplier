@@ -38,40 +38,39 @@ export function ActivityForm({ opportunityId, action, onSuccess }: ActivityFormP
   const defaultFecha = new Date(Date.now() + 3600_000).toISOString().slice(0, 16)
 
   return (
-    <form ref={formRef} action={formAction} className="space-y-3">
+    <form ref={formRef} action={formAction} className="space-y-5">
       <input type="hidden" name="opportunity_id" value={opportunityId} />
 
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1">
-          <Label className="text-xs">Tipo *</Label>
-          <Select name="tipo" defaultValue="llamada" required>
-            <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-1">
-          <Label className="text-xs">Fecha *</Label>
-          <Input name="fecha" type="datetime-local" className="h-8 text-sm"
-            defaultValue={defaultFecha} required />
-        </div>
+      <div className="space-y-2">
+        <Label>Tipo *</Label>
+        <Select name="tipo" defaultValue="llamada" required>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            {TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
+          </SelectContent>
+        </Select>
       </div>
 
-      <div className="space-y-1">
-        <Label className="text-xs">Título *</Label>
-        <Input name="titulo" className="h-8 text-sm" placeholder="Llamada de seguimiento…" required />
+      {/* Fecha en su propia fila — el datetime-local necesita más ancho del que
+          le toca compartiendo columna con Tipo, si no el valor se corta. */}
+      <div className="space-y-2">
+        <Label>Fecha *</Label>
+        <Input name="fecha" type="datetime-local" defaultValue={defaultFecha} required />
       </div>
 
-      <div className="space-y-1">
-        <Label className="text-xs">Descripción</Label>
-        <Textarea name="descripcion" className="text-sm" rows={2} placeholder="Notas…" />
+      <div className="space-y-2">
+        <Label>Título *</Label>
+        <Input name="titulo" placeholder="Llamada de seguimiento…" required />
       </div>
 
-      {state?.error && <p className="text-xs text-destructive">{state.error}</p>}
+      <div className="space-y-2">
+        <Label>Descripción</Label>
+        <Textarea name="descripcion" rows={3} placeholder="Notas…" />
+      </div>
 
-      <Button type="submit" size="sm" disabled={pending} className="w-full">
+      {state?.error && <p className="text-sm text-destructive">{state.error}</p>}
+
+      <Button type="submit" disabled={pending} className="w-full">
         {pending ? 'Guardando…' : 'Agregar actividad'}
       </Button>
     </form>
