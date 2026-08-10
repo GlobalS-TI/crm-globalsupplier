@@ -13,7 +13,7 @@ import type { AssignableUser } from '@/components/crm/LeadModal'
 import { LEADS_ROLES } from '@/lib/types'
 import type { UserRole } from '@/lib/types'
 
-export const metadata = { title: 'Leads — CRM Global Supplier' }
+export const metadata = { title: 'Leads — Supply' }
 export const dynamic  = 'force-dynamic'
 
 interface PageProps {

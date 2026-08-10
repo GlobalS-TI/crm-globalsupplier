@@ -7,7 +7,7 @@ import { ContentItemRow } from '@/components/crm/ContentItemRow'
 import type { BusinessUnit } from '@/lib/validations/opportunity'
 import type { ContentItemWithRelations } from '@/lib/repositories/interfaces/IContentRepository'
 
-export const metadata = { title: 'Biblioteca de Contenido — CRM Global Supplier' }
+export const metadata = { title: 'Biblioteca de Contenido — Supply' }
 export const dynamic  = 'force-dynamic'
 
 const BUSINESS_UNIT_LABELS: Record<BusinessUnit, string> = {

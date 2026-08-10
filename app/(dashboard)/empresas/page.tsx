@@ -8,7 +8,7 @@ import { SearchInput } from '@/components/crm/SearchInput'
 import { CompanyRepository } from '@/lib/repositories/supabase/CompanyRepository'
 import { CompanyService } from '@/lib/services/CompanyService'
 
-export const metadata = { title: 'Empresas — CRM Global Supplier' }
+export const metadata = { title: 'Empresas — Supply' }
 export const dynamic  = 'force-dynamic'
 
 interface PageProps {

@@ -8,7 +8,7 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 import { UpdateProfileSchema, CreateUserSchema } from '@/lib/validations/profile'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
-const FROM   = process.env.RESEND_FROM ?? 'CRM Global Supplier <noreply@globalsupplier.com.mx>'
+const FROM   = process.env.RESEND_FROM ?? 'Supply <noreply@globalsupplier.com.mx>'
 
 // Estas acciones mutan auth.users vía supabaseAdmin (service role, bypasea RLS).
 // La página /admin/usuarios está gateada a role='administracion' en layout.tsx,
@@ -80,10 +80,10 @@ export async function updateUser(id: string, raw: unknown): Promise<{ error?: st
         void resend.emails.send({
           from: FROM,
           to: targetEmail,
-          subject: 'Tu contraseña en CRM Global Supplier fue actualizada',
+          subject: 'Tu contraseña en Supply fue actualizada',
           html: `
             <p>Hola ${full_name},</p>
-            <p>Tu contraseña en el CRM de Global Supplier fue actualizada por el administrador.</p>
+            <p>Tu contraseña en Supply fue actualizada por el administrador.</p>
             <p><strong>Nueva contraseña:</strong> ${new_password}</p>
             <p>Puedes iniciar sesión en <a href="${process.env.NEXT_PUBLIC_APP_URL ?? 'https://crm.globalsupplier.com.mx'}/login">crm.globalsupplier.com.mx</a></p>
             <p>Te recomendamos cambiarla en tu próximo inicio de sesión.</p>
@@ -138,10 +138,10 @@ export async function resetUserPassword(id: string): Promise<{ error?: string }>
   const { error: emailError } = await resend.emails.send({
     from:    FROM,
     to:      email,
-    subject: 'Restablece tu contraseña — CRM Global Supplier',
+    subject: 'Restablece tu contraseña — Supply',
     html: `
       <p>Hola${name ? ` ${name}` : ''},</p>
-      <p>El administrador del sistema generó un enlace para que restablezcas tu contraseña en el CRM de Global Supplier.</p>
+      <p>El administrador del sistema generó un enlace para que restablezcas tu contraseña en Supply.</p>
       <p style="margin:24px 0;">
         <a href="${linkData.properties.action_link}" style="display:inline-block;padding:10px 20px;background:#0f172a;color:#fff;border-radius:6px;text-decoration:none;font-weight:600;">
           Restablecer contraseña

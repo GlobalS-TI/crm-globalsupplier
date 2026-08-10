@@ -18,7 +18,7 @@ export function LeadConvertedEmail({ leadName, oppNombre, convertedBy, oppUrl }:
               🚀 Lead convertido a oportunidad
             </Heading>
             <Text style={{ color: '#ddd6fe', margin: '4px 0 0', fontSize: '13px' }}>
-              CRM Global Supplier
+              Supply
             </Text>
           </Section>
           <Section style={{ padding: '28px 24px' }}>
@@ -36,7 +36,7 @@ export function LeadConvertedEmail({ leadName, oppNombre, convertedBy, oppUrl }:
             </Button>
             <Hr style={{ borderColor: '#e5e7eb', margin: '24px 0 12px' }} />
             <Text style={{ margin: 0, fontSize: '12px', color: '#9ca3af' }}>
-              CRM Global Supplier — notificación automática
+              Supply — notificación automática
             </Text>
           </Section>
         </Container>

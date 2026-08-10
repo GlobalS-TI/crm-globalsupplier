@@ -9,7 +9,7 @@ import { LeadConvertedEmail } from './templates/leadConverted'
 import { OpportunityAssignedEmail } from './templates/opportunityAssigned'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
-const FROM   = process.env.RESEND_FROM ?? 'CRM Global Supplier <noreply@globalsupplier.dev>'
+const FROM   = process.env.RESEND_FROM ?? 'Supply <noreply@globalsupplier.dev>'
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -137,7 +137,7 @@ export async function notifyLeadConverted({
     href:         `/oportunidades/${oppId}`,
     payload:      { lead_id: leadId, lead_name: leadName, opp_id: oppId, opp_nombre: oppNombre },
     buildEmail:   async appUrl => ({
-      subject: `🚀 Lead convertido: ${oppNombre} — CRM Global Supplier`,
+      subject: `🚀 Lead convertido: ${oppNombre} — Supply`,
       html:    await render(LeadConvertedEmail({
         leadName,
         oppNombre,
@@ -169,7 +169,7 @@ export async function notifyOpportunityAssigned({
     href:         `/oportunidades/${oppId}`,
     payload:      { opp_id: oppId, opp_nombre: oppNombre, lead_name: leadName },
     buildEmail:   async appUrl => ({
-      subject: `📋 Nueva oportunidad: ${oppNombre} — CRM Global Supplier`,
+      subject: `📋 Nueva oportunidad: ${oppNombre} — Supply`,
       html:    await render(OpportunityAssignedEmail({
         oppNombre,
         leadName,
@@ -209,8 +209,8 @@ export async function notifyOppClosed({
     payload:      { opp_id: oppId, opp_nombre: oppNombre, etapa, vendedor: vendedorName, monto: montoFinal },
     buildEmail:   async appUrl => ({
       subject: isWon
-        ? `🎉 Oportunidad GANADA: ${oppNombre} — CRM Global Supplier`
-        : `📉 Oportunidad PERDIDA: ${oppNombre} — CRM Global Supplier`,
+        ? `🎉 Oportunidad GANADA: ${oppNombre} — Supply`
+        : `📉 Oportunidad PERDIDA: ${oppNombre} — Supply`,
       html: await render(OppClosedEmail({
         outcome:   etapa,
         oppNombre,
@@ -240,7 +240,7 @@ export async function notifyStaleDigest({
     href:         '/oportunidades',
     payload:      { count: opps.length, opp_names: opps.map(o => o.nombre) },
     buildEmail:   async () => ({
-      subject: `⚠️ ${opps.length} oportunidades sin actividad — CRM Global Supplier`,
+      subject: `⚠️ ${opps.length} oportunidades sin actividad — Supply`,
       html:    await render(StaleDigestEmail({ opps })),
     }),
   })
