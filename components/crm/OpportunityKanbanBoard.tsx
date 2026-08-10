@@ -86,7 +86,7 @@ function KanbanColumn({
   return (
     <div
       ref={setNodeRef}
-      className={`flex flex-col shrink-0 w-72 rounded-xl overflow-hidden transition-colors ${
+      className={`flex flex-col shrink-0 snap-start w-[calc(100vw-3rem)] sm:w-72 rounded-xl overflow-hidden transition-colors ${
         isOver ? 'bg-primary/10 ring-1 ring-primary/30' : 'bg-muted/40'
       }`}
     >
@@ -225,7 +225,7 @@ export function OpportunityKanbanBoard({ opportunities }: Props) {
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
-        <div className={`flex gap-4 h-full overflow-x-auto pb-4 px-6 transition-opacity ${pending ? 'opacity-80' : ''}`}>
+        <div className={`flex gap-4 h-full overflow-x-auto snap-x snap-mandatory pb-4 px-6 transition-opacity ${pending ? 'opacity-80' : ''}`}>
           {COLUMNS.map(({ stage, label }) => (
             <KanbanColumn
               key={stage}
