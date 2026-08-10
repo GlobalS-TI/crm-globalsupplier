@@ -57,7 +57,7 @@ export default async function OportunidadesPage({ searchParams }: PageProps) {
       {/* Content */}
       <div className="flex-1 overflow-hidden">
         {view === 'kanban' ? (
-          <div className="h-full py-4">
+          <div className="h-full py-4 bg-muted/20">
             <OpportunityKanbanBoard key={boardKey} opportunities={opportunities} />
           </div>
         ) : (

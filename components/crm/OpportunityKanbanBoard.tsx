@@ -33,15 +33,26 @@ const COLUMNS: { stage: OpportunityStage; label: string }[] = [
   { stage: 'perdido',            label: 'Perdido' },
 ]
 
-const STAGE_STRIPE: Record<OpportunityStage, string> = {
-  nuevo_lead:         'bg-sky-400 dark:bg-sky-500',
-  contactado:         'bg-emerald-400 dark:bg-emerald-500',
-  diagnostico:        'bg-amber-400 dark:bg-amber-500',
-  cotizacion_enviada: 'bg-purple-400 dark:bg-purple-500',
-  seguimiento:        'bg-orange-400 dark:bg-orange-500',
-  negociacion:        'bg-pink-400 dark:bg-pink-500',
-  ganado:             'bg-green-600 dark:bg-green-500',
-  perdido:            'bg-red-300 dark:bg-red-900/70',
+const STAGE_DOT: Record<OpportunityStage, string> = {
+  nuevo_lead:         'bg-sky-500',
+  contactado:         'bg-emerald-500',
+  diagnostico:        'bg-amber-500',
+  cotizacion_enviada: 'bg-purple-500',
+  seguimiento:        'bg-orange-500',
+  negociacion:        'bg-pink-500',
+  ganado:             'bg-green-600',
+  perdido:            'bg-red-400',
+}
+
+const STAGE_BADGE: Record<OpportunityStage, string> = {
+  nuevo_lead:         'bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300',
+  contactado:         'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
+  diagnostico:        'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
+  cotizacion_enviada: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300',
+  seguimiento:        'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300',
+  negociacion:        'bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300',
+  ganado:             'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300',
+  perdido:            'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
 }
 
 const CLOSED: Set<OpportunityStage> = new Set(['ganado', 'perdido'])
@@ -75,23 +86,22 @@ function KanbanColumn({
   return (
     <div
       ref={setNodeRef}
-      className={`flex flex-col shrink-0 w-60 rounded-lg overflow-hidden transition-colors ${
-        isOver ? 'bg-primary/10 ring-1 ring-primary/30' : 'bg-muted/50'
+      className={`flex flex-col shrink-0 w-72 rounded-xl overflow-hidden transition-colors ${
+        isOver ? 'bg-primary/10 ring-1 ring-primary/30' : 'bg-muted/40'
       }`}
     >
-      <div className={`h-1.5 shrink-0 ${STAGE_STRIPE[stage]}`} />
-
-      <div className="flex items-center justify-between px-3 py-2.5">
-        <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+      <div className="flex items-center justify-between px-3.5 py-3">
+        <span className="flex items-center gap-2 text-sm font-semibold text-foreground">
+          <span className={`h-2 w-2 rounded-full shrink-0 ${STAGE_DOT[stage]}`} />
           {label}
         </span>
-        <Badge variant="secondary" className="text-xs h-5 px-1.5">
+        <Badge variant="secondary" className={`text-xs font-semibold h-5 px-2 border-transparent ${STAGE_BADGE[stage]}`}>
           {cards.length}
         </Badge>
       </div>
 
-      <ScrollArea className="flex-1 px-2 pb-2">
-        <div className="space-y-2">
+      <ScrollArea className="flex-1 px-2.5 pb-2.5">
+        <div className="space-y-2.5">
           {cards.map(opp => (
             <OpportunityKanbanCard
               key={opp.id}
@@ -215,7 +225,7 @@ export function OpportunityKanbanBoard({ opportunities }: Props) {
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
-        <div className={`flex gap-3 h-full overflow-x-auto pb-4 px-6 transition-opacity ${pending ? 'opacity-80' : ''}`}>
+        <div className={`flex gap-4 h-full overflow-x-auto pb-4 px-6 transition-opacity ${pending ? 'opacity-80' : ''}`}>
           {COLUMNS.map(({ stage, label }) => (
             <KanbanColumn
               key={stage}
