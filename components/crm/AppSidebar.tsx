@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useTheme } from 'next-themes'
@@ -76,7 +77,8 @@ export function AppSidebar({ userFullName, userEmail, userRole, userId }: AppSid
   return (
     <aside className="flex flex-col w-60 h-screen bg-card border-r shrink-0">
       {/* Brand */}
-      <div className="px-4 py-5">
+      <div className="px-4 py-5 flex items-center gap-2">
+        <Image src="/logo.png" alt="" width={24} height={24} className="rounded-sm" />
         <span className="font-semibold text-sm tracking-tight">Supply</span>
       </div>
 

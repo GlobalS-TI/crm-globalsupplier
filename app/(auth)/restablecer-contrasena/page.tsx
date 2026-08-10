@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useTransition } from 'react'
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -46,7 +47,8 @@ export default function RestablecerContrasenaPage() {
 
   return (
     <Card className="w-full max-w-sm">
-      <CardHeader>
+      <CardHeader className="items-center text-center">
+        <Image src="/logo.png" alt="" width={48} height={48} className="rounded-md mb-1" />
         <CardTitle>Restablecer contraseña</CardTitle>
         <CardDescription>Supply</CardDescription>
       </CardHeader>
