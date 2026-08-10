@@ -77,27 +77,27 @@ export function OpportunityForm({
   }, [pending, state, toast])
 
   return (
-    <form action={formAction} className="space-y-5">
+    <form action={formAction} className="space-y-7">
       {/* Nombre */}
-      <div className="space-y-1.5">
+      <div className="space-y-2">
         <Label htmlFor="nombre">Nombre *</Label>
         <Input id="nombre" name="nombre" required defaultValue={d.nombre ?? ''} />
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
-        {/* Business unit */}
-        <div className="space-y-1.5">
-          <Label>Unidad de negocio *</Label>
-          <Select name="business_unit" defaultValue={d.business_unit ?? ''} required>
-            <SelectTrigger><SelectValue placeholder="Selecciona…" /></SelectTrigger>
-            <SelectContent>
-              {UNITS.map(u => <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
+      {/* Business unit — fila completa: su label es la más larga y el select trunca si comparte fila con otros dos */}
+      <div className="space-y-2">
+        <Label>Unidad de negocio *</Label>
+        <Select name="business_unit" defaultValue={d.business_unit ?? ''} required>
+          <SelectTrigger><SelectValue placeholder="Selecciona…" /></SelectTrigger>
+          <SelectContent>
+            {UNITS.map(u => <SelectItem key={u.value} value={u.value}>{u.label}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </div>
 
+      <div className="grid grid-cols-2 gap-5">
         {/* Fuente */}
-        <div className="space-y-1.5">
+        <div className="space-y-2">
           <Label>Fuente *</Label>
           <Select name="fuente" defaultValue={d.fuente ?? ''} required>
             <SelectTrigger><SelectValue placeholder="Selecciona…" /></SelectTrigger>
@@ -108,7 +108,7 @@ export function OpportunityForm({
         </div>
 
         {/* Moneda */}
-        <div className="space-y-1.5">
+        <div className="space-y-2">
           <Label>Moneda *</Label>
           <Select name="moneda" value={moneda} onValueChange={v => setMoneda(v as 'MXN' | 'USD')} required>
             <SelectTrigger><SelectValue /></SelectTrigger>
@@ -119,9 +119,9 @@ export function OpportunityForm({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-5">
         {/* Etapa */}
-        <div className="space-y-1.5">
+        <div className="space-y-2">
           <Label>Etapa</Label>
           <Select name="etapa" defaultValue={d.etapa ?? 'nuevo_lead'}>
             <SelectTrigger><SelectValue /></SelectTrigger>
@@ -132,7 +132,7 @@ export function OpportunityForm({
         </div>
 
         {/* Dueño */}
-        <div className="space-y-1.5">
+        <div className="space-y-2">
           <Label>Vendedor *</Label>
           <Select name="owner_id" defaultValue={d.owner_id ?? currentUserId} required>
             <SelectTrigger><SelectValue /></SelectTrigger>
@@ -143,9 +143,9 @@ export function OpportunityForm({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-5">
         {/* Empresa */}
-        <div className="space-y-1.5">
+        <div className="space-y-2">
           <Label>Empresa</Label>
           <Select name="company_id" defaultValue={d.company_id ?? 'null'}>
             <SelectTrigger><SelectValue placeholder="Sin empresa" /></SelectTrigger>
@@ -157,7 +157,7 @@ export function OpportunityForm({
         </div>
 
         {/* Probabilidad */}
-        <div className="space-y-1.5">
+        <div className="space-y-2">
           <Label htmlFor="probabilidad">Probabilidad (%)</Label>
           <Input
             id="probabilidad" name="probabilidad" type="number"
@@ -166,9 +166,9 @@ export function OpportunityForm({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-5">
         {/* Monto estimado */}
-        <div className="space-y-1.5">
+        <div className="space-y-2">
           <Label htmlFor="monto_estimado">Monto estimado ({moneda})</Label>
           <Input
             id="monto_estimado" name="monto_estimado" type="number"
@@ -185,7 +185,7 @@ export function OpportunityForm({
         </div>
 
         {/* Monto final */}
-        <div className="space-y-1.5">
+        <div className="space-y-2">
           <Label htmlFor="monto_final">Monto final ({moneda})</Label>
           <Input
             id="monto_final" name="monto_final" type="number"
@@ -202,9 +202,9 @@ export function OpportunityForm({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-5">
         {/* Fecha cierre estimada */}
-        <div className="space-y-1.5">
+        <div className="space-y-2">
           <Label htmlFor="fecha_cierre_estimada">Cierre estimado</Label>
           <Input
             id="fecha_cierre_estimada" name="fecha_cierre_estimada" type="date"
@@ -213,7 +213,7 @@ export function OpportunityForm({
         </div>
 
         {/* Próxima actividad */}
-        <div className="space-y-1.5">
+        <div className="space-y-2">
           <Label htmlFor="next_activity_at">Próxima actividad</Label>
           <Input
             id="next_activity_at" name="next_activity_at" type="datetime-local"
@@ -223,7 +223,7 @@ export function OpportunityForm({
       </div>
 
       {/* Notas */}
-      <div className="space-y-1.5">
+      <div className="space-y-2">
         <Label htmlFor="notas">Notas</Label>
         <Textarea id="notas" name="notas" rows={3} defaultValue={d.notas ?? ''} />
       </div>

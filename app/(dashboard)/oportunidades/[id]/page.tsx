@@ -143,8 +143,9 @@ export default async function OportunidadDetailPage({
         </>
       )}
 
-      {/* Two-column layout: edit form + activity timeline */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+      {/* Two-column layout: edit form + activity timeline. Activities gets more
+          width — su datetime-local necesita más espacio del que le toca a un 50/50. */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.3fr] gap-10">
         {/* Edit form */}
         <div className="space-y-4">
           <h2 className="text-base font-semibold">Datos de la oportunidad</h2>
@@ -159,12 +160,12 @@ export default async function OportunidadDetailPage({
         </div>
 
         {/* Activities */}
-        <div className="space-y-4">
+        <div className="space-y-5">
           <h2 className="text-base font-semibold">Actividades</h2>
 
           {/* Add activity form */}
-          <div className="border rounded-lg p-4 bg-muted/30">
-            <p className="text-xs font-medium text-muted-foreground mb-3 uppercase tracking-wide">Nueva actividad</p>
+          <div className="border rounded-lg p-6 bg-muted/30">
+            <p className="text-xs font-medium text-muted-foreground mb-4 uppercase tracking-wide">Nueva actividad</p>
             <ActivityForm opportunityId={id} action={createActivity} />
           </div>
 

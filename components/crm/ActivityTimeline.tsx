@@ -75,7 +75,7 @@ export function ActivityTimeline({ activities, opportunityId }: ActivityTimeline
               )}
             </span>
 
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-xs text-muted-foreground">
                   {TYPE_LABELS[act.tipo as ActivityType]}
