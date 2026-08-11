@@ -10,6 +10,7 @@ const USER_ROLES = [
 
 const BUSINESS_UNITS = [
   'global_supplier_mty',
+  'cotizia',
   'thunder_safety',
   'thunder_led',
   'got_fresh_breath',

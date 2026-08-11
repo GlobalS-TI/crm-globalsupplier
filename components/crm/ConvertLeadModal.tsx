@@ -20,6 +20,7 @@ type ActionState = { error: string } | null
 
 const BUSINESS_UNITS = [
   { value: 'global_supplier_mty', label: 'Global Supplier MTY' },
+  { value: 'cotizia',              label: 'Cotizia' },
   { value: 'thunder_safety',       label: 'Thunder Safety Solutions' },
   { value: 'thunder_led',          label: 'Thunder LED Lights' },
   { value: 'got_fresh_breath',     label: 'Got Fresh Breath' },
@@ -30,6 +31,7 @@ const BUSINESS_UNITS = [
 
 const LEAD_SOURCES = [
   { value: 'referido',         label: 'Referido' },
+  { value: 'meta',             label: 'Meta / Facebook' },
   { value: 'web',              label: 'Sitio web' },
   { value: 'linkedin',         label: 'LinkedIn' },
   { value: 'llamada_en_frio',  label: 'Llamada en frío' },

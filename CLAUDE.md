@@ -3,7 +3,7 @@
 Internal CRM replacing Monday.com. Next.js 14 App Router · TypeScript · Supabase · Tailwind · shadcn/ui · Zod · Resend · Vercel.
 
 ## Business units
-global_supplier_mty | thunder_safety | thunder_led | got_fresh_breath | gtx_systems | juno_promotional | fire_spot
+global_supplier_mty | cotizia | thunder_safety | thunder_led | got_fresh_breath | gtx_systems | juno_promotional | fire_spot
 
 ## Roles
 director_general | direccion_comercial | vendedor | marketing | administracion
