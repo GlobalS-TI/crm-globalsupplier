@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Route } from 'next'
-import { Mail, Phone } from 'lucide-react'
+import { Mail, MessageCircle } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { OpportunityRepository } from '@/lib/repositories/supabase/OpportunityRepository'
 import { OpportunityService } from '@/lib/services/OpportunityService'
@@ -30,6 +30,15 @@ const STAGE_LABELS: Record<OpportunityStage, string> = {
   nuevo_lead: 'Nuevo lead', contactado: 'Contactado', diagnostico: 'Diagnóstico',
   cotizacion_enviada: 'Cotización enviada', seguimiento: 'Seguimiento',
   negociacion: 'Negociación', ganado: 'Ganado', perdido: 'Perdido',
+}
+
+// wa.me exige código de país sin "+" ni espacios — los teléfonos se capturan
+// como número local de 10 dígitos (México), así que se antepone "52" solo en
+// ese caso; si ya trae código de país (u otro largo), se manda tal cual.
+function toWhatsAppLink(telefono: string): string {
+  const digits = telefono.replace(/\D/g, '')
+  const withCountryCode = digits.length === 10 ? `52${digits}` : digits
+  return `https://wa.me/${withCountryCode}`
 }
 
 const ALL_STAGES: OpportunityStage[] = [
@@ -104,10 +113,12 @@ export default async function OportunidadDetailPage({
             )}
             {opp.contact.telefono && (
               <a
-                href={`tel:${opp.contact.telefono}`}
+                href={toWhatsAppLink(opp.contact.telefono)}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="flex items-center gap-1 hover:text-foreground transition-colors"
               >
-                <Phone className="h-3.5 w-3.5" />
+                <MessageCircle className="h-3.5 w-3.5" />
                 {opp.contact.telefono}
               </a>
             )}
