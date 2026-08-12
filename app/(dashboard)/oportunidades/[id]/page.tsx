@@ -14,6 +14,7 @@ import { QuickStageButton } from '@/components/crm/QuickStageButton'
 import { ActivityTimeline } from '@/components/crm/ActivityTimeline'
 import { ActivityForm } from '@/components/crm/ActivityForm'
 import { StaleBadge } from '@/components/crm/StaleBadge'
+import { ActivityStatusBadge } from '@/components/crm/ActivityStatusBadge'
 import { DeleteButton } from '@/components/crm/DeleteButton'
 import { OpportunityFilesPanel } from '@/components/crm/OpportunityFilesPanel'
 import { Badge } from '@/components/ui/badge'
@@ -94,6 +95,7 @@ export default async function OportunidadDetailPage({
           <Badge variant={isClosed ? 'secondary' : 'default'}>
             {STAGE_LABELS[opp.etapa as OpportunityStage]}
           </Badge>
+          {!isClosed && <ActivityStatusBadge nextActivityAt={opp.next_activity_at} />}
           {opp.stale && <StaleBadge />}
         </div>
         {opp.company && <p className="text-muted-foreground">{opp.company.nombre}</p>}

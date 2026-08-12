@@ -70,6 +70,7 @@ export function OpportunityForm({
   const wasPending = useRef(false)
   const [moneda, setMoneda] = useState(d.moneda ?? 'MXN')
   const isUsd = moneda === 'USD'
+  const isEdit = Boolean(d.id)
 
   useEffect(() => {
     if (wasPending.current && !pending && state === null) {
@@ -145,7 +146,7 @@ export function OpportunityForm({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-5">
+      <div className={isEdit ? 'space-y-2' : 'grid grid-cols-2 gap-5'}>
         {/* Empresa */}
         <div className="space-y-2">
           <Label>Empresa</Label>
@@ -158,14 +159,19 @@ export function OpportunityForm({
           </Select>
         </div>
 
-        {/* Próxima actividad */}
-        <div className="space-y-2">
-          <Label htmlFor="next_activity_at">Próxima actividad</Label>
-          <Input
-            id="next_activity_at" name="next_activity_at" type="datetime-local"
-            defaultValue={d.next_activity_at ? d.next_activity_at.slice(0, 16) : ''}
-          />
-        </div>
+        {/* Próxima actividad — solo al crear. Al editar se quita: una vez que existe
+            la oportunidad, este valor se deriva solo de la actividad pendiente más
+            próxima (ver ActivityForm/ActivityTimeline al lado), para que no se quede
+            desactualizado por edición manual. */}
+        {!isEdit && (
+          <div className="space-y-2">
+            <Label htmlFor="next_activity_at">Próxima actividad</Label>
+            <Input
+              id="next_activity_at" name="next_activity_at" type="datetime-local"
+              defaultValue={d.next_activity_at ? d.next_activity_at.slice(0, 16) : ''}
+            />
+          </div>
+        )}
       </div>
 
       {/* Monto estimado — monto_final se quitó de este formulario: ya se captura en el
