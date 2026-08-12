@@ -19,6 +19,7 @@ const ROLE_LABELS: Record<string, string> = {
   vendedor:            'Vendedor',
   marketing:           'Marketing',
   administracion:      'Administración / TI',
+  soporte_ti:          'Soporte TI',
 }
 
 export function CreateUserDialog() {

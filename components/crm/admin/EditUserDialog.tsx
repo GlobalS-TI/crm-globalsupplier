@@ -21,6 +21,7 @@ const ROLE_LABELS: Record<string, string> = {
   vendedor:            'Vendedor',
   marketing:           'Marketing',
   administracion:      'Administración / TI',
+  soporte_ti:          'Soporte TI',
 }
 
 interface Props {
@@ -38,6 +39,7 @@ export function EditUserDialog({ user, open, onClose }: Props) {
   const [fullName,  setFullName]  = useState(user.full_name)
   const [role,      setRole]      = useState<UserRole>(user.role)
   const [isActive,  setIsActive]  = useState(String(user.is_active))
+  const [itStaff,   setItStaff]   = useState(user.it_staff)
   // Auth fields
   const [email,     setEmail]     = useState(user.email)
   const [selectedBUs, setSelectedBUs] = useState<BusinessUnit[]>(user.business_units)
@@ -68,6 +70,7 @@ export function EditUserDialog({ user, open, onClose }: Props) {
       is_active:           isActive === 'true',
       email:               email !== user.email ? email : undefined,
       business_units:      selectedBUs,
+      it_staff:            itStaff,
       new_password:        newPassword || undefined,
       send_password_email: newPassword ? sendPasswordEmail : undefined,
     })
@@ -112,6 +115,17 @@ export function EditUserDialog({ user, open, onClose }: Props) {
                 </SelectContent>
               </Select>
             </div>
+
+            <label className="flex items-center gap-2 cursor-pointer text-sm">
+              <input
+                type="checkbox"
+                checked={itStaff}
+                onChange={e => setItStaff(e.target.checked)}
+                className="h-4 w-4 rounded border-input accent-primary"
+              />
+              Acceso a Soporte TI
+              <span className="text-muted-foreground font-normal">(puede gestionar tickets aunque su rol no sea Soporte TI)</span>
+            </label>
 
             <div className="space-y-1.5">
               <Label>Estado</Label>

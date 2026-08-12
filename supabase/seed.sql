@@ -92,6 +92,9 @@ update public.profiles set role = 'director_general'    where id = '00000001-000
 update public.profiles set role = 'direccion_comercial' where id = '00000002-0000-0000-0000-000000000000';
 update public.profiles set role = 'marketing'           where id = '00000006-0000-0000-0000-000000000000';
 update public.profiles set role = 'administracion'      where id = '00000007-0000-0000-0000-000000000000';
+-- Alexandro Espino gestiona tickets de TI además de su rol de administracion
+-- (profiles.role es de un solo valor — it_staff es la bandera aparte para esto).
+update public.profiles set it_staff = true where id = '00000007-0000-0000-0000-000000000000';
 -- usuarios 3, 4, 5, 8 ya son vendedor — sin cambio necesario
 
 -- ================================================================

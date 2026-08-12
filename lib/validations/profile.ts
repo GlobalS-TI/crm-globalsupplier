@@ -6,6 +6,7 @@ const USER_ROLES = [
   'vendedor',
   'marketing',
   'administracion',
+  'soporte_ti',
 ] as const
 
 const BUSINESS_UNITS = [
@@ -25,6 +26,7 @@ export const UpdateProfileSchema = z.object({
   is_active:           z.boolean(),
   email:               z.string().email('Email inválido').optional(),
   business_units:      z.array(z.enum(BUSINESS_UNITS)).optional(),
+  it_staff:            z.boolean().optional(),
   new_password:        z.string().min(8, 'Mínimo 8 caracteres').optional().or(z.literal('')),
   send_password_email: z.boolean().optional(),
 })

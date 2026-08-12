@@ -36,14 +36,14 @@ export async function updateUser(id: string, raw: unknown): Promise<{ error?: st
   const parsed = UpdateProfileSchema.safeParse(raw)
   if (!parsed.success) return { error: parsed.error.errors[0]?.message }
 
-  const { full_name, role, is_active, email, business_units, new_password, send_password_email } = parsed.data
+  const { full_name, role, is_active, email, business_units, it_staff, new_password, send_password_email } = parsed.data
   const errors: string[] = []
 
-  // 1. Campos de profile (nombre, rol, estado) — via sesión del usuario (RLS permite administracion)
+  // 1. Campos de profile (nombre, rol, estado, acceso TI) — via sesión del usuario (RLS permite administracion)
   const supabase = await createClient()
   const { error: profileError } = await supabase
     .from('profiles')
-    .update({ full_name, role, is_active })
+    .update({ full_name, role, is_active, ...(it_staff !== undefined && { it_staff }) })
     .eq('id', id)
   if (profileError) errors.push(profileError.message)
 

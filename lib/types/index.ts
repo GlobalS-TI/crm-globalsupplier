@@ -4,6 +4,7 @@ export type UserRole =
   | 'vendedor'
   | 'marketing'
   | 'administracion'
+  | 'soporte_ti'
 
 export type BusinessUnit =
   | 'global_supplier_mty'
@@ -178,3 +179,49 @@ export const CURRENCY_LABELS: Record<Currency, string> = {
   MXN: 'MXN — Peso mexicano',
   USD: 'USD — Dólar',
 }
+
+export type ITTicketPriority = 'bajo' | 'medio' | 'alto' | 'urgente'
+export type ITTicketStatus   = 'abierto' | 'en_proceso' | 'qa_ready' | 'prod_ready' | 'resuelto'
+
+export const IT_TICKET_STATUSES: ITTicketStatus[] = [
+  'abierto', 'en_proceso', 'qa_ready', 'prod_ready', 'resuelto',
+]
+
+export const IT_TICKET_STATUS_ORDER: Record<ITTicketStatus, number> = {
+  abierto: 0, en_proceso: 1, qa_ready: 2, prod_ready: 3, resuelto: 4,
+}
+
+export const IT_TICKET_STATUS_LABELS: Record<ITTicketStatus, string> = {
+  abierto:     'Abierto',
+  en_proceso:  'En proceso',
+  qa_ready:    'QA Ready',
+  prod_ready:  'Prod Ready',
+  resuelto:    'Resuelto',
+}
+
+export const IT_TICKET_PRIORITIES: ITTicketPriority[] = ['bajo', 'medio', 'alto', 'urgente']
+
+export const IT_TICKET_PRIORITY_ORDER: Record<ITTicketPriority, number> = {
+  bajo: 0, medio: 1, alto: 2, urgente: 3,
+}
+
+export const IT_TICKET_PRIORITY_LABELS: Record<ITTicketPriority, string> = {
+  bajo:    'Bajo',
+  medio:   'Medio',
+  alto:    'Alto',
+  urgente: 'Urgente',
+}
+
+// Fuente única de verdad para el KPI "Eficacia" (% de tickets resueltos dentro de SLA).
+export const IT_TICKET_SLA_DAYS: Record<ITTicketPriority, number> = {
+  urgente: 1,
+  alto:    3,
+  medio:   7,
+  bajo:    14,
+}
+
+// Quién puede cambiar prioridad/estado de un ticket (gating de UI — RLS es la seguridad real).
+export const IT_STAFF_ROLES: UserRole[] = ['soporte_ti']
+
+// Quién ve la cola completa de tickets + el panel de KPIs.
+export const IT_ROLES: UserRole[] = ['soporte_ti', 'director_general', 'administracion']

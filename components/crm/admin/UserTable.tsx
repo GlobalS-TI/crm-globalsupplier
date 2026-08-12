@@ -23,6 +23,7 @@ const ROLE_LABELS: Record<string, string> = {
   vendedor:            'Vendedor',
   marketing:           'Marketing',
   administracion:      'Admin / TI',
+  soporte_ti:          'Soporte TI',
 }
 
 const ROLE_VARIANTS: Record<string, 'default' | 'secondary' | 'outline' | 'destructive'> = {
@@ -31,6 +32,7 @@ const ROLE_VARIANTS: Record<string, 'default' | 'secondary' | 'outline' | 'destr
   marketing:           'secondary',
   vendedor:            'outline',
   administracion:      'destructive',
+  soporte_ti:          'secondary',
 }
 
 interface Props {
@@ -117,9 +119,14 @@ export function UserTable({ users, currentUserId }: Props) {
                   <TableCell className="font-medium">{user.full_name}</TableCell>
                   <TableCell className="text-muted-foreground text-sm">{user.email}</TableCell>
                   <TableCell>
-                    <Badge variant={ROLE_VARIANTS[user.role] ?? 'outline'}>
-                      {ROLE_LABELS[user.role] ?? user.role}
-                    </Badge>
+                    <div className="flex items-center gap-1.5">
+                      <Badge variant={ROLE_VARIANTS[user.role] ?? 'outline'}>
+                        {ROLE_LABELS[user.role] ?? user.role}
+                      </Badge>
+                      {user.it_staff && user.role !== 'soporte_ti' && (
+                        <Badge variant="outline" className="text-xs">+ TI</Badge>
+                      )}
+                    </div>
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {user.business_units.length === 0
