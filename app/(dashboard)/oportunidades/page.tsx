@@ -61,7 +61,7 @@ export default async function OportunidadesPage({ searchParams }: PageProps) {
             <OpportunityKanbanBoard key={boardKey} opportunities={opportunities} />
           </div>
         ) : (
-          <div className="p-6">
+          <div className="h-full overflow-y-auto p-6">
             <p className="text-sm text-muted-foreground mb-4">
               {opportunities.length} oportunidad{opportunities.length !== 1 ? 'es' : ''}
             </p>
