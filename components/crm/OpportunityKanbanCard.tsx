@@ -26,8 +26,11 @@ function initialsOf(fullName: string): string {
     .toUpperCase()
 }
 
+// timeZone explícito: sin esto, el string sale distinto en el render del servidor
+// (Vercel corre en UTC) vs. la hidratación en el navegador (hora local de México),
+// lo que se ve como si la fecha "cambiara sola" al cargar la tarjeta.
 function formatShortDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('es-MX', { day: '2-digit', month: 'short' })
+  return new Date(iso).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', timeZone: 'America/Mexico_City' })
 }
 
 function formatRelativeActivity(iso: string): string {

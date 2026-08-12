@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils'
+import { businessDayKey } from '@/lib/utils/date'
 
 const STATUS_LABELS = {
   vencida:          'Vencida',
@@ -26,13 +27,11 @@ type ActivityStatus = keyof typeof STATUS_LABELS
 function resolveStatus(nextActivityAt: string | null): ActivityStatus {
   if (!nextActivityAt) return 'sin_seguimiento'
 
-  const target = new Date(nextActivityAt)
-  const now = new Date()
-  const startOfTarget = new Date(target.getFullYear(), target.getMonth(), target.getDate())
-  const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const targetKey = businessDayKey(new Date(nextActivityAt))
+  const todayKey  = businessDayKey(new Date())
 
-  if (startOfTarget.getTime() < startOfToday.getTime()) return 'vencida'
-  if (startOfTarget.getTime() === startOfToday.getTime()) return 'hoy'
+  if (targetKey < todayKey) return 'vencida'
+  if (targetKey === todayKey) return 'hoy'
   return 'programada'
 }
 
