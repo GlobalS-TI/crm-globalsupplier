@@ -5,6 +5,7 @@ import type { SalesByUnit } from '@/lib/repositories/interfaces/IOpportunityRepo
 
 const UNIT_LABELS: Record<string, string> = {
   global_supplier_mty: 'Global MTY',
+  cotizia:             'Cotizia',
   thunder_safety:      'Thunder Safety',
   thunder_led:         'Thunder LED',
   got_fresh_breath:    'Got Fresh',

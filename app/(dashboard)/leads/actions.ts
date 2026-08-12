@@ -8,6 +8,8 @@ import { ProfileRepository } from '@/lib/repositories/supabase/ProfileRepository
 import { LeadService } from '@/lib/services/LeadService'
 import { OpportunityRepository } from '@/lib/repositories/supabase/OpportunityRepository'
 import { OpportunityService } from '@/lib/services/OpportunityService'
+import { OpportunityFileRepository } from '@/lib/repositories/supabase/OpportunityFileRepository'
+import { OpportunityFileService } from '@/lib/services/OpportunityFileService'
 import { CompanyRepository } from '@/lib/repositories/supabase/CompanyRepository'
 import { CompanyService } from '@/lib/services/CompanyService'
 import { ContactRepository } from '@/lib/repositories/supabase/ContactRepository'
@@ -85,6 +87,36 @@ async function resolveCompanyContact(opts: {
 }
 
 /**
+ * Copia el archivo de requerimientos del lead (bucket 'media', prefijo leads/) al
+ * panel de Documentos de la oportunidad recién creada, para que no se pierda al
+ * convertir. Best-effort: un fallo aquí no debe tronar la conversión.
+ */
+async function carryOverRequirementFile(
+  lead:    Pick<LeadWithRelations, 'requirements_file_path' | 'nombre'>,
+  oppId:   string,
+  ownerId: string,
+): Promise<void> {
+  if (!lead.requirements_file_path) return
+
+  try {
+    const basename = lead.requirements_file_path.split('/').pop() ?? 'requerimiento'
+    const newPath  = `opportunity-docs/${oppId}/${Date.now()}-${basename}`
+
+    const { error: copyErr } = await supabaseAdmin.storage
+      .from('media')
+      .copy(lead.requirements_file_path, newPath)
+    if (copyErr) return
+
+    await new OpportunityFileService(new OpportunityFileRepository()).addFile({
+      opportunity_id: oppId,
+      categoria:      'otro',
+      nombre:         basename,
+      file_path:      newPath,
+    }, ownerId)
+  } catch { /* best-effort: no bloquea la conversión */ }
+}
+
+/**
  * Al asignar un vendedor a un lead se crea automáticamente la oportunidad correspondiente
  * (business_unit/fuente vienen de la campaña) — ventas ya no necesita acceso a /leads.
  * Idempotente: no-op si el lead no tiene vendedor o ya fue convertido.
@@ -112,6 +144,7 @@ async function autoConvertLead(lead: LeadWithRelations, assignedByName: string):
   })
 
   await service().updateLead(lead.id, { converted_opportunity_id: opp.id })
+  await carryOverRequirementFile(lead, opp.id, lead.vendedor_id)
   revalidatePath('/oportunidades')
 
   void notifyOpportunityAssigned({
@@ -170,14 +203,15 @@ export async function createLead(_prev: ActionState, form: FormData): Promise<Ac
     const svc = service()
     const [user, responsableId] = await Promise.all([getUser(), svc.getResponsableId()])
     const lead = await svc.createLead({
-      section_id:     form.get('section_id') as string,
-      nombre:         form.get('nombre') as string,
-      empresa:        (form.get('empresa') as string) || undefined,
-      email:          (form.get('email') as string) || undefined,
-      telefono:       (form.get('telefono') as string) || undefined,
-      requerimientos: (form.get('requerimientos') as string) || undefined,
-      responsable_id: responsableId,
-      vendedor_id:    parseVendedor(form) ?? undefined,
+      section_id:             form.get('section_id') as string,
+      nombre:                 form.get('nombre') as string,
+      empresa:                (form.get('empresa') as string) || undefined,
+      email:                  (form.get('email') as string) || undefined,
+      telefono:               (form.get('telefono') as string) || undefined,
+      requerimientos:         (form.get('requerimientos') as string) || undefined,
+      requirements_file_path: (form.get('requirements_file_path') as string) || undefined,
+      responsable_id:         responsableId,
+      vendedor_id:            parseVendedor(form) ?? undefined,
     }, user.id)
 
     if (lead.vendedor_id) {
@@ -255,14 +289,15 @@ export async function createLeadAndReturn(
     const [user, responsableId] = await Promise.all([getUser(), svc.getResponsableId()])
     const v = form.get('vendedor_id') as string
     const lead = await svc.createLead({
-      section_id:     form.get('section_id') as string,
-      nombre:         form.get('nombre') as string,
-      empresa:        (form.get('empresa') as string) || undefined,
-      email:          (form.get('email') as string) || undefined,
-      telefono:       (form.get('telefono') as string) || undefined,
-      requerimientos: (form.get('requerimientos') as string) || undefined,
-      responsable_id: responsableId,
-      vendedor_id:    (!v || v === '__none__') ? undefined : v,
+      section_id:             form.get('section_id') as string,
+      nombre:                 form.get('nombre') as string,
+      empresa:                (form.get('empresa') as string) || undefined,
+      email:                  (form.get('email') as string) || undefined,
+      telefono:               (form.get('telefono') as string) || undefined,
+      requerimientos:         (form.get('requerimientos') as string) || undefined,
+      requirements_file_path: (form.get('requirements_file_path') as string) || undefined,
+      responsable_id:         responsableId,
+      vendedor_id:            (!v || v === '__none__') ? undefined : v,
     }, user.id)
 
     if (lead.vendedor_id) {
@@ -275,11 +310,6 @@ export async function createLeadAndReturn(
   } catch (e) {
     return { error: (e as Error).message }
   }
-}
-
-export async function setLeadRequirementFile(leadId: string, filePath: string): Promise<void> {
-  await service().updateLead(leadId, { requirements_file_path: filePath })
-  revalidatePath('/leads')
 }
 
 export async function replaceLeadRequirementFile(
@@ -330,6 +360,7 @@ export async function convertLeadToOpportunity(
     })
 
     await service().updateLead(leadId, { converted_opportunity_id: opp.id })
+    if (lead) await carryOverRequirementFile(lead, opp.id, ownerId)
     revalidatePath('/leads')
     revalidatePath('/oportunidades')
 

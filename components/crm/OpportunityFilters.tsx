@@ -20,6 +20,7 @@ const STAGES = [
 
 const UNITS = [
   { value: 'global_supplier_mty', label: 'Global Supplier MTY' },
+  { value: 'cotizia',             label: 'Cotizia' },
   { value: 'thunder_safety',      label: 'Thunder Safety' },
   { value: 'thunder_led',         label: 'Thunder LED' },
   { value: 'got_fresh_breath',    label: 'Got Fresh Breath' },

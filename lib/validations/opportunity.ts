@@ -9,11 +9,11 @@ export const opportunityStageSchema = z.enum([
 ])
 
 export const leadSourceSchema = z.enum([
-  'referido', 'web', 'linkedin', 'llamada_en_frio', 'evento', 'alianza', 'otro',
+  'referido', 'meta', 'web', 'linkedin', 'llamada_en_frio', 'evento', 'alianza', 'otro',
 ])
 
 export const businessUnitSchema = z.enum([
-  'global_supplier_mty', 'thunder_safety', 'thunder_led', 'got_fresh_breath',
+  'global_supplier_mty', 'cotizia', 'thunder_safety', 'thunder_led', 'got_fresh_breath',
   'gtx_systems', 'juno_promotional', 'fire_spot',
 ])
 

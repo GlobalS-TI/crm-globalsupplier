@@ -18,6 +18,7 @@ const PCT = new Intl.NumberFormat('es-MX', { style: 'percent', minimumFractionDi
 
 const BRAND_LABELS: Record<string, string> = {
   global_supplier_mty: 'Global Supplier',
+  cotizia:             'Cotizia',
   thunder_safety:      'Thunder Safety',
   thunder_led:         'Thunder LED',
   got_fresh_breath:    'Got Fresh Breath',

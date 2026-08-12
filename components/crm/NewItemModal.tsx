@@ -19,6 +19,7 @@ import { FileDropzone } from '@/components/crm/FileDropzone'
 
 const BUSINESS_UNITS = [
   { value: 'global_supplier_mty', label: 'Global Supplier MTY' },
+  { value: 'cotizia',              label: 'Cotizia' },
   { value: 'thunder_safety',       label: 'Thunder Safety Solutions' },
   { value: 'thunder_led',          label: 'Thunder LED Lights' },
   { value: 'got_fresh_breath',     label: 'Got Fresh Breath' },

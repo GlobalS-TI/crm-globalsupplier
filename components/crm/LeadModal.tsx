@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/select'
 import { FileDropzone } from '@/components/crm/FileDropzone'
 import {
-  createLeadAndReturn, setLeadRequirementFile, updateLead, replaceLeadRequirementFile,
+  createLeadAndReturn, updateLead, replaceLeadRequirementFile,
 } from '@/app/(dashboard)/leads/actions'
 import type { LeadWithRelations } from '@/lib/repositories/interfaces/ILeadRepository'
 
@@ -52,21 +52,24 @@ export function NewLeadButton({ sectionId, assignableUsers }: CreateProps) {
     const form = new FormData(e.currentTarget)
 
     start(async () => {
-      const result = await createLeadAndReturn(form)
-      if ('error' in result) { setError(result.error); return }
-
+      // Sube el archivo ANTES de crear el lead: si el vendedor se asigna desde este
+      // mismo formulario, la creación auto-convierte a oportunidad de inmediato, y
+      // requirements_file_path debe existir ya en la fila para que ese archivo se
+      // arrastre a la oportunidad (si no, la conversión ocurre sin archivo que copiar).
       if (file) {
         const ext      = file.name.split('.').pop() ?? ''
         const basename = file.name.replace(`.${ext}`, '').replace(/[^a-zA-Z0-9._-]/g, '-')
-        const path     = `leads/${result.id}/${Date.now()}-${basename}.${ext}`
+        const path     = `leads/${crypto.randomUUID()}/${Date.now()}-${basename}.${ext}`
         const supabase = createClient()
         const { error: storageErr } = await supabase.storage
           .from('media')
           .upload(path, file, { cacheControl: '3600' })
-        if (!storageErr) {
-          await setLeadRequirementFile(result.id, path)
-        }
+        if (storageErr) { setError(storageErr.message); return }
+        form.set('requirements_file_path', path)
       }
+
+      const result = await createLeadAndReturn(form)
+      if ('error' in result) { setError(result.error); return }
 
       handleClose(false)
     })

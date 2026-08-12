@@ -19,6 +19,7 @@ type User = { id: string; full_name: string; email: string }
 // ----------------------------------------------------------------
 const BU_LABELS: Record<string, string> = {
   global_supplier_mty: 'GS',
+  cotizia:             'CTZ',
   thunder_safety:      'TSS',
   thunder_led:         'TLL',
   got_fresh_breath:    'GFB',
@@ -29,6 +30,7 @@ const BU_LABELS: Record<string, string> = {
 
 const BU_COLORS: Record<string, string> = {
   global_supplier_mty: '#9ca3af', // gris claro
+  cotizia:             '#8b5cf6', // violeta
   thunder_safety:      '#facc15', // amarillo pollo
   thunder_led:         '#ca8a04', // amarillo
   got_fresh_breath:    '#38bdf8', // azul celeste

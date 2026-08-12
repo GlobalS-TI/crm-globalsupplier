@@ -1400,6 +1400,7 @@ export type Database = {
         | "otro"
       business_unit:
         | "global_supplier_mty"
+        | "cotizia"
         | "thunder_safety"
         | "thunder_led"
         | "got_fresh_breath"
@@ -1409,6 +1410,7 @@ export type Database = {
       currency: "MXN" | "USD"
       lead_source:
         | "referido"
+        | "meta"
         | "web"
         | "linkedin"
         | "llamada_en_frio"
@@ -1596,6 +1598,7 @@ export const Constants = {
       ],
       business_unit: [
         "global_supplier_mty",
+        "cotizia",
         "thunder_safety",
         "thunder_led",
         "got_fresh_breath",
@@ -1606,6 +1609,7 @@ export const Constants = {
       currency: ["MXN", "USD"],
       lead_source: [
         "referido",
+        "meta",
         "web",
         "linkedin",
         "llamada_en_frio",

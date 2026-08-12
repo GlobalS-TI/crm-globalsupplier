@@ -18,6 +18,7 @@ export const dynamic = 'force-dynamic'
 
 const BUSINESS_UNIT_LABELS: Record<string, string> = {
   global_supplier_mty: 'Global Supplier MTY',
+  cotizia:              'Cotizia',
   thunder_safety:       'Thunder Safety Solutions',
   thunder_led:          'Thunder LED Lights',
   got_fresh_breath:     'Got Fresh Breath',

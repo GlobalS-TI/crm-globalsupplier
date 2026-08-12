@@ -7,6 +7,7 @@ export type UserRole =
 
 export type BusinessUnit =
   | 'global_supplier_mty'
+  | 'cotizia'
   | 'thunder_safety'
   | 'thunder_led'
   | 'got_fresh_breath'
@@ -26,6 +27,7 @@ export type OpportunityStage =
 
 export type LeadSource =
   | 'referido'
+  | 'meta'
   | 'web'
   | 'linkedin'
   | 'llamada_en_frio'
@@ -61,6 +63,7 @@ export const CLOSED_STAGES: OpportunityStage[] = ['ganado', 'perdido']
 
 export const BUSINESS_UNITS: BusinessUnit[] = [
   'global_supplier_mty',
+  'cotizia',
   'thunder_safety',
   'thunder_led',
   'got_fresh_breath',
@@ -126,6 +129,7 @@ export const PROJECT_TIPO_LABELS: Record<ProjectTipo, string> = {
 
 export const BRAND_LABELS: Record<BusinessUnit, string> = {
   global_supplier_mty: 'Global Supplier MTY',
+  cotizia:             'Cotizia',
   thunder_safety:      'Thunder Safety Solutions',
   thunder_led:         'Thunder Led Lights',
   got_fresh_breath:    'Got Fresh Breath',
@@ -136,6 +140,7 @@ export const BRAND_LABELS: Record<BusinessUnit, string> = {
 
 export const BRAND_COLORS: Record<BusinessUnit, string> = {
   global_supplier_mty: '#16a34a', // verde hoja
+  cotizia:             '#8b5cf6', // violeta
   thunder_safety:      '#eab308', // amarillo (tono 1)
   thunder_led:         '#f59e0b', // amarillo (tono 2, distinto)
   got_fresh_breath:    '#3b82f6', // azul
@@ -153,11 +158,12 @@ export const ADMIN_ROLES: UserRole[] = ['administracion']
 export const LEADS_ROLES: UserRole[] = ['marketing', 'director_general', 'direccion_comercial', 'administracion']
 
 export const LEAD_SOURCES: LeadSource[] = [
-  'referido', 'web', 'linkedin', 'llamada_en_frio', 'evento', 'alianza', 'otro',
+  'referido', 'meta', 'web', 'linkedin', 'llamada_en_frio', 'evento', 'alianza', 'otro',
 ]
 
 export const LEAD_SOURCE_LABELS: Record<LeadSource, string> = {
   referido:        'Referido',
+  meta:             'Meta / Facebook',
   web:              'Sitio web',
   linkedin:         'LinkedIn',
   llamada_en_frio:  'Llamada en frío',
