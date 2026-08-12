@@ -8,6 +8,7 @@ export interface ProfileRow {
   is_active:      boolean
   created_at:     string
   business_units: BusinessUnit[]
+  it_staff:       boolean
 }
 
 export interface ProfileTableUpdate {
@@ -15,10 +16,13 @@ export interface ProfileTableUpdate {
   role?:      UserRole
   is_active?: boolean
   email?:     string
+  it_staff?:  boolean
 }
 
 export interface IProfileRepository {
   findFirstByRole(role: UserRole): Promise<{ id: string } | null>
+  /** Primer perfil activo con acceso de gestión de tickets de TI: role='soporte_ti' o it_staff=true. */
+  findFirstITStaff(): Promise<{ id: string } | null>
   findAll(): Promise<ProfileRow[]>
   update(id: string, data: ProfileTableUpdate): Promise<void>
 }

@@ -7,6 +7,10 @@ import { StaleDigestEmail } from './templates/staleDigest'
 import { OppClosedEmail } from './templates/oppClosed'
 import { LeadConvertedEmail } from './templates/leadConverted'
 import { OpportunityAssignedEmail } from './templates/opportunityAssigned'
+import { ITTicketAssignedEmail } from './templates/itTicketAssigned'
+import { ITTicketActivityEmail } from './templates/itTicketActivity'
+import { IT_TICKET_STATUS_LABELS } from '@/lib/types'
+import type { ITTicketStatus } from '@/lib/types'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 const FROM   = process.env.RESEND_FROM ?? 'Supply <noreply@globalsupplier.dev>'
@@ -219,6 +223,99 @@ export async function notifyOppClosed({
         monto:     montoFinal,
         montoMxn:  montoFinalMxn,
         oppUrl:    `${appUrl}/oportunidades/${oppId}`,
+      })),
+    }),
+  })
+}
+
+export async function notifyITTicketAssigned({
+  recipientId,
+  ticketId,
+  ticketTitle,
+  requesterName,
+}: {
+  recipientId:    string
+  ticketId:       string
+  ticketTitle:    string
+  requesterName:  string
+}) {
+  return sendNotification({
+    type:         'it_ticket_assigned',
+    recipientIds: [recipientId],
+    title:        'Nuevo ticket de TI',
+    body:         `${requesterName} levantó "${ticketTitle}"`,
+    href:         `/soporte-ti/${ticketId}`,
+    payload:      { ticket_id: ticketId, ticket_title: ticketTitle, requester_name: requesterName },
+    buildEmail:   async appUrl => ({
+      subject: `🎫 Nuevo ticket de TI: ${ticketTitle} — Supply`,
+      html:    await render(ITTicketAssignedEmail({
+        ticketTitle,
+        requesterName,
+        ticketUrl: `${appUrl}/soporte-ti/${ticketId}`,
+      })),
+    }),
+  })
+}
+
+export async function notifyITTicketStatusChanged({
+  recipientId,
+  ticketId,
+  ticketTitle,
+  status,
+  changedByName,
+}: {
+  recipientId:    string
+  ticketId:       string
+  ticketTitle:    string
+  status:         ITTicketStatus
+  changedByName:  string
+}) {
+  const statusLabel = IT_TICKET_STATUS_LABELS[status]
+  return sendNotification({
+    type:         'it_ticket_status_changed',
+    recipientIds: [recipientId],
+    title:        'Tu ticket de TI cambió de estado',
+    body:         `"${ticketTitle}" → ${statusLabel}`,
+    href:         `/soporte-ti/${ticketId}`,
+    payload:      { ticket_id: ticketId, ticket_title: ticketTitle, status, changed_by: changedByName },
+    buildEmail:   async appUrl => ({
+      subject: `🔄 ${ticketTitle} → ${statusLabel} — Supply`,
+      html:    await render(ITTicketActivityEmail({
+        kind:        'status',
+        ticketTitle,
+        actorName:   changedByName,
+        statusLabel,
+        ticketUrl:   `${appUrl}/soporte-ti/${ticketId}`,
+      })),
+    }),
+  })
+}
+
+export async function notifyITTicketMessage({
+  recipientId,
+  ticketId,
+  ticketTitle,
+  authorName,
+}: {
+  recipientId:  string
+  ticketId:     string
+  ticketTitle:  string
+  authorName:   string
+}) {
+  return sendNotification({
+    type:         'it_ticket_message',
+    recipientIds: [recipientId],
+    title:        'Nuevo mensaje en tu ticket de TI',
+    body:         `${authorName} escribió en "${ticketTitle}"`,
+    href:         `/soporte-ti/${ticketId}`,
+    payload:      { ticket_id: ticketId, ticket_title: ticketTitle, author_name: authorName },
+    buildEmail:   async appUrl => ({
+      subject: `💬 Nuevo mensaje: ${ticketTitle} — Supply`,
+      html:    await render(ITTicketActivityEmail({
+        kind:       'message',
+        ticketTitle,
+        actorName:  authorName,
+        ticketUrl:  `${appUrl}/soporte-ti/${ticketId}`,
       })),
     }),
   })

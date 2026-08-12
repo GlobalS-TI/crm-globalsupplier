@@ -333,6 +333,201 @@ export type Database = {
           },
         ]
       }
+      it_ticket_files: {
+        Row: {
+          created_at: string
+          file_path: string
+          file_size: number | null
+          id: string
+          mime_type: string | null
+          nombre: string
+          owner_id: string
+          ticket_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_path: string
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          nombre: string
+          owner_id: string
+          ticket_id: string
+        }
+        Update: {
+          created_at?: string
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          mime_type?: string | null
+          nombre?: string
+          owner_id?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "it_ticket_files_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "it_ticket_files_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "it_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      it_ticket_messages: {
+        Row: {
+          author_id: string | null
+          content: string
+          created_at: string
+          file_label: string | null
+          file_url: string | null
+          id: string
+          ticket_id: string
+        }
+        Insert: {
+          author_id?: string | null
+          content: string
+          created_at?: string
+          file_label?: string | null
+          file_url?: string | null
+          id?: string
+          ticket_id: string
+        }
+        Update: {
+          author_id?: string | null
+          content?: string
+          created_at?: string
+          file_label?: string | null
+          file_url?: string | null
+          id?: string
+          ticket_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "it_ticket_messages_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "it_ticket_messages_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "it_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      it_ticket_stage_logs: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          comment: string | null
+          from_status: string | null
+          id: string
+          ticket_id: string
+          to_status: string
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          comment?: string | null
+          from_status?: string | null
+          id?: string
+          ticket_id: string
+          to_status: string
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          comment?: string | null
+          from_status?: string | null
+          id?: string
+          ticket_id?: string
+          to_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "it_ticket_stage_logs_changed_by_fkey"
+            columns: ["changed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "it_ticket_stage_logs_ticket_id_fkey"
+            columns: ["ticket_id"]
+            isOneToOne: false
+            referencedRelation: "it_tickets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      it_tickets: {
+        Row: {
+          assignee_id: string | null
+          brand: Database["public"]["Enums"]["business_unit"]
+          created_at: string
+          description: string | null
+          id: string
+          priority: string
+          requester_id: string
+          resolved_at: string | null
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assignee_id?: string | null
+          brand: Database["public"]["Enums"]["business_unit"]
+          created_at?: string
+          description?: string | null
+          id?: string
+          priority?: string
+          requester_id: string
+          resolved_at?: string | null
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assignee_id?: string | null
+          brand?: Database["public"]["Enums"]["business_unit"]
+          created_at?: string
+          description?: string | null
+          id?: string
+          priority?: string
+          requester_id?: string
+          resolved_at?: string | null
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "it_tickets_assignee_id_fkey"
+            columns: ["assignee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "it_tickets_requester_id_fkey"
+            columns: ["requester_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lead_sections: {
         Row: {
           business_unit: Database["public"]["Enums"]["business_unit"]
@@ -743,6 +938,7 @@ export type Database = {
           full_name: string
           id: string
           is_active: boolean
+          it_staff: boolean
           role: Database["public"]["Enums"]["user_role"]
           updated_at: string
         }
@@ -752,6 +948,7 @@ export type Database = {
           full_name: string
           id: string
           is_active?: boolean
+          it_staff?: boolean
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
         }
@@ -761,6 +958,7 @@ export type Database = {
           full_name?: string
           id?: string
           is_active?: boolean
+          it_staff?: boolean
           role?: Database["public"]["Enums"]["user_role"]
           updated_at?: string
         }
@@ -1371,6 +1569,7 @@ export type Database = {
     Functions: {
       can_manage_leads: { Args: never; Returns: boolean }
       can_manage_projects: { Args: never; Returns: boolean }
+      can_view_it_ticket: { Args: { p_ticket_id: string }; Returns: boolean }
       is_active_owner: { Args: never; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
       is_comisiones_viewer: { Args: never; Returns: boolean }
@@ -1378,6 +1577,8 @@ export type Database = {
       is_content_team: { Args: never; Returns: boolean }
       is_director_general: { Args: never; Returns: boolean }
       is_full_access: { Args: never; Returns: boolean }
+      is_it_oversight: { Args: never; Returns: boolean }
+      is_it_staff: { Args: never; Returns: boolean }
       is_leads_manager: { Args: never; Returns: boolean }
       is_project_admin: { Args: never; Returns: boolean }
       is_project_team: { Args: never; Returns: boolean }
@@ -1400,23 +1601,23 @@ export type Database = {
         | "otro"
       business_unit:
         | "global_supplier_mty"
-        | "cotizia"
         | "thunder_safety"
         | "thunder_led"
         | "got_fresh_breath"
         | "gtx_systems"
         | "juno_promotional"
         | "fire_spot"
+        | "cotizia"
       currency: "MXN" | "USD"
       lead_source:
         | "referido"
-        | "meta"
         | "web"
         | "linkedin"
         | "llamada_en_frio"
         | "evento"
         | "alianza"
         | "otro"
+        | "meta"
       opportunity_stage:
         | "nuevo_lead"
         | "contactado"
@@ -1456,6 +1657,7 @@ export type Database = {
         | "vendedor"
         | "marketing"
         | "administracion"
+        | "soporte_ti"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1598,24 +1800,24 @@ export const Constants = {
       ],
       business_unit: [
         "global_supplier_mty",
-        "cotizia",
         "thunder_safety",
         "thunder_led",
         "got_fresh_breath",
         "gtx_systems",
         "juno_promotional",
         "fire_spot",
+        "cotizia",
       ],
       currency: ["MXN", "USD"],
       lead_source: [
         "referido",
-        "meta",
         "web",
         "linkedin",
         "llamada_en_frio",
         "evento",
         "alianza",
         "otro",
+        "meta",
       ],
       opportunity_stage: [
         "nuevo_lead",
@@ -1659,6 +1861,7 @@ export const Constants = {
         "vendedor",
         "marketing",
         "administracion",
+        "soporte_ti",
       ],
     },
   },
