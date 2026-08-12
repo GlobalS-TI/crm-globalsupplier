@@ -9,7 +9,6 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { StaleBadge } from '@/components/crm/StaleBadge'
 import { ActivityStatusBadge } from '@/components/crm/ActivityStatusBadge'
-import { ProbabilityBadge } from '@/components/crm/ProbabilityBadge'
 import { formatDualCurrency } from '@/lib/utils/currency'
 import type { OpportunityWithRelations } from '@/lib/repositories/interfaces/IOpportunityRepository'
 
@@ -86,13 +85,12 @@ export function OpportunityKanbanCard({ opportunity: opp, draggable = true }: Op
               </div>
             </div>
 
-            {/* Próxima actividad + probabilidad de cierre */}
-            <div className="flex items-center justify-between select-none">
+            {/* Próxima actividad */}
+            <div className="flex items-center select-none">
               <span className="flex items-center gap-1 text-xs text-muted-foreground">
                 <Flag className="h-3 w-3" />
                 {opp.next_activity_at ? formatShortDate(opp.next_activity_at) : 'Sin fecha'}
               </span>
-              <ProbabilityBadge probabilidad={opp.probabilidad} />
             </div>
 
             {/* Footer: monto + última actividad */}

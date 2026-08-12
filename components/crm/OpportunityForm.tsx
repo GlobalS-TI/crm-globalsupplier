@@ -121,21 +121,6 @@ export function OpportunityForm({
         </div>
       </div>
 
-      {/* Tipo de cambio estimado — la moneda USD lo exige internamente (constraint de
-          DB replicada en OpportunityService), sin importar que "Monto estimado" ya no
-          se capture aquí. */}
-      {isUsd && (
-        <div className="space-y-2">
-          <Label htmlFor="tipo_cambio_estimado">Tipo de cambio (USD → MXN)</Label>
-          <Input
-            id="tipo_cambio_estimado" name="tipo_cambio_estimado" type="number"
-            min={0.0001} step="0.0001"
-            defaultValue={d.tipo_cambio_estimado ?? undefined}
-            required
-          />
-        </div>
-      )}
-
       <div className="grid grid-cols-2 gap-5">
         {/* Etapa */}
         <div className="space-y-2">
@@ -183,20 +168,20 @@ export function OpportunityForm({
         </div>
       </div>
 
-      {/* Monto final — el único monto que se sigue capturando; estimado/probabilidad/cierre
-          estimado se quitaron de este formulario por feedback de vendedores (no se usaban). */}
+      {/* Monto estimado — monto_final se quitó de este formulario: ya se captura en el
+          modal dedicado al mover una oportunidad a "Ganado" (GanadoTransitionModal). */}
       <div className="space-y-2">
-        <Label htmlFor="monto_final">Monto final ({moneda})</Label>
+        <Label htmlFor="monto_estimado">Monto estimado ({moneda})</Label>
         <Input
-          id="monto_final" name="monto_final" type="number"
-          min={0} step="0.01" defaultValue={d.monto_final ?? undefined}
-          placeholder="Solo para oportunidades ganadas"
+          id="monto_estimado" name="monto_estimado" type="number"
+          min={0} step="0.01" defaultValue={d.monto_estimado ?? 0}
         />
         {isUsd && (
           <Input
-            name="tipo_cambio_final" type="number"
-            min={0.0001} step="0.0001" placeholder="Tipo de cambio al cierre (USD → MXN)"
-            defaultValue={d.tipo_cambio_final ?? undefined}
+            name="tipo_cambio_estimado" type="number"
+            min={0.0001} step="0.0001" placeholder="Tipo de cambio (USD → MXN)"
+            defaultValue={d.tipo_cambio_estimado ?? undefined}
+            required
           />
         )}
       </div>
