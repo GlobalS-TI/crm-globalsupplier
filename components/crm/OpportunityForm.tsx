@@ -158,62 +158,6 @@ export function OpportunityForm({
           </Select>
         </div>
 
-        {/* Probabilidad */}
-        <div className="space-y-2">
-          <Label htmlFor="probabilidad">Probabilidad (%)</Label>
-          <Input
-            id="probabilidad" name="probabilidad" type="number"
-            min={0} max={100} defaultValue={d.probabilidad ?? 0}
-          />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-5">
-        {/* Monto estimado */}
-        <div className="space-y-2">
-          <Label htmlFor="monto_estimado">Monto estimado ({moneda})</Label>
-          <Input
-            id="monto_estimado" name="monto_estimado" type="number"
-            min={0} step="0.01" defaultValue={d.monto_estimado ?? 0}
-          />
-          {isUsd && (
-            <Input
-              name="tipo_cambio_estimado" type="number"
-              min={0.0001} step="0.0001" placeholder="Tipo de cambio (USD → MXN)"
-              defaultValue={d.tipo_cambio_estimado ?? undefined}
-              required
-            />
-          )}
-        </div>
-
-        {/* Monto final */}
-        <div className="space-y-2">
-          <Label htmlFor="monto_final">Monto final ({moneda})</Label>
-          <Input
-            id="monto_final" name="monto_final" type="number"
-            min={0} step="0.01" defaultValue={d.monto_final ?? undefined}
-            placeholder="Solo para oportunidades ganadas"
-          />
-          {isUsd && (
-            <Input
-              name="tipo_cambio_final" type="number"
-              min={0.0001} step="0.0001" placeholder="Tipo de cambio al cierre (USD → MXN)"
-              defaultValue={d.tipo_cambio_final ?? undefined}
-            />
-          )}
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-5">
-        {/* Fecha cierre estimada */}
-        <div className="space-y-2">
-          <Label htmlFor="fecha_cierre_estimada">Cierre estimado</Label>
-          <Input
-            id="fecha_cierre_estimada" name="fecha_cierre_estimada" type="date"
-            defaultValue={d.fecha_cierre_estimada ?? ''}
-          />
-        </div>
-
         {/* Próxima actividad */}
         <div className="space-y-2">
           <Label htmlFor="next_activity_at">Próxima actividad</Label>
@@ -222,6 +166,24 @@ export function OpportunityForm({
             defaultValue={d.next_activity_at ? d.next_activity_at.slice(0, 16) : ''}
           />
         </div>
+      </div>
+
+      {/* Monto estimado — monto_final se quitó de este formulario: ya se captura en el
+          modal dedicado al mover una oportunidad a "Ganado" (GanadoTransitionModal). */}
+      <div className="space-y-2">
+        <Label htmlFor="monto_estimado">Monto estimado ({moneda})</Label>
+        <Input
+          id="monto_estimado" name="monto_estimado" type="number"
+          min={0} step="0.01" defaultValue={d.monto_estimado ?? 0}
+        />
+        {isUsd && (
+          <Input
+            name="tipo_cambio_estimado" type="number"
+            min={0.0001} step="0.0001" placeholder="Tipo de cambio (USD → MXN)"
+            defaultValue={d.tipo_cambio_estimado ?? undefined}
+            required
+          />
+        )}
       </div>
 
       {/* Notas */}

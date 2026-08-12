@@ -145,7 +145,7 @@ export default async function OportunidadDetailPage({
 
       {/* Two-column layout: edit form + activity timeline. Activities gets more
           width — su datetime-local necesita más espacio del que le toca a un 50/50. */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.3fr] gap-10">
+      <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1.3fr] gap-10">
         {/* Edit form */}
         <div className="space-y-4">
           <h2 className="text-base font-semibold">Datos de la oportunidad</h2>
