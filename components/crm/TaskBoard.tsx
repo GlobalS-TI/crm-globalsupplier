@@ -1,11 +1,18 @@
 'use client'
 
 import { useState, useTransition, useRef, useCallback } from 'react'
-import { ChevronDown, ChevronRight, Plus, Loader2, Pencil, Check, X } from 'lucide-react'
+import { ChevronDown, ChevronRight, Plus, Loader2, Pencil, Check, X, GripVertical } from 'lucide-react'
+import {
+  DndContext, closestCenter, PointerSensor, useSensor, useSensors, type DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  SortableContext, verticalListSortingStrategy, useSortable, arrayMove,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import type { BoardWithColumns, TaskWithValues, TaskBoardColumnRow, TaskGroupRow } from '@/lib/repositories/interfaces/ITaskRepository'
 import {
   createTask, updateTask, deleteTask, setColumnValue, deleteBoardColumn, updateBoardColumn,
-  createGroup, updateGroup, deleteGroup,
+  createGroup, updateGroup, deleteGroup, reorderGroups, reorderTasks,
 } from '@/app/(dashboard)/actividades/task-actions'
 import { TaskBoardCell } from '@/components/crm/TaskBoardCell'
 import { TaskBoardAddColumn } from '@/components/crm/TaskBoardAddColumn'
@@ -159,6 +166,8 @@ function TaskRow({ task, columns, users, allowedBusinessUnits, onTituloSave, onD
   const [editing,     setEditing]     = useState(false)
   const [titleValue,  setTitleValue]  = useState(task.titulo)
   const [, start] = useTransition()
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id })
+  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.4 : 1 }
 
   function saveTitle() {
     const v = titleValue.trim()
@@ -171,9 +180,17 @@ function TaskRow({ task, columns, users, allowedBusinessUnits, onTituloSave, onD
   }
 
   return (
-    <tr className="border-t border-border/20 hover:bg-muted/20 group/row">
+    <tr ref={setNodeRef} style={style} className="border-t border-border/20 hover:bg-muted/20 group/row">
       <td className="w-8 px-2 text-center">
-        <div className="w-3.5 h-3.5 rounded border border-border mx-auto opacity-0 group-hover/row:opacity-100 transition-opacity" />
+        <button
+          {...attributes}
+          {...listeners}
+          tabIndex={-1}
+          className="cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground opacity-0 group-hover/row:opacity-100 transition-opacity mx-auto flex"
+          title="Arrastrar para reordenar"
+        >
+          <GripVertical className="h-3.5 w-3.5" />
+        </button>
       </td>
       <td className="px-3 py-2 border-r border-border/30">
         {editing ? (
@@ -258,7 +275,7 @@ function GroupNameEditor({ group, onSave, onCancel }: {
 function TaskGroup({
   group, tasks, columns, users, boardId, allowedBusinessUnits,
   collapsed, onToggle,
-  onTaskAdd, onTaskTitleUpdate, onTaskDelete, onCellChange,
+  onTaskAdd, onTaskTitleUpdate, onTaskDelete, onCellChange, onTasksReorder,
   onGroupRename, onGroupDelete, onColumnRename, onColumnDelete, onColumnAdded, onOptionsUpdate,
 }: {
   group:               TaskGroupRow
@@ -273,6 +290,7 @@ function TaskGroup({
   onTaskTitleUpdate:   (taskId: string, titulo: string) => void
   onTaskDelete:        (taskId: string) => void
   onCellChange:        (taskId: string, colId: string, val: string | null) => void
+  onTasksReorder:      (groupId: string, orderedIds: string[]) => void
   onGroupRename:       (groupId: string, nombre: string) => void
   onGroupDelete:       (groupId: string) => void
   onColumnRename:      (colId: string, nombre: string) => void
@@ -281,14 +299,34 @@ function TaskGroup({
   onOptionsUpdate:     (columnId: string, opts: import('@/lib/validations/task').SelectorOption[]) => void
 }) {
   const [editingName, setEditingName] = useState(false)
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: group.id })
+  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 }
+  const taskSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }))
+
+  function handleTaskDragEnd(event: DragEndEvent) {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    const oldIndex = tasks.findIndex(t => t.id === active.id)
+    const newIndex = tasks.findIndex(t => t.id === over.id)
+    onTasksReorder(group.id, arrayMove(tasks, oldIndex, newIndex).map(t => t.id))
+  }
 
   return (
-    <div className="mb-4">
+    <div ref={setNodeRef} style={style} className="mb-4">
       {/* Group header bar */}
       <div
         className="flex items-center gap-2 py-1.5 rounded-t-sm group/group"
         style={{ borderLeft: `3px solid ${group.color}`, paddingLeft: '8px' }}
       >
+        <button
+          {...attributes}
+          {...listeners}
+          tabIndex={-1}
+          className="p-0.5 -ml-1 rounded cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground opacity-0 group-hover/group:opacity-100 transition-opacity shrink-0"
+          title="Arrastrar para reordenar"
+        >
+          <GripVertical className="h-4 w-4" />
+        </button>
         <button onClick={onToggle} className="text-muted-foreground hover:text-foreground shrink-0">
           {collapsed
             ? <ChevronRight className="h-4 w-4" />
@@ -335,56 +373,60 @@ function TaskGroup({
 
       {!collapsed && (
         <div className="overflow-x-auto border border-border/40 rounded-b-sm">
-          <table className="w-full min-w-max text-sm border-collapse">
-            <colgroup>
-              <col className="w-8" />
-              <col className="min-w-[280px]" />
-              {columns.map(c => (
-                <col key={c.id} className={c.tipo === 'url' ? 'min-w-[160px]' : 'min-w-[130px]'} />
-              ))}
-              <col className="w-8" />
-            </colgroup>
-            <thead>
-              <tr className="border-b border-border/40 bg-muted/20">
-                <th className="w-8 px-2" />
-                <th className="px-3 py-2.5 text-left text-xs font-medium text-muted-foreground uppercase tracking-wide border-r border-border/40">
-                  Actividad
-                </th>
-                {columns.map(col => (
-                  <ColHeader key={col.id} col={col} onRename={onColumnRename} onDelete={onColumnDelete} />
-                ))}
-                <th className="w-8 px-1 border-l border-border/20">
-                  <TaskBoardAddColumn
+          <DndContext id={`tasks-dnd-${group.id}`} sensors={taskSensors} collisionDetection={closestCenter} onDragEnd={handleTaskDragEnd}>
+            <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
+              <table className="w-full min-w-max text-sm border-collapse">
+                <colgroup>
+                  <col className="w-8" />
+                  <col className="min-w-[280px]" />
+                  {columns.map(c => (
+                    <col key={c.id} className={c.tipo === 'url' ? 'min-w-[160px]' : 'min-w-[130px]'} />
+                  ))}
+                  <col className="w-8" />
+                </colgroup>
+                <thead>
+                  <tr className="border-b border-border/40 bg-muted/20">
+                    <th className="w-8 px-2" />
+                    <th className="px-3 py-2.5 text-left text-xs font-medium text-muted-foreground uppercase tracking-wide border-r border-border/40">
+                      Actividad
+                    </th>
+                    {columns.map(col => (
+                      <ColHeader key={col.id} col={col} onRename={onColumnRename} onDelete={onColumnDelete} />
+                    ))}
+                    <th className="w-8 px-1 border-l border-border/20">
+                      <TaskBoardAddColumn
+                        boardId={boardId}
+                        nextPosition={columns.length}
+                        onColumnAdded={onColumnAdded}
+                        compact
+                      />
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {tasks.map(task => (
+                    <TaskRow
+                      key={task.id}
+                      task={task}
+                      columns={columns}
+                      users={users}
+                      allowedBusinessUnits={allowedBusinessUnits}
+                      onTituloSave={titulo => onTaskTitleUpdate(task.id, titulo)}
+                      onDelete={() => onTaskDelete(task.id)}
+                      onCellChange={(colId, val) => onCellChange(task.id, colId, val)}
+                      onOptionsUpdate={onOptionsUpdate}
+                    />
+                  ))}
+                  <AddTaskRow
                     boardId={boardId}
-                    nextPosition={columns.length}
-                    onColumnAdded={onColumnAdded}
-                    compact
+                    groupId={group.id}
+                    columns={columns}
+                    onAdd={onTaskAdd}
                   />
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {tasks.map(task => (
-                <TaskRow
-                  key={task.id}
-                  task={task}
-                  columns={columns}
-                  users={users}
-                  allowedBusinessUnits={allowedBusinessUnits}
-                  onTituloSave={titulo => onTaskTitleUpdate(task.id, titulo)}
-                  onDelete={() => onTaskDelete(task.id)}
-                  onCellChange={(colId, val) => onCellChange(task.id, colId, val)}
-                  onOptionsUpdate={onOptionsUpdate}
-                />
-              ))}
-              <AddTaskRow
-                boardId={boardId}
-                groupId={group.id}
-                columns={columns}
-                onAdd={onTaskAdd}
-              />
-            </tbody>
-          </table>
+                </tbody>
+              </table>
+            </SortableContext>
+          </DndContext>
         </div>
       )}
     </div>
@@ -457,26 +499,52 @@ export function TaskBoard({ board, initialGroups, initialTasks, users, allowedBu
 
   const handleAddGroup = useCallback((nombre: string) => {
     const color = GROUP_COLORS[groups.length % GROUP_COLORS.length]
-    const position = groups.length
     const optimisticId = `temp-${Date.now()}`
     const optimistic: TaskGroupRow = {
-      id: optimisticId, board_id: board.id, nombre, color, position,
+      id: optimisticId, board_id: board.id, nombre, color, position: -1,
       created_at: new Date().toISOString(),
     }
-    setGroups(prev => [...prev, optimistic])
+    // Grupo nuevo va arriba (mes actual arriba, meses viejos se recorren hacia abajo).
+    const previousIds = groups.map(g => g.id)
+    setGroups(prev => [optimistic, ...prev])
     start(async () => {
-      const result = await createGroup(board.id, nombre, color, position)
+      const result = await createGroup(board.id, nombre, color, 0)
       if ('id' in result && result.id && !('error' in result)) {
-        setGroups(prev => prev.map(g => g.id === optimisticId ? result as TaskGroupRow : g))
+        const newGroup = result as TaskGroupRow
+        setGroups(prev => prev.map(g => g.id === optimisticId ? newGroup : g))
+        await reorderGroups(board.id, [newGroup.id, ...previousIds])
       } else {
         setGroups(prev => prev.filter(g => g.id !== optimisticId))
       }
     })
-  }, [board.id, groups.length])
+  }, [board.id, groups])
 
   const handleGroupRename = useCallback((groupId: string, nombre: string) => {
     setGroups(prev => prev.map(g => g.id === groupId ? { ...g, nombre } : g))
     start(async () => { await updateGroup(groupId, { nombre }) })
+  }, [])
+
+  const handleGroupDragEnd = useCallback((event: DragEndEvent) => {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    setGroups(prev => {
+      const oldIndex = prev.findIndex(g => g.id === active.id)
+      const newIndex = prev.findIndex(g => g.id === over.id)
+      const next = arrayMove(prev, oldIndex, newIndex)
+      start(async () => { await reorderGroups(board.id, next.map(g => g.id)) })
+      return next
+    })
+  }, [board.id])
+
+  const handleTasksReorder = useCallback((groupId: string | null, orderedIds: string[]) => {
+    setTasks(prev => {
+      const idSet = new Set(orderedIds)
+      const byId = new Map(prev.map(t => [t.id, t]))
+      const reordered = orderedIds.map(id => byId.get(id)).filter((t): t is TaskWithValues => !!t)
+      const rest = prev.filter(t => !idSet.has(t.id))
+      return [...rest, ...reordered]
+    })
+    start(async () => { await reorderTasks(groupId, orderedIds) })
   }, [])
 
   const handleColumnRename = useCallback((colId: string, nombre: string) => {
@@ -534,6 +602,17 @@ export function TaskBoard({ board, initialGroups, initialTasks, users, allowedBu
   // Tasks without a group
   const ungroupedTasks = tasks.filter(t => !t.group_id || !groups.find(g => g.id === t.group_id))
 
+  const groupSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }))
+  const ungroupedSensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }))
+
+  function handleUngroupedTaskDragEnd(event: DragEndEvent) {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    const oldIndex = ungroupedTasks.findIndex(t => t.id === active.id)
+    const newIndex = ungroupedTasks.findIndex(t => t.id === over.id)
+    handleTasksReorder(null, arrayMove(ungroupedTasks, oldIndex, newIndex).map(t => t.id))
+  }
+
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
@@ -559,76 +638,84 @@ export function TaskBoard({ board, initialGroups, initialTasks, users, allowedBu
           </div>
         )}
 
-        {groups.map(group => (
-          <TaskGroup
-            key={group.id}
-            group={group}
-            tasks={tasks.filter(t => t.group_id === group.id)}
-            columns={columns}
-            users={users}
-            boardId={board.id}
-            allowedBusinessUnits={allowedBusinessUnits}
-            collapsed={collapsed.has(group.id)}
-            onToggle={() => toggleCollapse(group.id)}
-            onTaskAdd={handleTaskAdd}
-            onTaskTitleUpdate={handleTitleUpdate}
-            onTaskDelete={id => setDeleteTaskId(id)}
-            onCellChange={handleCellChange}
-            onGroupRename={handleGroupRename}
-            onGroupDelete={id => setDeleteGroupId(id)}
-            onColumnRename={handleColumnRename}
-            onColumnDelete={id => setDeleteColId(id)}
-            onColumnAdded={col => setColumns(prev => [...prev, col])}
-            onOptionsUpdate={handleOptionsUpdate}
-          />
-        ))}
+        <DndContext id={`groups-dnd-${board.id}`} sensors={groupSensors} collisionDetection={closestCenter} onDragEnd={handleGroupDragEnd}>
+          <SortableContext items={groups.map(g => g.id)} strategy={verticalListSortingStrategy}>
+            {groups.map(group => (
+              <TaskGroup
+                key={group.id}
+                group={group}
+                tasks={tasks.filter(t => t.group_id === group.id)}
+                columns={columns}
+                users={users}
+                boardId={board.id}
+                allowedBusinessUnits={allowedBusinessUnits}
+                collapsed={collapsed.has(group.id)}
+                onToggle={() => toggleCollapse(group.id)}
+                onTaskAdd={handleTaskAdd}
+                onTaskTitleUpdate={handleTitleUpdate}
+                onTaskDelete={id => setDeleteTaskId(id)}
+                onCellChange={handleCellChange}
+                onTasksReorder={handleTasksReorder}
+                onGroupRename={handleGroupRename}
+                onGroupDelete={id => setDeleteGroupId(id)}
+                onColumnRename={handleColumnRename}
+                onColumnDelete={id => setDeleteColId(id)}
+                onColumnAdded={col => setColumns(prev => [...prev, col])}
+                onOptionsUpdate={handleOptionsUpdate}
+              />
+            ))}
+          </SortableContext>
+        </DndContext>
 
         {/* Ungrouped tasks (if any) */}
         {ungroupedTasks.length > 0 && (
           <div className="mt-4">
             <p className="text-xs text-muted-foreground mb-2 px-1">Sin grupo ({ungroupedTasks.length})</p>
             <div className="overflow-x-auto border border-border/30 rounded-sm">
-              <table className="w-full min-w-max text-sm border-collapse">
-                <colgroup>
-                  <col className="w-8" />
-                  <col className="min-w-[280px]" />
-                  {columns.map(c => <col key={c.id} className="min-w-[130px]" />)}
-                  <col className="w-8" />
-                </colgroup>
-                <thead>
-                  <tr className="border-b border-border/30 bg-muted/10">
-                    <th className="w-8" />
-                    <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wide border-r border-border/30">Actividad</th>
-                    {columns.map(col => (
-                      <ColHeader key={col.id} col={col} onRename={handleColumnRename} onDelete={id => setDeleteColId(id)} />
-                    ))}
-                    <th className="w-8 px-1 border-l border-border/20">
-                      <TaskBoardAddColumn
-                        boardId={board.id}
-                        nextPosition={columns.length}
-                        onColumnAdded={col => setColumns(prev => [...prev, col])}
-                        compact
-                      />
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {ungroupedTasks.map(task => (
-                    <TaskRow
-                      key={task.id}
-                      task={task}
-                      columns={columns}
-                      users={users}
-                      allowedBusinessUnits={allowedBusinessUnits}
-                      onTituloSave={titulo => handleTitleUpdate(task.id, titulo)}
-                      onDelete={() => setDeleteTaskId(task.id)}
-                      onCellChange={(colId, val) => handleCellChange(task.id, colId, val)}
-                      onOptionsUpdate={handleOptionsUpdate}
-                    />
-
-                  ))}
-                </tbody>
-              </table>
+              <DndContext id={`tasks-dnd-ungrouped-${board.id}`} sensors={ungroupedSensors} collisionDetection={closestCenter} onDragEnd={handleUngroupedTaskDragEnd}>
+                <SortableContext items={ungroupedTasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
+                  <table className="w-full min-w-max text-sm border-collapse">
+                    <colgroup>
+                      <col className="w-8" />
+                      <col className="min-w-[280px]" />
+                      {columns.map(c => <col key={c.id} className="min-w-[130px]" />)}
+                      <col className="w-8" />
+                    </colgroup>
+                    <thead>
+                      <tr className="border-b border-border/30 bg-muted/10">
+                        <th className="w-8" />
+                        <th className="px-3 py-2 text-left text-xs font-medium text-muted-foreground uppercase tracking-wide border-r border-border/30">Actividad</th>
+                        {columns.map(col => (
+                          <ColHeader key={col.id} col={col} onRename={handleColumnRename} onDelete={id => setDeleteColId(id)} />
+                        ))}
+                        <th className="w-8 px-1 border-l border-border/20">
+                          <TaskBoardAddColumn
+                            boardId={board.id}
+                            nextPosition={columns.length}
+                            onColumnAdded={col => setColumns(prev => [...prev, col])}
+                            compact
+                          />
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {ungroupedTasks.map(task => (
+                        <TaskRow
+                          key={task.id}
+                          task={task}
+                          columns={columns}
+                          users={users}
+                          allowedBusinessUnits={allowedBusinessUnits}
+                          onTituloSave={titulo => handleTitleUpdate(task.id, titulo)}
+                          onDelete={() => setDeleteTaskId(task.id)}
+                          onCellChange={(colId, val) => handleCellChange(task.id, colId, val)}
+                          onOptionsUpdate={handleOptionsUpdate}
+                        />
+                      ))}
+                    </tbody>
+                  </table>
+                </SortableContext>
+              </DndContext>
             </div>
           </div>
         )}
