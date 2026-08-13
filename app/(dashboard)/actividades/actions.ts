@@ -37,6 +37,7 @@ export async function createActivity(_prev: ActionState, form: FormData): Promis
   try {
     await makeService().create(raw.data, user.id)
     revalidatePath(`/oportunidades/${raw.data.opportunity_id}`)
+    revalidatePath('/oportunidades')
     revalidatePath('/actividades')
     return null
   } catch (e) {
@@ -48,6 +49,7 @@ export async function completeActivity(id: string, opportunityId: string): Promi
   try {
     await makeService().complete(id)
     revalidatePath(`/oportunidades/${opportunityId}`)
+    revalidatePath('/oportunidades')
     revalidatePath('/actividades')
     return {}
   } catch (e) {
@@ -59,6 +61,7 @@ export async function deleteActivity(id: string, opportunityId: string): Promise
   try {
     await makeService().delete(id)
     revalidatePath(`/oportunidades/${opportunityId}`)
+    revalidatePath('/oportunidades')
     revalidatePath('/actividades')
     return {}
   } catch (e) {
