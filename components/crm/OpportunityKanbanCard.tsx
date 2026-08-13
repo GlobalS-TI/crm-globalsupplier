@@ -49,6 +49,13 @@ export function OpportunityKanbanCard({ opportunity: opp, draggable = true }: Op
     ? { transform: CSS.Translate.toString(transform), opacity: isDragging ? 0.4 : 1 }
     : undefined
 
+  // Ganado/perdido muestran el monto final (lo capturado al cerrar) — el estimado suele
+  // no llenarse nunca en esos casos, y antes la card se quedaba mostrando "—" aunque el
+  // monto final sí estuviera guardado.
+  const isClosed = opp.etapa === 'ganado' || opp.etapa === 'perdido'
+  const amount    = isClosed ? opp.monto_final    : opp.monto_estimado
+  const amountMxn = isClosed ? opp.monto_final_mxn : opp.monto_estimado_mxn
+
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="touch-none">
       <Link href={`/oportunidades/${opp.id}` as Route} draggable={false}>
@@ -96,8 +103,8 @@ export function OpportunityKanbanCard({ opportunity: opp, draggable = true }: Op
             {/* Footer: monto + última actividad */}
             <div className="flex items-center justify-between gap-2 border-t pt-2 text-xs select-none">
               <span className="font-medium text-foreground truncate">
-                {opp.monto_estimado > 0
-                  ? formatDualCurrency(opp.monto_estimado, opp.moneda, opp.monto_estimado_mxn ?? opp.monto_estimado)
+                {amount && amount > 0
+                  ? formatDualCurrency(amount, opp.moneda, amountMxn ?? amount)
                   : '—'}
               </span>
               <span className="text-muted-foreground shrink-0">
