@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
+import { after } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { OpportunityRepository } from '@/lib/repositories/supabase/OpportunityRepository'
 import { OpportunityService } from '@/lib/services/OpportunityService'
@@ -80,8 +81,9 @@ export async function moveToStage(id: string, _prev: ActionState, form: FormData
     revalidatePath(`/oportunidades/${id}`)
     revalidatePath('/oportunidades')
 
-    if (raw.data.etapa === 'ganado' || raw.data.etapa === 'perdido') {
-      void fireOppClosedNotification(id, raw.data.etapa)
+    const etapa = raw.data.etapa
+    if (etapa === 'ganado' || etapa === 'perdido') {
+      after(() => fireOppClosedNotification(id, etapa))
     }
 
     return null
@@ -136,7 +138,7 @@ export async function kanbanMoveToStage(
     revalidatePath(`/oportunidades/${id}`)
 
     if (stage === 'ganado' || stage === 'perdido') {
-      void fireOppClosedNotification(id, stage)
+      after(() => fireOppClosedNotification(id, stage))
     }
 
     return {}

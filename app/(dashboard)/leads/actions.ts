@@ -2,6 +2,7 @@
 
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
+import { after } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { LeadSectionRepository, LeadRepository } from '@/lib/repositories/supabase/LeadRepository'
 import { ProfileRepository } from '@/lib/repositories/supabase/ProfileRepository'
@@ -147,13 +148,19 @@ async function autoConvertLead(lead: LeadWithRelations, assignedByName: string):
   await carryOverRequirementFile(lead, opp.id, lead.vendedor_id)
   revalidatePath('/oportunidades')
 
-  void notifyOpportunityAssigned({
-    recipientId:    lead.vendedor_id,
-    oppId:          opp.id,
-    oppNombre:      opp.nombre,
-    leadName:       lead.nombre,
-    assignedByName,
-  }).catch(() => { /* notificaciones no bloquean */ })
+  // after(): un `void promise` fire-and-forget no garantiza completarse — Vercel puede
+  // congelar la función serverless en cuanto se envía la respuesta del Server Action,
+  // matando el envío a medias. after() sí espera a que termine antes de cerrar.
+  const vendedorId = lead.vendedor_id
+  after(() =>
+    notifyOpportunityAssigned({
+      recipientId:    vendedorId,
+      oppId:          opp.id,
+      oppNombre:      opp.nombre,
+      leadName:       lead.nombre,
+      assignedByName,
+    }).catch(() => { /* notificaciones no bloquean */ })
+  )
 }
 
 // ── Sections ──────────────────────────────────────────────────────
@@ -364,7 +371,7 @@ export async function convertLeadToOpportunity(
     revalidatePath('/leads')
     revalidatePath('/oportunidades')
 
-    void (async () => {
+    after(async () => {
       try {
         const user = await getUser()
         const [leadRes, userRes, mgmtIds] = await Promise.all([
@@ -372,18 +379,30 @@ export async function convertLeadToOpportunity(
           supabaseAdmin.from('profiles').select('full_name').eq('id', user.id).single(),
           getManagementProfileIds(),
         ])
-        if (leadRes.data && userRes.data && mgmtIds.length) {
-          await notifyLeadConverted({
-            recipientIds:    mgmtIds,
-            leadId,
-            leadName:        leadRes.data.nombre,
-            oppId:           opp.id,
+        if (leadRes.data && userRes.data) {
+          const convertedByName = userRes.data.full_name
+          if (mgmtIds.length) {
+            await notifyLeadConverted({
+              recipientIds: mgmtIds,
+              leadId,
+              leadName:     leadRes.data.nombre,
+              oppId:        opp.id,
+              oppNombre,
+              convertedByName,
+            })
+          }
+          // El responsable elegido en el modal también debe enterarse — antes solo
+          // se notificaba a dirección/gerencia, dejando al vendedor sin aviso.
+          await notifyOpportunityAssigned({
+            recipientId:    ownerId,
+            oppId:          opp.id,
             oppNombre,
-            convertedByName: userRes.data.full_name,
+            leadName:       leadRes.data.nombre,
+            assignedByName: convertedByName,
           })
         }
       } catch { /* notificaciones no bloquean */ }
-    })()
+    })
 
     return null
   } catch (e) {
