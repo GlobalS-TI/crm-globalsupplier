@@ -47,6 +47,16 @@ export async function deleteGroup(groupId: string): Promise<{ error?: string }> 
   }
 }
 
+export async function reorderGroups(boardId: string, orderedIds: string[]): Promise<{ error?: string }> {
+  try {
+    await makeService().reorderGroups(boardId, orderedIds)
+    revalidatePath('/actividades')
+    return {}
+  } catch (e) {
+    return { error: (e as Error).message }
+  }
+}
+
 export async function createTask(boardId: string, titulo: string, groupId?: string): Promise<{ id: string } | { error: string }> {
   try {
     const userId = await getCurrentUserId()
@@ -76,6 +86,16 @@ export async function updateTask(taskId: string, data: UpdateTaskInput & { group
 export async function deleteTask(taskId: string): Promise<{ error?: string }> {
   try {
     await makeService().deleteTask(taskId)
+    revalidatePath('/actividades')
+    return {}
+  } catch (e) {
+    return { error: (e as Error).message }
+  }
+}
+
+export async function reorderTasks(groupId: string | null, orderedIds: string[]): Promise<{ error?: string }> {
+  try {
+    await makeService().reorderTasks(groupId, orderedIds)
     revalidatePath('/actividades')
     return {}
   } catch (e) {

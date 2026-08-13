@@ -135,7 +135,6 @@ export class TaskRepository implements ITaskRepository {
       .from('tasks')
       .select('*, raw_values:task_column_values(column_id, value)')
       .eq('board_id', boardId)
-      .order('fecha_entrega', { ascending: true, nullsFirst: false })
       .order('position', { ascending: true })
       .order('created_at', { ascending: true })
 
@@ -150,7 +149,6 @@ export class TaskRepository implements ITaskRepository {
       .select('*, raw_values:task_column_values(column_id, value)')
       .eq('board_id', boardId)
       .or(`created_by.eq.${userId},assigned_to.eq.${userId}`)
-      .order('fecha_entrega', { ascending: true, nullsFirst: false })
       .order('position', { ascending: true })
       .order('created_at', { ascending: true })
 
@@ -196,6 +194,16 @@ export class TaskRepository implements ITaskRepository {
     const supabase = await createClient()
     const { error } = await supabase.from('tasks').delete().eq('id', id)
     if (error) throw error
+  }
+
+  async reorderTasks(groupId: string | null, orderedIds: string[]): Promise<void> {
+    const supabase = await createClient()
+    await Promise.all(
+      orderedIds.map((id, position) => {
+        const query = supabase.from('tasks').update({ position }).eq('id', id)
+        return (groupId === null ? query.is('group_id', null) : query.eq('group_id', groupId))
+      })
+    )
   }
 
   async upsertColumnValue(taskId: string, columnId: string, value: string | null): Promise<void> {
