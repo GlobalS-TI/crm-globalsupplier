@@ -1,0 +1,47 @@
+name: Supabase — aplicar migraciones
+
+# Solo manual: nunca se dispara solo en push/merge. Por default corre en
+# --dry-run (solo muestra qué se aplicaría); hay que marcar "apply" a mano
+# para que sí escriba en la base de datos.
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: "Aplicar de verdad (si no, solo dry-run)"
+        type: boolean
+        default: false
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: supabase-migrate
+      cancel-in-progress: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link project
+        run: supabase link --project-ref "$SUPABASE_PROJECT_REF"
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+
+      - name: Dry run — mostrar qué se aplicaría
+        if: ${{ inputs.apply != true }}
+        run: supabase db push --dry-run --password "$SUPABASE_DB_PASSWORD"
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+
+      - name: Aplicar migraciones
+        if: ${{ inputs.apply == true }}
+        run: supabase db push --password "$SUPABASE_DB_PASSWORD"
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
