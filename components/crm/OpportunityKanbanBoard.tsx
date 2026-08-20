@@ -184,8 +184,6 @@ export function OpportunityKanbanBoard({ opportunities }: Props) {
     const sourceIsClosed = CLOSED.has(card.etapa)
     const targetIsClosed = CLOSED.has(targetStage)
 
-    if (sourceIsClosed && targetIsClosed) return
-
     if (sourceIsClosed && !targetIsClosed) {
       setPendingReopen({ card, sourceStage: card.etapa as ClosedStage, targetStage })
       return
