@@ -2,7 +2,7 @@ import type { IOpportunityRepository, OpportunityWithRelations, DashboardStats, 
 import type { StageTransitionInput } from '@/lib/validations/opportunity'
 import { createOpportunitySchema, updateOpportunitySchema, stageTransitionSchema } from '@/lib/validations/opportunity'
 
-const CLOSED_STAGES = ['ganado', 'perdido'] as const
+const CLOSED_STAGES = ['ganado', 'perdido', 'sin_respuesta'] as const
 
 export class OpportunityService {
   constructor(private readonly repo: IOpportunityRepository) {}

@@ -23,6 +23,7 @@ export type OpportunityStage =
   | 'cotizacion_enviada'
   | 'seguimiento'
   | 'negociacion'
+  | 'sin_respuesta'
   | 'ganado'
   | 'perdido'
 
@@ -56,11 +57,12 @@ export const OPPORTUNITY_STAGES: OpportunityStage[] = [
   'cotizacion_enviada',
   'seguimiento',
   'negociacion',
+  'sin_respuesta',
   'ganado',
   'perdido',
 ]
 
-export const CLOSED_STAGES: OpportunityStage[] = ['ganado', 'perdido']
+export const CLOSED_STAGES: OpportunityStage[] = ['ganado', 'perdido', 'sin_respuesta']
 
 export const BUSINESS_UNITS: BusinessUnit[] = [
   'global_supplier_mty',

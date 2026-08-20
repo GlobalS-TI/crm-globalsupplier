@@ -15,7 +15,13 @@ import type { OpportunityStage } from '@/lib/validations/opportunity'
 const STAGE_LABELS: Record<OpportunityStage, string> = {
   nuevo_lead: 'Nuevo lead', contactado: 'Contactado', diagnostico: 'Diagnóstico',
   cotizacion_enviada: 'Cotización enviada', seguimiento: 'Seguimiento',
-  negociacion: 'Negociación', ganado: 'Ganado', perdido: 'Perdido',
+  negociacion: 'Negociación', sin_respuesta: 'Sin respuesta', ganado: 'Ganado', perdido: 'Perdido',
+}
+
+const STAGE_DESCRIPTIONS: Partial<Record<OpportunityStage, string>> = {
+  ganado:        'Esta acción marcará la oportunidad como ganada. Ingresa el monto final.',
+  perdido:       'Esta acción marcará la oportunidad como perdida. Esta operación no bloquea edición futura.',
+  sin_respuesta: 'El cliente dejó de responder. La oportunidad se moverá a "Sin respuesta" y podrás reabrirla más tarde desde el kanban.',
 }
 
 interface StageTransitionModalProps {
@@ -49,9 +55,7 @@ export function StageTransitionModal({ targetStage, action, moneda = 'MXN' }: St
             Mover a {STAGE_LABELS[targetStage]}
           </AlertDialogTitle>
           <AlertDialogDescription>
-            {targetStage === 'ganado'
-              ? 'Esta acción marcará la oportunidad como ganada. Ingresa el monto final.'
-              : 'Esta acción marcará la oportunidad como perdida. Esta operación no bloquea edición futura.'}
+            {STAGE_DESCRIPTIONS[targetStage]}
           </AlertDialogDescription>
         </AlertDialogHeader>
 
