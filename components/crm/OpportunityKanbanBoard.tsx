@@ -28,6 +28,7 @@ const COLUMNS: { stage: OpportunityStage; label: string }[] = [
   { stage: 'cotizacion_enviada', label: 'Cotización enviada' },
   { stage: 'seguimiento',        label: 'Seguimiento' },
   { stage: 'negociacion',        label: 'Negociación' },
+  { stage: 'sin_respuesta',      label: 'Sin respuesta' },
   { stage: 'ganado',             label: 'Ganado' },
   { stage: 'perdido',            label: 'Perdido' },
 ]
@@ -39,6 +40,7 @@ const STAGE_DOT: Record<OpportunityStage, string> = {
   cotizacion_enviada: 'bg-purple-500',
   seguimiento:        'bg-orange-500',
   negociacion:        'bg-pink-500',
+  sin_respuesta:      'bg-slate-400',
   ganado:             'bg-green-600',
   perdido:            'bg-red-400',
 }
@@ -50,20 +52,23 @@ const STAGE_BADGE: Record<OpportunityStage, string> = {
   cotizacion_enviada: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300',
   seguimiento:        'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-300',
   negociacion:        'bg-pink-100 text-pink-700 dark:bg-pink-900/40 dark:text-pink-300',
+  sin_respuesta:      'bg-slate-100 text-slate-700 dark:bg-slate-800/40 dark:text-slate-300',
   ganado:             'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300',
   perdido:            'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
 }
 
-const CLOSED: Set<OpportunityStage> = new Set(['ganado', 'perdido'])
+type ClosedStage = 'ganado' | 'perdido' | 'sin_respuesta'
+
+const CLOSED: Set<OpportunityStage> = new Set<OpportunityStage>(['ganado', 'perdido', 'sin_respuesta'])
 
 type PendingDrop = {
   card:        OpportunityWithRelations
-  targetStage: 'ganado' | 'perdido'
+  targetStage: ClosedStage
 }
 
 type PendingReopen = {
   card:        OpportunityWithRelations
-  sourceStage: 'ganado' | 'perdido'
+  sourceStage: ClosedStage
   targetStage: OpportunityStage
 }
 
@@ -179,15 +184,13 @@ export function OpportunityKanbanBoard({ opportunities }: Props) {
     const sourceIsClosed = CLOSED.has(card.etapa)
     const targetIsClosed = CLOSED.has(targetStage)
 
-    if (sourceIsClosed && targetIsClosed) return
-
     if (sourceIsClosed && !targetIsClosed) {
-      setPendingReopen({ card, sourceStage: card.etapa as 'ganado' | 'perdido', targetStage })
+      setPendingReopen({ card, sourceStage: card.etapa as ClosedStage, targetStage })
       return
     }
 
     if (targetIsClosed) {
-      setPendingDrop({ card, targetStage: targetStage as 'ganado' | 'perdido' })
+      setPendingDrop({ card, targetStage: targetStage as ClosedStage })
       return
     }
 
@@ -285,12 +288,12 @@ export function OpportunityKanbanBoard({ opportunities }: Props) {
         />
       )}
 
-      {pendingDrop && pendingDrop.targetStage === 'perdido' && (
+      {pendingDrop && (pendingDrop.targetStage === 'perdido' || pendingDrop.targetStage === 'sin_respuesta') && (
         <KanbanStageModal
           open
           oppId={pendingDrop.card.id}
           oppName={pendingDrop.card.nombre}
-          targetStage="perdido"
+          targetStage={pendingDrop.targetStage}
           moneda={pendingDrop.card.moneda}
           onConfirm={handleModalConfirm}
           onCancel={handleModalCancel}

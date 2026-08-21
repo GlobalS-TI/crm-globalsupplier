@@ -23,6 +23,7 @@ export type OpportunityStage =
   | 'cotizacion_enviada'
   | 'seguimiento'
   | 'negociacion'
+  | 'sin_respuesta'
   | 'ganado'
   | 'perdido'
 
@@ -56,11 +57,12 @@ export const OPPORTUNITY_STAGES: OpportunityStage[] = [
   'cotizacion_enviada',
   'seguimiento',
   'negociacion',
+  'sin_respuesta',
   'ganado',
   'perdido',
 ]
 
-export const CLOSED_STAGES: OpportunityStage[] = ['ganado', 'perdido']
+export const CLOSED_STAGES: OpportunityStage[] = ['ganado', 'perdido', 'sin_respuesta']
 
 export const BUSINESS_UNITS: BusinessUnit[] = [
   'global_supplier_mty',
@@ -181,14 +183,14 @@ export const CURRENCY_LABELS: Record<Currency, string> = {
 }
 
 export type ITTicketPriority = 'bajo' | 'medio' | 'alto' | 'urgente'
-export type ITTicketStatus   = 'abierto' | 'en_proceso' | 'qa_ready' | 'prod_ready' | 'resuelto'
+export type ITTicketStatus   = 'abierto' | 'en_proceso' | 'qa_ready' | 'prod_ready' | 'resuelto' | 'cancelado'
 
 export const IT_TICKET_STATUSES: ITTicketStatus[] = [
-  'abierto', 'en_proceso', 'qa_ready', 'prod_ready', 'resuelto',
+  'abierto', 'en_proceso', 'qa_ready', 'prod_ready', 'resuelto', 'cancelado',
 ]
 
 export const IT_TICKET_STATUS_ORDER: Record<ITTicketStatus, number> = {
-  abierto: 0, en_proceso: 1, qa_ready: 2, prod_ready: 3, resuelto: 4,
+  abierto: 0, en_proceso: 1, qa_ready: 2, prod_ready: 3, resuelto: 4, cancelado: 5,
 }
 
 export const IT_TICKET_STATUS_LABELS: Record<ITTicketStatus, string> = {
@@ -197,7 +199,13 @@ export const IT_TICKET_STATUS_LABELS: Record<ITTicketStatus, string> = {
   qa_ready:    'QA Ready',
   prod_ready:  'Prod Ready',
   resuelto:    'Resuelto',
+  cancelado:   'Cancelado',
 }
+
+// Estados finales: no admiten seguir editando el estado desde el dropdown/kanban
+// y, al llegar a ellos, piden confirmación vía modal (ver ITTicketStageTransition
+// / ITTicketKanbanBoard).
+export const IT_TICKET_TERMINAL_STATUSES: ITTicketStatus[] = ['resuelto', 'cancelado']
 
 export const IT_TICKET_PRIORITIES: ITTicketPriority[] = ['bajo', 'medio', 'alto', 'urgente']
 

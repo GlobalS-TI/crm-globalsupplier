@@ -16,7 +16,7 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { IT_STAFF_ROLES, BRAND_LABELS } from '@/lib/types'
 import type { BusinessUnit, UserRole } from '@/lib/types'
-import { advanceStatus, setPriority, addMessage, deleteITTicketFile } from '@/app/(dashboard)/soporte-ti/actions'
+import { setStatus, setPriority, addMessage, deleteITTicketFile } from '@/app/(dashboard)/soporte-ti/actions'
 
 export const dynamic = 'force-dynamic'
 
@@ -84,7 +84,7 @@ export default async function TicketDetailPage({ params }: PageProps) {
 
         {canManage && (
           <div className="shrink-0">
-            <ITTicketStageTransition status={ticket.status} action={advanceStatus.bind(null, ticket.id)} />
+            <ITTicketStageTransition status={ticket.status} action={setStatus.bind(null, ticket.id)} />
           </div>
         )}
       </div>

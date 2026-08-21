@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button'
 import type { OpportunityFilters as Filters } from '@/lib/repositories/interfaces/IOpportunityRepository'
 import type { OpportunityStage, BusinessUnit } from '@/lib/validations/opportunity'
 
-export const metadata = { title: 'Oportunidades — Supply' }
+export const metadata = { title: 'Oportunidades | Supply' }
 export const dynamic = 'force-dynamic'
 
 interface PageProps {

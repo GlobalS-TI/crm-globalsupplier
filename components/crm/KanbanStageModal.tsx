@@ -11,11 +11,21 @@ import { Label } from '@/components/ui/label'
 import { kanbanMoveToStage } from '@/app/(dashboard)/oportunidades/actions'
 import type { OpportunityStage } from '@/lib/validations/opportunity'
 
+const STAGE_TITLES: Record<'ganado' | 'perdido' | 'sin_respuesta', string> = {
+  ganado: 'Ganado', perdido: 'Perdido', sin_respuesta: 'Sin respuesta',
+}
+
+const STAGE_DESCRIPTIONS: Record<'ganado' | 'perdido' | 'sin_respuesta', string> = {
+  ganado:        ': ingresa el monto final para marcar como ganada.',
+  perdido:       ': esta acción marcará la oportunidad como perdida.',
+  sin_respuesta: ': el cliente dejó de responder. Podrás reabrirla más tarde arrastrándola a otra etapa.',
+}
+
 interface Props {
   open:        boolean
   oppId:       string
   oppName:     string
-  targetStage: 'ganado' | 'perdido'
+  targetStage: 'ganado' | 'perdido' | 'sin_respuesta'
   moneda?:     'MXN' | 'USD'
   onConfirm:   () => void
   onCancel:    () => void
@@ -74,13 +84,11 @@ export function KanbanStageModal({ open, oppId, oppName, targetStage, moneda = '
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>
-            Mover a {targetStage === 'ganado' ? 'Ganado' : 'Perdido'}
+            Mover a {STAGE_TITLES[targetStage]}
           </AlertDialogTitle>
           <AlertDialogDescription>
             <span className="font-medium text-foreground">{oppName}</span>
-            {targetStage === 'ganado'
-              ? ' — Ingresa el monto final para marcar como ganada.'
-              : ' — Esta acción marcará la oportunidad como perdida.'}
+            {STAGE_DESCRIPTIONS[targetStage]}
           </AlertDialogDescription>
         </AlertDialogHeader>
 

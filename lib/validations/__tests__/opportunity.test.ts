@@ -100,6 +100,11 @@ describe('createOpportunitySchema', () => {
       const result = createOpportunitySchema.safeParse({ ...baseCreate(), etapa: 'perdido' })
       expect(result.success).toBe(true)
     })
+
+    it('passes for etapa=sin_respuesta without next_activity_at', () => {
+      const result = createOpportunitySchema.safeParse({ ...baseCreate(), etapa: 'sin_respuesta' })
+      expect(result.success).toBe(true)
+    })
   })
 
   // 3b. Divisa USD — superRefine requires tipo_cambio_estimado / tipo_cambio_final
@@ -263,6 +268,12 @@ describe('stageTransitionSchema', () => {
   // 9. perdido without documents must pass
   it('passes when moving to perdido without documents (document rules only apply to ganado)', () => {
     const result = stageTransitionSchema.safeParse({ etapa: 'perdido' })
+    expect(result.success).toBe(true)
+  })
+
+  // 9c. sin_respuesta needs no monto_final/documents either — same shape as perdido
+  it('passes when moving to sin_respuesta without monto_final or documents', () => {
+    const result = stageTransitionSchema.safeParse({ etapa: 'sin_respuesta' })
     expect(result.success).toBe(true)
   })
 

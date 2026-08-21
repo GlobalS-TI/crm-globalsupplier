@@ -18,7 +18,7 @@ import {
 import type { UserRole, ITTicketStatus, ITTicketPriority } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
-export const metadata = { title: 'Soporte TI — Supply' }
+export const metadata = { title: 'Soporte TI | Supply' }
 export const dynamic  = 'force-dynamic'
 
 interface PageProps {

@@ -77,7 +77,7 @@ export function ProjectHandoffForm({ action, handoff, status }: Props) {
         </p>
         {completedCount === ITEMS.length && (
           <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
-            ✓ Handoff completo — listo para Development
+            ✓ Handoff completo: listo para Development
           </span>
         )}
       </div>

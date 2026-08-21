@@ -137,7 +137,7 @@ export function GanadoTransitionModal({
           <DialogTitle>Marcar como Ganado</DialogTitle>
           <DialogDescription>
             <span className="font-medium text-foreground">{oppName}</span>
-            {' '}— Confirma qué documentos corresponden a la cotización y orden de compra.
+            {': '}confirma qué documentos corresponden a la cotización y orden de compra.
           </DialogDescription>
         </DialogHeader>
 

@@ -19,6 +19,7 @@ const STAGES = [
   { value: 'cotizacion_enviada', label: 'Cotización enviada' },
   { value: 'seguimiento',        label: 'Seguimiento' },
   { value: 'negociacion',        label: 'Negociación' },
+  { value: 'sin_respuesta',      label: 'Sin respuesta' },
   { value: 'ganado',             label: 'Ganado' },
   { value: 'perdido',            label: 'Perdido' },
 ]
@@ -35,8 +36,8 @@ const SOURCES = [
 ]
 
 const CURRENCIES = [
-  { value: 'MXN', label: 'MXN — Peso mexicano' },
-  { value: 'USD', label: 'USD — Dólar' },
+  { value: 'MXN', label: 'MXN: Peso mexicano' },
+  { value: 'USD', label: 'USD: Dólar' },
 ]
 
 const UNITS = [

@@ -133,7 +133,7 @@ async function autoConvertLead(lead: LeadWithRelations, assignedByName: string):
 
   const oppService = new OpportunityService(new OpportunityRepository())
   const opp = await oppService.create({
-    nombre:           lead.empresa ? `${lead.empresa} — ${lead.nombre}` : lead.nombre,
+    nombre:           lead.empresa ? `${lead.empresa} - ${lead.nombre}` : lead.nombre,
     business_unit:    lead.section.business_unit,
     fuente:           lead.section.fuente,
     owner_id:         lead.vendedor_id,

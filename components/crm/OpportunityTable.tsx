@@ -12,7 +12,7 @@ import type { OpportunityStage } from '@/lib/validations/opportunity'
 const STAGE_LABELS: Record<OpportunityStage, string> = {
   nuevo_lead: 'Nuevo lead', contactado: 'Contactado', diagnostico: 'Diagnóstico',
   cotizacion_enviada: 'Cotización enviada', seguimiento: 'Seguimiento',
-  negociacion: 'Negociación', ganado: 'Ganado', perdido: 'Perdido',
+  negociacion: 'Negociación', sin_respuesta: 'Sin respuesta', ganado: 'Ganado', perdido: 'Perdido',
 }
 
 interface OpportunityTableProps {
@@ -44,7 +44,7 @@ export function OpportunityTable({ opportunities }: OpportunityTableProps) {
         </TableHeader>
         <TableBody>
           {opportunities.map(opp => {
-            const isClosed = opp.etapa === 'ganado' || opp.etapa === 'perdido'
+            const isClosed = opp.etapa === 'ganado' || opp.etapa === 'perdido' || opp.etapa === 'sin_respuesta'
             const nextAt   = opp.next_activity_at ? new Date(opp.next_activity_at) : null
             const isOverdue = nextAt && nextAt < new Date() && !isClosed
 
