@@ -11,7 +11,7 @@ import type { BusinessUnit, ProjectStatus, ProjectTipo } from '@/lib/types'
 import { UnarchiveButton } from '@/components/crm/UnarchiveButton'
 import { unarchiveProject, deleteProject } from '@/app/(dashboard)/proyectos/actions'
 
-export const metadata = { title: 'Proyectos archivados — Supply' }
+export const metadata = { title: 'Proyectos archivados | Supply' }
 export const dynamic  = 'force-dynamic'
 
 export default async function ProyectosArchivadosPage() {

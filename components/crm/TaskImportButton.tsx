@@ -170,7 +170,7 @@ export function TaskImportButton({ boardId, groupId, onImported }: Props) {
               Importar actividades
             </DialogTitle>
             <DialogDescription>
-              {fileName} — {rows.length} actividad{rows.length !== 1 ? 'es' : ''} detectada{rows.length !== 1 ? 's' : ''}
+              {fileName}: {rows.length} actividad{rows.length !== 1 ? 'es' : ''} detectada{rows.length !== 1 ? 's' : ''}
             </DialogDescription>
           </DialogHeader>
 

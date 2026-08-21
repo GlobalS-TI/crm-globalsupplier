@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { CompanyForm } from '@/components/crm/CompanyForm'
 import { createCompany } from '../actions'
 
-export const metadata = { title: 'Nueva empresa — Supply' }
+export const metadata = { title: 'Nueva empresa | Supply' }
 
 export default function NuevaEmpresaPage() {
   return (

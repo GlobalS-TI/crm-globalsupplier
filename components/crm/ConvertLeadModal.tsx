@@ -94,7 +94,7 @@ export function ConvertLeadButton({ lead, assignableUsers }: Props) {
               name="nombre"
               required
               autoFocus
-              defaultValue={lead.empresa ? `${lead.empresa} — ${lead.nombre}` : lead.nombre}
+              defaultValue={lead.empresa ? `${lead.empresa} - ${lead.nombre}` : lead.nombre}
             />
           </div>
 
