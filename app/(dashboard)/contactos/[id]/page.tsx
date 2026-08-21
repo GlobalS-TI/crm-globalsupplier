@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: PageProps) {
   const { id } = await params
   const contact = await new ContactService(new ContactRepository()).getByIdWithCompany(id).catch(() => null)
   const name = contact ? `${contact.nombre}${contact.apellido ? ' ' + contact.apellido : ''}` : 'Contacto'
-  return { title: `${name} — Supply` }
+  return { title: `${name} | Supply` }
 }
 
 export default async function ContactoDetailPage({ params }: PageProps) {

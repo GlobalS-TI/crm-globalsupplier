@@ -86,7 +86,7 @@ export function SalesTargetsBoard({ vendors, selectedVendedorId, year, monthlyDa
       {/* Chart */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-semibold">Meta vs Real por mes — {year}</CardTitle>
+          <CardTitle className="text-sm font-semibold">Meta vs Real por mes ({year})</CardTitle>
         </CardHeader>
         <CardContent>
           <SalesTargetsChart data={data} year={year} />

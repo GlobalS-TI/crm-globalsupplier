@@ -33,7 +33,7 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps) {
   const { id } = await params
   const company = await new CompanyService(new CompanyRepository()).getByIdWithContacts(id).catch(() => null)
-  return { title: `${company?.nombre ?? 'Empresa'} — Supply` }
+  return { title: `${company?.nombre ?? 'Empresa'} | Supply` }
 }
 
 export default async function EmpresaDetailPage({ params }: PageProps) {

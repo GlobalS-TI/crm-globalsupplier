@@ -1,7 +1,7 @@
 import { ITTicketForm } from '@/components/crm/ITTicketForm'
 import { createTicket } from '@/app/(dashboard)/soporte-ti/actions'
 
-export const metadata = { title: 'Nuevo ticket de TI — Supply' }
+export const metadata = { title: 'Nuevo ticket de TI | Supply' }
 
 export default function NuevoTicketPage() {
   return (

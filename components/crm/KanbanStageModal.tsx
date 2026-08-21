@@ -16,9 +16,9 @@ const STAGE_TITLES: Record<'ganado' | 'perdido' | 'sin_respuesta', string> = {
 }
 
 const STAGE_DESCRIPTIONS: Record<'ganado' | 'perdido' | 'sin_respuesta', string> = {
-  ganado:        ' — Ingresa el monto final para marcar como ganada.',
-  perdido:       ' — Esta acción marcará la oportunidad como perdida.',
-  sin_respuesta: ' — El cliente dejó de responder. Podrás reabrirla más tarde arrastrándola a otra etapa.',
+  ganado:        ': ingresa el monto final para marcar como ganada.',
+  perdido:       ': esta acción marcará la oportunidad como perdida.',
+  sin_respuesta: ': el cliente dejó de responder. Podrás reabrirla más tarde arrastrándola a otra etapa.',
 }
 
 interface Props {

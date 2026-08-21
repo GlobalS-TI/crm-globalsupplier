@@ -78,7 +78,7 @@ export function ActivityCard({ act }: Props) {
         <AlertDialogHeader>
           <AlertDialogTitle>¿Eliminar actividad?</AlertDialogTitle>
           <AlertDialogDescription>
-            <span className="font-medium text-foreground">{act.titulo}</span> — Esta acción no se puede deshacer.
+            <span className="font-medium text-foreground">{act.titulo}</span>: esta acción no se puede deshacer.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

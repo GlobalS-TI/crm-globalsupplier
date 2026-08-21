@@ -36,8 +36,8 @@ const SOURCES = [
 ]
 
 const CURRENCIES = [
-  { value: 'MXN', label: 'MXN — Peso mexicano' },
-  { value: 'USD', label: 'USD — Dólar' },
+  { value: 'MXN', label: 'MXN: Peso mexicano' },
+  { value: 'USD', label: 'USD: Dólar' },
 ]
 
 const UNITS = [
