@@ -9,6 +9,7 @@ import { ITTicketStatusBadge } from '@/components/crm/ITTicketStatusBadge'
 import { ITTicketPriorityBadge } from '@/components/crm/ITTicketPriorityBadge'
 import { ITTicketPrioritySelect } from '@/components/crm/ITTicketPrioritySelect'
 import { ITTicketStageTransition } from '@/components/crm/ITTicketStageTransition'
+import { ITTicketDeleteButton } from '@/components/crm/ITTicketDeleteButton'
 import { ITTicketFilesPanel } from '@/components/crm/ITTicketFilesPanel'
 import { ITTicketMessagesFeed } from '@/components/crm/ITTicketMessagesFeed'
 import { ITTicketStageLog } from '@/components/crm/ITTicketStageLog'
@@ -16,7 +17,7 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { IT_STAFF_ROLES, BRAND_LABELS } from '@/lib/types'
 import type { BusinessUnit, UserRole } from '@/lib/types'
-import { setStatus, setPriority, addMessage, deleteITTicketFile } from '@/app/(dashboard)/soporte-ti/actions'
+import { setStatus, setPriority, addMessage, deleteITTicketFile, deleteTicket } from '@/app/(dashboard)/soporte-ti/actions'
 
 export const dynamic = 'force-dynamic'
 
@@ -83,8 +84,9 @@ export default async function TicketDetailPage({ params }: PageProps) {
         </div>
 
         {canManage && (
-          <div className="shrink-0">
+          <div className="shrink-0 flex items-center gap-2">
             <ITTicketStageTransition status={ticket.status} action={setStatus.bind(null, ticket.id)} />
+            <ITTicketDeleteButton action={deleteTicket} ticketId={ticket.id} ticketTitle={ticket.title} />
           </div>
         )}
       </div>

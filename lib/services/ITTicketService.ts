@@ -94,6 +94,10 @@ export class ITTicketService {
     return updated
   }
 
+  async deleteTicket(id: string): Promise<void> {
+    return this.repo.delete(id)
+  }
+
   async setPriority(id: string, raw: unknown): Promise<ITTicketRow> {
     const data = setITTicketPrioritySchema.parse(raw)
     return this.repo.updatePriority(id, data.priority)

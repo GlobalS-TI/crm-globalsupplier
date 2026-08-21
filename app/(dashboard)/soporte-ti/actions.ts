@@ -127,6 +127,16 @@ export async function kanbanMoveToStatus(id: string, status: ITTicketStatus, com
   }
 }
 
+export async function deleteTicket(id: string): Promise<{ error?: string }> {
+  try {
+    await makeService().deleteTicket(id)
+  } catch (e) {
+    return { error: (e as Error).message }
+  }
+  revalidatePath('/soporte-ti')
+  redirect('/soporte-ti')
+}
+
 export async function setPriority(id: string, _prev: ActionState, form: FormData): Promise<ActionState> {
   const priority = form.get('priority')?.toString()
   try {
