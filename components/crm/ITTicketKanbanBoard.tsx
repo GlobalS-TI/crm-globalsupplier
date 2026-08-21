@@ -14,9 +14,9 @@ import {
 } from '@dnd-kit/core'
 import { Badge } from '@/components/ui/badge'
 import { ITTicketKanbanCard } from '@/components/crm/ITTicketKanbanCard'
-import { ITTicketResolveModal } from '@/components/crm/ITTicketResolveModal'
+import { ITTicketCloseModal } from '@/components/crm/ITTicketCloseModal'
 import { kanbanMoveToStatus } from '@/app/(dashboard)/soporte-ti/actions'
-import { IT_TICKET_STATUSES, IT_TICKET_STATUS_LABELS } from '@/lib/types'
+import { IT_TICKET_STATUSES, IT_TICKET_STATUS_LABELS, IT_TICKET_TERMINAL_STATUSES } from '@/lib/types'
 import type { ITTicketStatus } from '@/lib/types'
 import type { ITTicketRow } from '@/lib/repositories/interfaces/IITTicketRepository'
 
@@ -28,6 +28,7 @@ const STATUS_DOT: Record<ITTicketStatus, string> = {
   qa_ready:   'bg-yellow-500',
   prod_ready: 'bg-purple-500',
   resuelto:   'bg-emerald-500',
+  cancelado:  'bg-rose-500',
 }
 
 const STATUS_BADGE: Record<ITTicketStatus, string> = {
@@ -36,9 +37,14 @@ const STATUS_BADGE: Record<ITTicketStatus, string> = {
   qa_ready:   'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300',
   prod_ready: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300',
   resuelto:   'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
+  cancelado:  'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300',
 }
 
-type PendingResolve = { ticket: ITTicketRow }
+function isTerminal(status: ITTicketStatus): boolean {
+  return IT_TICKET_TERMINAL_STATUSES.includes(status)
+}
+
+type PendingClose = { ticket: ITTicketRow; targetStatus: ITTicketStatus }
 
 interface Props {
   tickets:      ITTicketRow[]
@@ -80,6 +86,7 @@ function KanbanColumn({
               key={ticket.id}
               ticket={ticket}
               profilesById={profilesById}
+              draggable={!isTerminal(ticket.status)}
             />
           ))}
           {cards.length === 0 && (
@@ -100,7 +107,7 @@ export function ITTicketKanbanBoard({ tickets, profilesById }: Props) {
   const [activeId, setActiveId] = useState<string | null>(null)
   const [overId, setOverId]     = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
-  const [pendingResolve, setPendingResolve] = useState<PendingResolve | null>(null)
+  const [pendingClose, setPendingClose] = useState<PendingClose | null>(null)
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -145,13 +152,13 @@ export function ITTicketKanbanBoard({ tickets, profilesById }: Props) {
     setOverId(null)
     if (!over) return
 
-    const ticketId    = active.id as string
+    const ticketId     = active.id as string
     const targetStatus = over.id as ITTicketStatus
     const ticket        = items.find(t => t.id === ticketId)
     if (!ticket || ticket.status === targetStatus) return
 
-    if (targetStatus === 'resuelto') {
-      setPendingResolve({ ticket })
+    if (isTerminal(targetStatus)) {
+      setPendingClose({ ticket, targetStatus })
       return
     }
 
@@ -173,17 +180,17 @@ export function ITTicketKanbanBoard({ tickets, profilesById }: Props) {
     })
   }
 
-  function handleResolveConfirm() {
-    if (!pendingResolve) return
-    const { ticket } = pendingResolve
+  function handleCloseConfirm() {
+    if (!pendingClose) return
+    const { ticket, targetStatus } = pendingClose
     setItems(prev =>
-      prev.map(t => t.id === ticket.id ? { ...t, status: 'resuelto' as ITTicketStatus } : t)
+      prev.map(t => t.id === ticket.id ? { ...t, status: targetStatus } : t)
     )
-    setPendingResolve(null)
+    setPendingClose(null)
   }
 
-  function handleResolveCancel() {
-    setPendingResolve(null)
+  function handleCloseCancel() {
+    setPendingClose(null)
   }
 
   return (
@@ -226,13 +233,14 @@ export function ITTicketKanbanBoard({ tickets, profilesById }: Props) {
         </DragOverlay>
       </DndContext>
 
-      {pendingResolve && (
-        <ITTicketResolveModal
+      {pendingClose && (
+        <ITTicketCloseModal
           open
-          ticketId={pendingResolve.ticket.id}
-          ticketTitle={pendingResolve.ticket.title}
-          onConfirm={handleResolveConfirm}
-          onCancel={handleResolveCancel}
+          ticketId={pendingClose.ticket.id}
+          ticketTitle={pendingClose.ticket.title}
+          targetStatus={pendingClose.targetStatus}
+          onConfirm={handleCloseConfirm}
+          onCancel={handleCloseCancel}
         />
       )}
     </>
