@@ -231,5 +231,11 @@ export const IT_TICKET_SLA_DAYS: Record<ITTicketPriority, number> = {
 // Quién puede cambiar prioridad/estado de un ticket (gating de UI — RLS es la seguridad real).
 export const IT_STAFF_ROLES: UserRole[] = ['soporte_ti']
 
-// Quién ve la cola completa de tickets + el panel de KPIs.
+// Quién ve el panel de KPIs (resumen de tickets resueltos).
 export const IT_ROLES: UserRole[] = ['soporte_ti', 'director_general', 'administracion']
+
+// Quién ve la cola completa de tickets de todos (lista, kanban, filtros). No
+// incluye director_general a propósito: quiere el resumen de KPIs, pero su
+// "Cola de tickets" debe verse igual que la de cualquier otro usuario (solo
+// los tickets que él mismo pidió), no como soporte_ti/administracion.
+export const IT_QUEUE_ROLES: UserRole[] = ['soporte_ti', 'administracion']
