@@ -94,29 +94,6 @@ export class ITTicketService {
     return updated
   }
 
-  async setStatus(id: string, raw: unknown, userId: string): Promise<ITTicketRow> {
-    const data = setITTicketStatusSchema.parse(raw)
-    const ticket = await this.repo.findById(id)
-    if (!ticket) throw new Error('Ticket no encontrado')
-
-    if (ticket.status === data.status) {
-      throw new Error('El ticket ya está en ese estado.')
-    }
-
-    const resolvedAt = data.status === 'resuelto' ? new Date().toISOString() : null
-
-    const updated = await this.repo.updateStatus(id, data.status, resolvedAt)
-    await this.repo.addStageLog({
-      ticket_id:   id,
-      from_status: ticket.status,
-      to_status:   data.status,
-      changed_by:  userId,
-      comment:     data.comment ?? null,
-    })
-
-    return updated
-  }
-
   async setPriority(id: string, raw: unknown): Promise<ITTicketRow> {
     const data = setITTicketPrioritySchema.parse(raw)
     return this.repo.updatePriority(id, data.priority)
