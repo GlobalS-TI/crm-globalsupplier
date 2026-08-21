@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { businessUnitSchema } from './opportunity'
 
 export const itTicketPrioritySchema = z.enum(['bajo', 'medio', 'alto', 'urgente'])
-export const itTicketStatusSchema   = z.enum(['abierto', 'en_proceso', 'qa_ready', 'prod_ready', 'resuelto'])
+export const itTicketStatusSchema   = z.enum(['abierto', 'en_proceso', 'qa_ready', 'prod_ready', 'resuelto', 'cancelado'])
 
 export const createITTicketSchema = z.object({
   title:       z.string().min(1, 'El título es requerido').max(200),
