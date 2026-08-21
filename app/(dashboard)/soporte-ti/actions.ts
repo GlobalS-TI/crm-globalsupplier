@@ -113,6 +113,20 @@ export async function setStatus(id: string, _prev: ActionState, form: FormData):
   }
 }
 
+export async function kanbanMoveToStatus(id: string, status: ITTicketStatus, comment?: string): Promise<{ error?: string }> {
+  const user = await getUser()
+
+  try {
+    const updated = await makeService().setStatus(id, { status, comment }, user.id)
+    revalidatePath('/soporte-ti')
+    revalidatePath(`/soporte-ti/${id}`)
+    after(() => fireITTicketStatusChangedNotification(updated.requester_id, id, updated.title, updated.status, user.id))
+    return {}
+  } catch (e) {
+    return { error: (e as Error).message }
+  }
+}
+
 export async function setPriority(id: string, _prev: ActionState, form: FormData): Promise<ActionState> {
   const priority = form.get('priority')?.toString()
   try {
