@@ -4,7 +4,9 @@ import type { Route } from 'next'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ITTicketTable } from '@/components/crm/ITTicketTable'
+import { ITTicketKanbanBoard } from '@/components/crm/ITTicketKanbanBoard'
 import { ITTicketKpiPanel } from '@/components/crm/ITTicketKpiPanel'
+import { ViewToggle } from '@/components/crm/ViewToggle'
 import { createClient } from '@/lib/supabase/server'
 import { ITTicketService } from '@/lib/services/ITTicketService'
 import { ITTicketRepository } from '@/lib/repositories/supabase/ITTicketRepository'
@@ -20,11 +22,11 @@ export const metadata = { title: 'Soporte TI — Supply' }
 export const dynamic  = 'force-dynamic'
 
 interface PageProps {
-  searchParams: Promise<{ status?: string; priority?: string; tab?: string }>
+  searchParams: Promise<{ status?: string; priority?: string; tab?: string; view?: string }>
 }
 
 export default async function SoporteTiPage({ searchParams }: PageProps) {
-  const { status, priority, tab } = await searchParams
+  const { status, priority, tab, view: viewParam } = await searchParams
   const supabase = await createClient()
 
   const { data: { user } } = await supabase.auth.getUser()
@@ -50,18 +52,30 @@ export default async function SoporteTiPage({ searchParams }: PageProps) {
   const profilesById = Object.fromEntries((profiles ?? []).map(p => [p.id, p]))
 
   const showKpi = isOversight && tab === 'kpi'
+  const view    = viewParam === 'list' ? 'list' : 'kanban'
+  const showKanban = isOversight && !showKpi && view === 'kanban'
+
+  const tickets = await service.listTickets(isOversight
+    ? {
+        ...(status   && IT_TICKET_STATUSES.includes(status as ITTicketStatus)     && { status:   status   as ITTicketStatus }),
+        ...(priority && IT_TICKET_PRIORITIES.includes(priority as ITTicketPriority) && { priority: priority as ITTicketPriority }),
+      }
+    : { requesterId: user.id })
 
   return (
     <div className="p-8 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="text-2xl font-bold">Soporte TI</h1>
-        <Button asChild size="sm">
-          <Link href={'/soporte-ti/nuevo' as Route}>
-            <Plus className="h-4 w-4 mr-1" />
-            Nuevo ticket
-          </Link>
-        </Button>
+        <div className="flex items-center gap-3">
+          {isOversight && !showKpi && <ViewToggle />}
+          <Button asChild size="sm">
+            <Link href={'/soporte-ti/nuevo' as Route}>
+              <Plus className="h-4 w-4 mr-1" />
+              Nuevo ticket
+            </Link>
+          </Button>
+        </div>
       </div>
 
       {isOversight && (
@@ -108,18 +122,19 @@ export default async function SoporteTiPage({ searchParams }: PageProps) {
             </div>
           )}
 
-          <ITTicketTable
-            tickets={await service.listTickets(isOversight
-              ? {
-                  ...(status   && IT_TICKET_STATUSES.includes(status as ITTicketStatus)     && { status:   status   as ITTicketStatus }),
-                  ...(priority && IT_TICKET_PRIORITIES.includes(priority as ITTicketPriority) && { priority: priority as ITTicketPriority }),
-                }
-              : { requesterId: user.id })}
-            profilesById={profilesById}
-            showRequester={isOversight}
-            showAssignee={isOversight}
-            emptyMessage={isOversight ? 'Sin tickets registrados.' : 'No has creado ningún ticket todavía.'}
-          />
+          {showKanban ? (
+            <div className="-mx-8 h-[calc(100vh-16rem)]">
+              <ITTicketKanbanBoard tickets={tickets} profilesById={profilesById} />
+            </div>
+          ) : (
+            <ITTicketTable
+              tickets={tickets}
+              profilesById={profilesById}
+              showRequester={isOversight}
+              showAssignee={isOversight}
+              emptyMessage={isOversight ? 'Sin tickets registrados.' : 'No has creado ningún ticket todavía.'}
+            />
+          )}
         </>
       )}
     </div>

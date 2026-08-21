@@ -19,6 +19,11 @@ export const advanceITTicketStatusSchema = z.object({
   comment: z.string().max(1000).optional(),
 })
 
+export const setITTicketStatusSchema = z.object({
+  status:  itTicketStatusSchema,
+  comment: z.string().max(1000).optional(),
+})
+
 export const itTicketFileSchema = z.object({
   ticket_id: z.string().uuid(),
   nombre:    z.string().min(1).max(255),
@@ -38,5 +43,6 @@ export type ITTicketStatusInput     = z.infer<typeof itTicketStatusSchema>
 export type CreateITTicketInput     = z.infer<typeof createITTicketSchema>
 export type SetITTicketPriorityInput   = z.infer<typeof setITTicketPrioritySchema>
 export type AdvanceITTicketStatusInput = z.infer<typeof advanceITTicketStatusSchema>
+export type SetITTicketStatusInput  = z.infer<typeof setITTicketStatusSchema>
 export type ITTicketFileInput       = z.infer<typeof itTicketFileSchema>
 export type ITTicketMessageInput    = z.infer<typeof itTicketMessageSchema>
