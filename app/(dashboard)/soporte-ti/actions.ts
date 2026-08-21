@@ -98,12 +98,13 @@ export async function createTicket(_prev: ActionState, form: FormData): Promise<
   redirect(`/soporte-ti/${ticketId}`)
 }
 
-export async function advanceStatus(id: string, _prev: ActionState, form: FormData): Promise<ActionState> {
+export async function setStatus(id: string, _prev: ActionState, form: FormData): Promise<ActionState> {
   const user = await getUser()
+  const status = form.get('status')?.toString()
   const comment = form.get('comment')?.toString().trim() || undefined
 
   try {
-    const updated = await makeService().advanceStatus(id, user.id, comment)
+    const updated = await makeService().setStatus(id, { status, comment }, user.id)
     revalidatePath(`/soporte-ti/${id}`)
     after(() => fireITTicketStatusChangedNotification(updated.requester_id, id, updated.title, updated.status, user.id))
     return null

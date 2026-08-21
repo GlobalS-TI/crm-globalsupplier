@@ -1,8 +1,9 @@
-import { IT_TICKET_STATUSES, IT_TICKET_PRIORITIES, IT_TICKET_SLA_DAYS } from '@/lib/types'
+import { IT_TICKET_PRIORITIES, IT_TICKET_SLA_DAYS } from '@/lib/types'
 import type { ITTicketStatus, ITTicketPriority } from '@/lib/types'
 import {
   createITTicketSchema,
   setITTicketPrioritySchema,
+  setITTicketStatusSchema,
   itTicketFileSchema,
   itTicketMessageSchema,
 } from '@/lib/validations/itTicket'
@@ -70,24 +71,24 @@ export class ITTicketService {
     return ticket
   }
 
-  async advanceStatus(id: string, userId: string, comment?: string): Promise<ITTicketRow> {
+  async setStatus(id: string, raw: unknown, userId: string): Promise<ITTicketRow> {
+    const data = setITTicketStatusSchema.parse(raw)
     const ticket = await this.repo.findById(id)
     if (!ticket) throw new Error('Ticket no encontrado')
 
-    const currentIdx = IT_TICKET_STATUSES.indexOf(ticket.status)
-    if (currentIdx === IT_TICKET_STATUSES.length - 1) {
-      throw new Error('El ticket ya está resuelto.')
+    if (ticket.status === data.status) {
+      throw new Error('El ticket ya está en ese estado.')
     }
-    const nextStatus = IT_TICKET_STATUSES[currentIdx + 1]
-    const resolvedAt = nextStatus === 'resuelto' ? new Date().toISOString() : null
 
-    const updated = await this.repo.updateStatus(id, nextStatus, resolvedAt)
+    const resolvedAt = data.status === 'resuelto' ? new Date().toISOString() : null
+
+    const updated = await this.repo.updateStatus(id, data.status, resolvedAt)
     await this.repo.addStageLog({
       ticket_id:   id,
       from_status: ticket.status,
-      to_status:   nextStatus,
+      to_status:   data.status,
       changed_by:  userId,
-      comment:     comment ?? null,
+      comment:     data.comment ?? null,
     })
 
     return updated
