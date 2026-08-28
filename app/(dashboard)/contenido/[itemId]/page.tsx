@@ -7,6 +7,7 @@ import { ContentItemRepository, ContentFileRepository } from '@/lib/repositories
 import { ContentItemForm } from '@/components/crm/ContentItemForm'
 import { ContentFileUploader } from '@/components/crm/ContentFileUploader'
 import { DeleteButton } from '@/components/crm/DeleteButton'
+import { FilePreviewTrigger } from '@/components/crm/FilePreviewTrigger'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -66,7 +67,9 @@ function FileCard({ file, signedUrl, isContentManager, itemId }: FileCardProps) 
     <div className="border rounded-lg overflow-hidden flex flex-col">
       <div className="bg-muted/40 flex items-center justify-center min-h-[180px]">
         {isImage && signedUrl ? (
-          <img src={signedUrl} alt={file.nombre} className="max-h-48 max-w-full object-contain" />
+          <FilePreviewTrigger url={signedUrl} name={file.nombre} mimeType={file.mime_type} className="contents">
+            <img src={signedUrl} alt={file.nombre} className="max-h-48 max-w-full object-contain cursor-zoom-in" />
+          </FilePreviewTrigger>
         ) : isVideo && signedUrl ? (
           <video controls className="max-h-48 max-w-full" preload="metadata">
             <source src={signedUrl} type={file.mime_type ?? undefined} />
@@ -78,6 +81,16 @@ function FileCard({ file, signedUrl, isContentManager, itemId }: FileCardProps) 
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
           />
+        ) : file.mime_type === 'application/pdf' && signedUrl ? (
+          <FilePreviewTrigger
+            url={signedUrl}
+            name={file.nombre}
+            mimeType={file.mime_type}
+            className="flex flex-col items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors py-6"
+          >
+            <Icon className="h-12 w-12 opacity-40" />
+            <span className="text-[11px]">Ver PDF</span>
+          </FilePreviewTrigger>
         ) : (
           <Icon className="h-12 w-12 text-muted-foreground opacity-40" />
         )}

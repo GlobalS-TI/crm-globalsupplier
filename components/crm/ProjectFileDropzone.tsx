@@ -40,9 +40,14 @@ export function ProjectFileDropzone({ projectId, onUploaded, label, className }:
         return
       }
 
-      const { data: { publicUrl } } = supabase.storage.from('media').getPublicUrl(path)
+      const { data, error: signError } = await supabase.storage.from('media').createSignedUrl(path, 60 * 60 * 24 * 7)
+      if (signError || !data) {
+        setError(signError?.message ?? 'No se pudo generar el enlace del archivo')
+        return
+      }
+
       setUploaded(file.name)
-      onUploaded(publicUrl, file.name)
+      onUploaded(data.signedUrl, file.name)
     })
   }
 

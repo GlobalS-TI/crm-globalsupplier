@@ -1,10 +1,12 @@
 'use client'
 
 import { useActionState, useEffect, useRef, useState } from 'react'
-import { Send, Paperclip, X, ExternalLink } from 'lucide-react'
+import { Send, Paperclip, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { ITTicketMessageDropzone } from '@/components/crm/ITTicketMessageDropzone'
+import { FilePreviewTrigger } from '@/components/crm/FilePreviewTrigger'
+import { getFileKind } from '@/lib/utils/files'
 import type { ActionState } from '@/app/(dashboard)/soporte-ti/actions'
 import type { ITTicketMessageRow } from '@/lib/repositories/interfaces/IITTicketRepository'
 
@@ -78,16 +80,24 @@ export function ITTicketMessagesFeed({ ticketId, messages, action }: Props) {
                     {m.content}
                   </div>
                   {m.file_url && (
-                    <a
-                      href={m.file_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-1.5 inline-flex items-center gap-1.5 text-xs text-primary hover:underline"
-                    >
-                      <Paperclip className="h-3 w-3" />
-                      {m.file_label ?? 'Archivo adjunto'}
-                      <ExternalLink className="h-3 w-3" />
-                    </a>
+                    getFileKind(null, m.file_label ?? m.file_url) === 'image' ? (
+                      <FilePreviewTrigger url={m.file_url} name={m.file_label ?? 'Archivo adjunto'} className="mt-1.5 block">
+                        <img
+                          src={m.file_url}
+                          alt={m.file_label ?? 'Archivo adjunto'}
+                          className="max-h-40 rounded-lg border object-cover cursor-zoom-in"
+                        />
+                      </FilePreviewTrigger>
+                    ) : (
+                      <FilePreviewTrigger
+                        url={m.file_url}
+                        name={m.file_label ?? 'Archivo adjunto'}
+                        className="mt-1.5 inline-flex items-center gap-1.5 text-xs text-primary hover:underline"
+                      >
+                        <Paperclip className="h-3 w-3" />
+                        {m.file_label ?? 'Archivo adjunto'}
+                      </FilePreviewTrigger>
+                    )
                   )}
                 </div>
               </div>

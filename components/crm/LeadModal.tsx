@@ -4,7 +4,8 @@ import { useActionState, useEffect, useRef, useState, useTransition } from 'reac
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import type { Route } from 'next'
-import { Pencil, Plus, ExternalLink, Loader2 } from 'lucide-react'
+import { Pencil, Plus, Eye, Loader2 } from 'lucide-react'
+import { FilePreviewTrigger } from '@/components/crm/FilePreviewTrigger'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -192,16 +193,15 @@ export function EditLeadButton({ lead, assignableUsers, requirementUrl }: EditPr
           {/* Requirement file — view existing + replace */}
           <div className="space-y-1.5">
             <Label>Archivo de requerimiento</Label>
-            {lead.requirements_file_path && (
-              <a
-                href={requirementUrl ?? '#'}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 px-3 py-2 border rounded-md text-xs text-primary hover:bg-accent transition-colors"
+            {lead.requirements_file_path && requirementUrl && (
+              <FilePreviewTrigger
+                url={requirementUrl}
+                name={lead.requirements_file_path.split('/').pop() ?? 'archivo'}
+                className="flex items-center gap-2 px-3 py-2 border rounded-md text-xs text-primary hover:bg-accent transition-colors w-full text-left"
               >
-                <ExternalLink className="h-3.5 w-3.5 shrink-0" />
+                <Eye className="h-3.5 w-3.5 shrink-0" />
                 <span className="truncate">{lead.requirements_file_path.split('/').pop()}</span>
-              </a>
+              </FilePreviewTrigger>
             )}
             <FileDropzone
               multiple={false}
