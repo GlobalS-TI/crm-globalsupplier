@@ -2,8 +2,9 @@
 
 import { useRouter } from 'next/navigation'
 import { useTransition, useState } from 'react'
-import { ExternalLink, Trash2, ImageIcon } from 'lucide-react'
+import { Download, Trash2, ImageIcon } from 'lucide-react'
 import { FileDropzone } from '@/components/crm/FileDropzone'
+import { FilePreviewTrigger, FileRowThumb } from '@/components/crm/FilePreviewTrigger'
 import { createClient } from '@/lib/supabase/client'
 import { addITTicketFile } from '@/app/(dashboard)/soporte-ti/actions'
 import type { ITTicketFileRow } from '@/lib/repositories/interfaces/IITTicketRepository'
@@ -74,11 +75,19 @@ export function ITTicketFilesPanel({ ticketId, files, signedUrls, deleteAction }
             const url = signedUrls[file.id]
             return (
               <div key={file.id} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors">
-                <ImageIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                {url ? (
+                  <FilePreviewTrigger url={url} name={file.nombre} mimeType={file.mime_type} className="shrink-0">
+                    <FileRowThumb url={url} name={file.nombre} mimeType={file.mime_type} fallbackIcon={ImageIcon} />
+                  </FilePreviewTrigger>
+                ) : (
+                  <div className="h-9 w-9 rounded border bg-muted/40 flex items-center justify-center shrink-0">
+                    <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                )}
                 <p className="flex-1 min-w-0 text-sm font-medium truncate">{file.nombre}</p>
                 {url && (
-                  <a href={url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground shrink-0">
-                    <ExternalLink className="h-4 w-4" />
+                  <a href={url} download={file.nombre} title="Descargar" className="text-muted-foreground hover:text-foreground shrink-0">
+                    <Download className="h-4 w-4" />
                   </a>
                 )}
                 <button

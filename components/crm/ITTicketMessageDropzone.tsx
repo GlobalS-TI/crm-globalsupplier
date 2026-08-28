@@ -15,9 +15,7 @@ interface Props {
   className?: string
 }
 
-// NOTA: a diferencia de ProjectFileDropzone.tsx (que usa getPublicUrl en un bucket
-// privado — URL que no funciona sin firma), este componente usa createSignedUrl
-// porque el bucket 'media' tiene public: false.
+// Usa createSignedUrl porque el bucket 'media' tiene public: false.
 export function ITTicketMessageDropzone({ ticketId, onUploaded, label, className }: Props) {
   const inputRef                   = useRef<HTMLInputElement>(null)
   const [dragging, setDragging]    = useState(false)

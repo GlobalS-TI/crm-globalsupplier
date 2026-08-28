@@ -7,8 +7,10 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
-import { ExternalLink, Trash2, Figma, Github, FileText, Box, Link2 } from 'lucide-react'
+import { ExternalLink, Download, Trash2, Figma, Github, FileText, Box, Link2 } from 'lucide-react'
 import { ProjectFileDropzone } from '@/components/crm/ProjectFileDropzone'
+import { FilePreviewTrigger, FileRowThumb } from '@/components/crm/FilePreviewTrigger'
+import { getFileKind } from '@/lib/utils/files'
 import { saveProjectFile } from '@/app/(dashboard)/proyectos/actions'
 import type { ActionState } from '@/app/(dashboard)/proyectos/actions'
 import type { ProjectFileRow } from '@/lib/repositories/interfaces/IProjectRepository'
@@ -49,10 +51,19 @@ export function ProjectFilesPanel({ projectId, addAction, deleteAction, files }:
       ) : (
         <div className="rounded-md border divide-y">
           {files.map(file => {
-            const Icon = FILE_TYPE_ICON[file.type as ProjectFileType] ?? Link2
+            const Icon        = FILE_TYPE_ICON[file.type as ProjectFileType] ?? Link2
+            const previewable = getFileKind(null, file.label ?? file.url) !== 'other'
             return (
               <div key={file.id} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors">
-                <Icon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                {previewable ? (
+                  <FilePreviewTrigger url={file.url} name={file.label} className="shrink-0">
+                    <FileRowThumb url={file.url} name={file.label} fallbackIcon={Icon} />
+                  </FilePreviewTrigger>
+                ) : (
+                  <div className="h-9 w-9 rounded border bg-muted/40 flex items-center justify-center shrink-0">
+                    <Icon className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                )}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{file.label}</p>
                   <a
@@ -67,9 +78,15 @@ export function ProjectFilesPanel({ projectId, addAction, deleteAction, files }:
                 <Badge variant="outline" className="text-xs shrink-0">
                   {FILE_TYPE_LABELS[file.type as ProjectFileType]}
                 </Badge>
-                <a href={file.url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground">
-                  <ExternalLink className="h-4 w-4" />
-                </a>
+                {previewable ? (
+                  <a href={file.url} download={file.label} title="Descargar" className="text-muted-foreground hover:text-foreground">
+                    <Download className="h-4 w-4" />
+                  </a>
+                ) : (
+                  <a href={file.url} target="_blank" rel="noopener noreferrer" title="Abrir enlace" className="text-muted-foreground hover:text-foreground">
+                    <ExternalLink className="h-4 w-4" />
+                  </a>
+                )}
                 <form action={() => deleteAction(file.id)}>
                   <button type="submit" className="text-muted-foreground hover:text-destructive transition-colors">
                     <Trash2 className="h-4 w-4" />
