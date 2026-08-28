@@ -15,11 +15,15 @@ const STAGE_LABELS: Partial<Record<OpportunityStage, string>> = {
   negociacion: 'Negociación',
 }
 
+const SOURCE_LABELS: Record<'ganado' | 'perdido' | 'sin_respuesta', string> = {
+  ganado: 'Ganada', perdido: 'Perdida', sin_respuesta: 'Sin respuesta',
+}
+
 interface Props {
   open:        boolean
   oppId:       string
   oppName:     string
-  sourceStage: 'ganado' | 'perdido'
+  sourceStage: 'ganado' | 'perdido' | 'sin_respuesta'
   targetStage: OpportunityStage
   onConfirm:   () => void
   onCancel:    () => void
@@ -57,7 +61,7 @@ export function KanbanReopenModal({ open, oppId, oppName, sourceStage, targetSta
                 <span className="font-medium text-foreground">{oppName}</span>
                 {' '}está marcada como{' '}
                 <span className="font-medium text-foreground">
-                  {sourceStage === 'ganado' ? 'Ganada' : 'Perdida'}
+                  {SOURCE_LABELS[sourceStage]}
                 </span>
                 . Se moverá a{' '}
                 <span className="font-medium text-foreground">

@@ -14,6 +14,7 @@ const STAGES = [
   { value: 'cotizacion_enviada', label: 'Cotización enviada' },
   { value: 'seguimiento',        label: 'Seguimiento' },
   { value: 'negociacion',        label: 'Negociación' },
+  { value: 'sin_respuesta',      label: 'Sin respuesta' },
   { value: 'ganado',             label: 'Ganado' },
   { value: 'perdido',            label: 'Perdido' },
 ]

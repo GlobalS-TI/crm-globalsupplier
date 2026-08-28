@@ -37,7 +37,7 @@ export function ITTicketKpiPanel({ summary }: Props) {
         {summary.by_priority.map((b, i) => (
           <StatCard
             key={b.priority}
-            title={`${IT_TICKET_PRIORITY_LABELS[b.priority]} — prom. resolución`}
+            title={`${IT_TICKET_PRIORITY_LABELS[b.priority]}: prom. resolución`}
             value={daysFmt(b.avg_days_to_resolve)}
             sub={`${b.resolved_count} resueltos · ${pctFmt(b.within_sla_pct)} en SLA`}
             delay={120 + i * 60}

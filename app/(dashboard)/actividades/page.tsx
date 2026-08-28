@@ -5,7 +5,7 @@ import { TaskBoard } from '@/components/crm/TaskBoard'
 import { DirectorUserList } from '@/components/crm/DirectorUserList'
 import { UserActivitiesReadOnly } from '@/components/crm/UserActivitiesReadOnly'
 
-export const metadata = { title: 'Actividades — Supply' }
+export const metadata = { title: 'Actividades | Supply' }
 export const dynamic = 'force-dynamic'
 
 interface Props {

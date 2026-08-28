@@ -14,6 +14,7 @@ import { QuickStageButton } from '@/components/crm/QuickStageButton'
 import { ActivityTimeline } from '@/components/crm/ActivityTimeline'
 import { ActivityForm } from '@/components/crm/ActivityForm'
 import { StaleBadge } from '@/components/crm/StaleBadge'
+import { ActivityStatusBadge } from '@/components/crm/ActivityStatusBadge'
 import { DeleteButton } from '@/components/crm/DeleteButton'
 import { OpportunityFilesPanel } from '@/components/crm/OpportunityFilesPanel'
 import { Badge } from '@/components/ui/badge'
@@ -29,7 +30,7 @@ export const dynamic = 'force-dynamic'
 const STAGE_LABELS: Record<OpportunityStage, string> = {
   nuevo_lead: 'Nuevo lead', contactado: 'Contactado', diagnostico: 'Diagnóstico',
   cotizacion_enviada: 'Cotización enviada', seguimiento: 'Seguimiento',
-  negociacion: 'Negociación', ganado: 'Ganado', perdido: 'Perdido',
+  negociacion: 'Negociación', sin_respuesta: 'Sin respuesta', ganado: 'Ganado', perdido: 'Perdido',
 }
 
 // wa.me exige código de país sin "+" ni espacios — los teléfonos se capturan
@@ -43,7 +44,7 @@ function toWhatsAppLink(telefono: string): string {
 
 const ALL_STAGES: OpportunityStage[] = [
   'nuevo_lead', 'contactado', 'diagnostico', 'cotizacion_enviada',
-  'seguimiento', 'negociacion', 'ganado', 'perdido',
+  'seguimiento', 'negociacion', 'sin_respuesta', 'ganado', 'perdido',
 ]
 
 export default async function OportunidadDetailPage({
@@ -68,7 +69,7 @@ export default async function OportunidadDetailPage({
   const companies     = companiesResult.data ?? []
   const profiles      = profilesResult.data ?? []
   const currentUserId = userResult.data.user?.id ?? ''
-  const isClosed      = opp.etapa === 'ganado' || opp.etapa === 'perdido'
+  const isClosed      = opp.etapa === 'ganado' || opp.etapa === 'perdido' || opp.etapa === 'sin_respuesta'
   const boundMove     = moveToStage.bind(null, id)
 
   // Signed URLs for the Documentos panel — bucket is private.
@@ -94,6 +95,7 @@ export default async function OportunidadDetailPage({
           <Badge variant={isClosed ? 'secondary' : 'default'}>
             {STAGE_LABELS[opp.etapa as OpportunityStage]}
           </Badge>
+          {!isClosed && <ActivityStatusBadge nextActivityAt={opp.next_activity_at} />}
           {opp.stale && <StaleBadge />}
         </div>
         {opp.company && <p className="text-muted-foreground">{opp.company.nombre}</p>}
@@ -144,6 +146,8 @@ export default async function OportunidadDetailPage({
                   />
                 ) : stage === 'perdido' ? (
                   <StageTransitionModal key="perdido" targetStage="perdido" action={boundMove} moneda={opp.moneda} />
+                ) : stage === 'sin_respuesta' ? (
+                  <StageTransitionModal key="sin_respuesta" targetStage="sin_respuesta" action={boundMove} moneda={opp.moneda} />
                 ) : (
                   <QuickStageButton key={stage} label={STAGE_LABELS[stage]} stage={stage} action={boundMove} />
                 )

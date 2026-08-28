@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
+import { after } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { ITTicketService } from '@/lib/services/ITTicketService'
@@ -87,8 +88,9 @@ export async function createTicket(_prev: ActionState, form: FormData): Promise<
   try {
     const ticket = await makeService().createTicket(parseForm(form), user.id)
     ticketId = ticket.id
-    if (ticket.assignee_id) {
-      void fireITTicketAssignedNotification(ticket.assignee_id, ticket.id, ticket.title, user.id)
+    const assigneeId = ticket.assignee_id
+    if (assigneeId) {
+      after(() => fireITTicketAssignedNotification(assigneeId, ticket.id, ticket.title, user.id))
     }
   } catch (e) {
     return { error: (e as Error).message }
@@ -96,18 +98,43 @@ export async function createTicket(_prev: ActionState, form: FormData): Promise<
   redirect(`/soporte-ti/${ticketId}`)
 }
 
-export async function advanceStatus(id: string, _prev: ActionState, form: FormData): Promise<ActionState> {
+export async function setStatus(id: string, _prev: ActionState, form: FormData): Promise<ActionState> {
   const user = await getUser()
+  const status = form.get('status')?.toString()
   const comment = form.get('comment')?.toString().trim() || undefined
 
   try {
-    const updated = await makeService().advanceStatus(id, user.id, comment)
+    const updated = await makeService().setStatus(id, { status, comment }, user.id)
     revalidatePath(`/soporte-ti/${id}`)
-    void fireITTicketStatusChangedNotification(updated.requester_id, id, updated.title, updated.status, user.id)
+    after(() => fireITTicketStatusChangedNotification(updated.requester_id, id, updated.title, updated.status, user.id))
     return null
   } catch (e) {
     return { error: (e as Error).message }
   }
+}
+
+export async function kanbanMoveToStatus(id: string, status: ITTicketStatus, comment?: string): Promise<{ error?: string }> {
+  const user = await getUser()
+
+  try {
+    const updated = await makeService().setStatus(id, { status, comment }, user.id)
+    revalidatePath('/soporte-ti')
+    revalidatePath(`/soporte-ti/${id}`)
+    after(() => fireITTicketStatusChangedNotification(updated.requester_id, id, updated.title, updated.status, user.id))
+    return {}
+  } catch (e) {
+    return { error: (e as Error).message }
+  }
+}
+
+export async function deleteTicket(id: string): Promise<{ error?: string }> {
+  try {
+    await makeService().deleteTicket(id)
+  } catch (e) {
+    return { error: (e as Error).message }
+  }
+  revalidatePath('/soporte-ti')
+  redirect('/soporte-ti')
 }
 
 export async function setPriority(id: string, _prev: ActionState, form: FormData): Promise<ActionState> {
@@ -140,7 +167,7 @@ export async function addMessage(id: string, _prev: ActionState, form: FormData)
     const { data: actorProfile } = await supabaseAdmin.from('profiles').select('role').eq('id', user.id).single()
     const recipientId = actorProfile?.role === 'soporte_ti' ? ticket.requester_id : ticket.assignee_id
     if (recipientId && recipientId !== user.id) {
-      void fireITTicketMessageNotification(recipientId, id, ticket.title, user.id)
+      after(() => fireITTicketMessageNotification(recipientId, id, ticket.title, user.id))
     }
     return null
   } catch (e) {

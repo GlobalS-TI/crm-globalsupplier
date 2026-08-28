@@ -209,7 +209,7 @@ export function UserTable({ users, currentUserId }: Props) {
             <AlertDialogTitle>¿Eliminar a {deletingUser?.full_name}?</AlertDialogTitle>
             <AlertDialogDescription>
               Esta acción no se puede deshacer. Si el usuario tiene empresas, contactos, oportunidades,
-              leads, actividades, tareas o proyectos a su nombre, no se podrá eliminar — desactívalo en
+              leads, actividades, tareas o proyectos a su nombre, no se podrá eliminar, desactívalo en
               su lugar.
             </AlertDialogDescription>
           </AlertDialogHeader>

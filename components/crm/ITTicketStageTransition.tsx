@@ -1,14 +1,17 @@
 'use client'
 
-import { useActionState, useState } from 'react'
-import { ArrowRight, CheckCircle2 } from 'lucide-react'
+import { useActionState, useEffect, useState } from 'react'
+import { CheckCircle2, XCircle } from 'lucide-react'
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog'
-import { IT_TICKET_STATUSES, IT_TICKET_STATUS_LABELS } from '@/lib/types'
+import { IT_TICKET_STATUSES, IT_TICKET_STATUS_LABELS, IT_TICKET_TERMINAL_STATUSES } from '@/lib/types'
 import type { ITTicketStatus } from '@/lib/types'
 import type { ActionState } from '@/app/(dashboard)/soporte-ti/actions'
 
@@ -17,73 +20,128 @@ interface Props {
   action: (prev: ActionState, form: FormData) => Promise<ActionState>
 }
 
+const TERMINAL_DISPLAY: Record<string, { icon: typeof CheckCircle2; text: string; className: string }> = {
+  resuelto: {
+    icon:      CheckCircle2,
+    text:      'Ticket resuelto',
+    className: 'text-emerald-600 dark:text-emerald-400',
+  },
+  cancelado: {
+    icon:      XCircle,
+    text:      'Ticket cancelado',
+    className: 'text-rose-600 dark:text-rose-400',
+  },
+}
+
+function isTerminal(status: ITTicketStatus): boolean {
+  return IT_TICKET_TERMINAL_STATUSES.includes(status)
+}
+
 export function ITTicketStageTransition({ status, action }: Props) {
-  const [open, setOpen] = useState(false)
+  const [localStatus, setLocalStatus]   = useState<ITTicketStatus>(status)
+  const [pendingTarget, setPendingTarget] = useState<ITTicketStatus | null>(null)
+
+  useEffect(() => setLocalStatus(status), [status])
 
   const [state, dispatch, pending] = useActionState(
     async (prev: ActionState, form: FormData) => {
       const result = await action(prev, form)
-      if (!result) setOpen(false)
+      if (!result) setPendingTarget(null)
+      else setLocalStatus(status)
       return result
     },
     null,
   )
 
-  const currentIdx = IT_TICKET_STATUSES.indexOf(status)
-  const nextStatus  = IT_TICKET_STATUSES[currentIdx + 1] as ITTicketStatus | undefined
+  function handleChange(value: string) {
+    const target = value as ITTicketStatus
+    if (target === status) return
 
-  if (!nextStatus) {
+    if (isTerminal(target)) {
+      setPendingTarget(target)
+      return
+    }
+
+    setLocalStatus(target)
+    const form = new FormData()
+    form.set('status', target)
+    dispatch(form)
+  }
+
+  if (isTerminal(status)) {
+    const display = TERMINAL_DISPLAY[status]
+    const Icon = display.icon
     return (
-      <span className="inline-flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
-        <CheckCircle2 className="h-3.5 w-3.5" />
-        Ticket resuelto
+      <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${display.className}`}>
+        <Icon className="h-3.5 w-3.5" />
+        {display.text}
       </span>
     )
   }
 
   return (
     <>
-      <Button size="sm" variant="outline" onClick={() => setOpen(true)}>
-        Avanzar estado
-        <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
-      </Button>
+      <div className="space-y-1.5">
+        <Select value={localStatus} onValueChange={handleChange} disabled={pending}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {IT_TICKET_STATUSES.map(s => (
+              <SelectItem key={s} value={s}>
+                {IT_TICKET_STATUS_LABELS[s]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-      <Dialog open={open} onOpenChange={setOpen}>
+        {!pendingTarget && state?.error && (
+          <p className="text-sm text-destructive">{state.error}</p>
+        )}
+      </div>
+
+      <Dialog open={!!pendingTarget} onOpenChange={v => { if (!v) setPendingTarget(null) }}>
         <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Avanzar a {IT_TICKET_STATUS_LABELS[nextStatus]}</DialogTitle>
-            <DialogDescription>
-              El ticket pasará de <strong>{IT_TICKET_STATUS_LABELS[status]}</strong> a{' '}
-              <strong>{IT_TICKET_STATUS_LABELS[nextStatus]}</strong>. Esta acción se registra en el historial.
-            </DialogDescription>
-          </DialogHeader>
+          {pendingTarget && (
+            <>
+              <DialogHeader>
+                <DialogTitle>Marcar como {IT_TICKET_STATUS_LABELS[pendingTarget]}</DialogTitle>
+                <DialogDescription>
+                  El ticket pasará de <strong>{IT_TICKET_STATUS_LABELS[status]}</strong> a{' '}
+                  <strong>{IT_TICKET_STATUS_LABELS[pendingTarget]}</strong>. Esta acción se registra en el historial.
+                </DialogDescription>
+              </DialogHeader>
 
-          <form action={dispatch} className="space-y-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="comment">Comentario <span className="text-muted-foreground font-normal">(opcional)</span></Label>
-              <Textarea
-                id="comment"
-                name="comment"
-                rows={3}
-                placeholder="Observaciones sobre este avance…"
-              />
-            </div>
+              <form action={dispatch} className="space-y-4">
+                <input type="hidden" name="status" value={pendingTarget} />
 
-            {state?.error && (
-              <p className="text-sm text-destructive bg-destructive/10 rounded-md px-3 py-2">
-                {state.error}
-              </p>
-            )}
+                <div className="space-y-1.5">
+                  <Label htmlFor="comment">Comentario <span className="text-muted-foreground font-normal">(opcional)</span></Label>
+                  <Textarea
+                    id="comment"
+                    name="comment"
+                    rows={3}
+                    placeholder="Observaciones sobre este cierre…"
+                  />
+                </div>
 
-            <DialogFooter className="gap-2">
-              <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={pending}>
-                Cancelar
-              </Button>
-              <Button type="submit" disabled={pending}>
-                {pending ? 'Avanzando…' : `Confirmar → ${IT_TICKET_STATUS_LABELS[nextStatus]}`}
-              </Button>
-            </DialogFooter>
-          </form>
+                {state?.error && (
+                  <p className="text-sm text-destructive bg-destructive/10 rounded-md px-3 py-2">
+                    {state.error}
+                  </p>
+                )}
+
+                <DialogFooter className="gap-2">
+                  <Button type="button" variant="outline" onClick={() => setPendingTarget(null)} disabled={pending}>
+                    Cancelar
+                  </Button>
+                  <Button type="submit" disabled={pending}>
+                    {pending ? 'Guardando…' : 'Confirmar'}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </>

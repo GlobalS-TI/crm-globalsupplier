@@ -2,7 +2,7 @@ import Image from 'next/image'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { LoginForm } from '@/components/crm/LoginForm'
 
-export const metadata = { title: 'Ingresar — Supply' }
+export const metadata = { title: 'Ingresar | Supply' }
 
 export default function LoginPage() {
   return (

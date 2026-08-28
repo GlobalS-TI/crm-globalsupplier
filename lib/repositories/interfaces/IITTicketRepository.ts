@@ -89,6 +89,7 @@ export interface IITTicketRepository {
   create(data: Omit<ITTicketRow, 'id' | 'created_at' | 'updated_at' | 'resolved_at'>): Promise<ITTicketRow>
   updateStatus(id: string, status: ITTicketStatus, resolvedAt: string | null): Promise<ITTicketRow>
   updatePriority(id: string, priority: ITTicketPriority): Promise<ITTicketRow>
+  delete(id: string): Promise<void>
 
   addStageLog(data: Omit<ITTicketStageLogRow, 'id' | 'changed_at' | 'changer'>): Promise<void>
 

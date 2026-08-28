@@ -1625,6 +1625,7 @@ export type Database = {
         | "cotizacion_enviada"
         | "seguimiento"
         | "negociacion"
+        | "sin_respuesta"
         | "ganado"
         | "perdido"
       project_file_type: "FIGMA" | "REPO" | "ASSET" | "DOC" | "OTHER"
@@ -1826,6 +1827,7 @@ export const Constants = {
         "cotizacion_enviada",
         "seguimiento",
         "negociacion",
+        "sin_respuesta",
         "ganado",
         "perdido",
       ],

@@ -4,7 +4,7 @@ import { SalesTargetService } from '@/lib/services/SalesTargetService'
 import { SalesTargetsBoard } from '@/components/crm/SalesTargetsBoard'
 import { redirect } from 'next/navigation'
 
-export const metadata = { title: 'Metas de venta — Supply' }
+export const metadata = { title: 'Metas de venta | Supply' }
 export const dynamic  = 'force-dynamic'
 
 const DIRECTOR_ROLES = ['director_general', 'direccion_comercial']

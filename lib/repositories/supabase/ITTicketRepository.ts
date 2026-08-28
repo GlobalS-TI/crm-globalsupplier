@@ -106,6 +106,13 @@ export class ITTicketRepository implements IITTicketRepository {
     return row as ITTicketRow
   }
 
+  async delete(id: string): Promise<void> {
+    const sb: AnyClient = await createClient()
+    const { data, error } = await sb.from('it_tickets').delete().eq('id', id).select('id')
+    if (error) throw error
+    if (!data?.length) throw new Error('Sin permisos para eliminar este ticket.')
+  }
+
   async addStageLog(data: Omit<ITTicketStageLogRow, 'id' | 'changed_at' | 'changer'>): Promise<void> {
     const sb: AnyClient = await createClient()
     const { error } = await sb.from('it_ticket_stage_logs').insert(data)

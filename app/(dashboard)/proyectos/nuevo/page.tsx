@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { ProjectForm } from '@/components/crm/ProjectForm'
 import { createProject } from '@/app/(dashboard)/proyectos/actions'
 
-export const metadata = { title: 'Nuevo proyecto — Supply' }
+export const metadata = { title: 'Nuevo proyecto | Supply' }
 
 export default async function NuevoProyectoPage() {
   const supabase = await createClient()

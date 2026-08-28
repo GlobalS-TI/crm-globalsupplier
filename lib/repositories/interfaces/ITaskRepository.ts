@@ -30,6 +30,7 @@ export interface ITaskRepository {
   createTask(data: CreateTaskInput & { created_by: string; group_id?: string }): Promise<TaskRow>
   updateTask(id: string, data: UpdateTaskInput & { group_id?: string | null }): Promise<TaskRow>
   deleteTask(id: string): Promise<void>
+  reorderTasks(groupId: string | null, orderedIds: string[]): Promise<void>
   upsertColumnValue(taskId: string, columnId: string, value: string | null): Promise<void>
   addColumn(data: CreateBoardColumnInput): Promise<TaskBoardColumnRow>
   updateColumn(id: string, data: { nombre?: string; position?: number; config?: Json }): Promise<TaskBoardColumnRow>

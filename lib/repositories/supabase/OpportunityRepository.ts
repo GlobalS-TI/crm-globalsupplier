@@ -24,6 +24,9 @@ const toUpdate = (d: UpdateOpportunityInput): OppUpdate => d as unknown as OppUp
 
 const WITH_RELATIONS = '*, company:companies(nombre), contact:contacts(nombre, apellido, email, telefono), owner:profiles!owner_id(full_name)'
 
+// Etapas cerradas — excluidas del pipeline abierto (forecast, totales, conteos).
+const CLOSED_STAGES: OpportunityStage[] = ['ganado', 'perdido', 'sin_respuesta']
+
 export class OpportunityRepository implements IOpportunityRepository {
   async findById(id: string): Promise<OpportunityWithRelations | null> {
     const supabase = await createClient()
@@ -73,7 +76,7 @@ export class OpportunityRepository implements IOpportunityRepository {
     const now   = new Date()
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
 
-    const openOpps = opps.filter(o => o.etapa !== 'ganado' && o.etapa !== 'perdido')
+    const openOpps = opps.filter(o => !CLOSED_STAGES.includes(o.etapa as OpportunityStage))
 
     const stats: DashboardStats = {
       openCount:        openOpps.length,
@@ -121,7 +124,7 @@ export class OpportunityRepository implements IOpportunityRepository {
     const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString()
 
     const wonOpps  = opps.filter(o => o.etapa === 'ganado')
-    const openOpps = opps.filter(o => o.etapa !== 'ganado' && o.etapa !== 'perdido')
+    const openOpps = opps.filter(o => !CLOSED_STAGES.includes(o.etapa as OpportunityStage))
 
     // KPIs
     const wonThisMonth  = wonOpps.filter(o => o.updated_at >= monthStart).reduce((s, o) => s + Number(o.monto_final_mxn ?? 0), 0)

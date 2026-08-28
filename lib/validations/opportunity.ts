@@ -5,7 +5,7 @@ import { z } from 'zod'
 // ----------------------------------------------------------------
 export const opportunityStageSchema = z.enum([
   'nuevo_lead', 'contactado', 'diagnostico', 'cotizacion_enviada',
-  'seguimiento', 'negociacion', 'ganado', 'perdido',
+  'seguimiento', 'negociacion', 'sin_respuesta', 'ganado', 'perdido',
 ])
 
 export const leadSourceSchema = z.enum([

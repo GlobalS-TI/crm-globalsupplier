@@ -108,8 +108,8 @@ export function ProjectRowActions({ projectId, projectTitle, deleteAction, archi
           <DialogHeader>
             <DialogTitle>Eliminar proyecto</DialogTitle>
             <DialogDescription>
-              ¿Eliminar <strong>{projectTitle}</strong>? Esta acción no se puede deshacer —
-              se borrarán el brief, archivos, historial y todos los datos asociados.
+              ¿Eliminar <strong>{projectTitle}</strong>? Esta acción no se puede deshacer.
+              Se borrarán el brief, archivos, historial y todos los datos asociados.
             </DialogDescription>
           </DialogHeader>
           {error && (

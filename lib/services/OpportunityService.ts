@@ -2,7 +2,7 @@ import type { IOpportunityRepository, OpportunityWithRelations, DashboardStats, 
 import type { StageTransitionInput } from '@/lib/validations/opportunity'
 import { createOpportunitySchema, updateOpportunitySchema, stageTransitionSchema } from '@/lib/validations/opportunity'
 
-const CLOSED_STAGES = ['ganado', 'perdido'] as const
+const CLOSED_STAGES = ['ganado', 'perdido', 'sin_respuesta'] as const
 
 export class OpportunityService {
   constructor(private readonly repo: IOpportunityRepository) {}
@@ -49,7 +49,15 @@ export class OpportunityService {
     const existing = await this.getById(id)
     const data = updateOpportunitySchema.parse(raw)
 
-    const nextStage  = data.etapa ?? existing.etapa
+    const nextStage = data.etapa ?? existing.etapa
+
+    // Rule 7: leaving ganado for any other stage (perdido, sin_respuesta, or reopening to
+    // an open stage) clears the stale monto_final, unless the caller supplies a fresh one
+    // in the same request (e.g. re-marking as ganado is handled by the branch above).
+    if (existing.etapa === 'ganado' && nextStage !== 'ganado' && data.monto_final === undefined) {
+      data.monto_final = null
+    }
+
     const nextMonto  = data.monto_final !== undefined ? data.monto_final : existing.monto_final
     const nextMoneda = data.moneda ?? existing.moneda
 
@@ -65,8 +73,9 @@ export class OpportunityService {
     }
 
     // Rule 4: editing monto_final on a USD opportunity always requires a fresh tipo_cambio_final —
-    // it is never carried over silently from the previous write
-    if (data.monto_final !== undefined && nextMoneda === 'USD' && data.tipo_cambio_final === undefined) {
+    // it is never carried over silently from the previous write. Does not apply when monto_final
+    // is being cleared to null (Rule 7 or an explicit reopen) — there is nothing to convert.
+    if (data.monto_final != null && nextMoneda === 'USD' && data.tipo_cambio_final === undefined) {
       throw new Error('tipo_cambio_final is required when editing monto_final on a USD opportunity')
     }
 

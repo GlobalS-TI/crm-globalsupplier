@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
 import { Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -9,13 +8,12 @@ import {
 } from '@/components/ui/dialog'
 
 interface Props {
-  action:       (id: string) => Promise<{ error: string } | null>
-  projectId:    string
-  projectTitle: string
+  action:      (id: string) => Promise<{ error?: string } | undefined>
+  ticketId:    string
+  ticketTitle: string
 }
 
-export function ProjectDeleteButton({ action, projectId, projectTitle }: Props) {
-  const router                     = useRouter()
+export function ITTicketDeleteButton({ action, ticketId, ticketTitle }: Props) {
   const [open, setOpen]            = useState(false)
   const [error, setError]          = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
@@ -23,12 +21,8 @@ export function ProjectDeleteButton({ action, projectId, projectTitle }: Props) 
   function handleConfirm() {
     setError(null)
     startTransition(async () => {
-      const result = await action(projectId)
-      if (result?.error) {
-        setError(result.error)
-      } else {
-        router.push('/proyectos')
-      }
+      const result = await action(ticketId)
+      if (result?.error) setError(result.error)
     })
   }
 
@@ -46,10 +40,10 @@ export function ProjectDeleteButton({ action, projectId, projectTitle }: Props) 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Eliminar proyecto</DialogTitle>
+            <DialogTitle>Eliminar ticket</DialogTitle>
             <DialogDescription>
-              ¿Eliminar <strong>{projectTitle}</strong>? Esta acción no se puede deshacer.
-              Se borrarán el brief, archivos, historial y todos los datos asociados.
+              ¿Eliminar <strong>{ticketTitle}</strong>? Esta acción no se puede deshacer:
+              se borrarán las imágenes, la conversación y el historial de este ticket.
             </DialogDescription>
           </DialogHeader>
           {error && (

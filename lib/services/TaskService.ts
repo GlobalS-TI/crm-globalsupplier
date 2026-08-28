@@ -34,6 +34,10 @@ export class TaskService {
     return this.repo.deleteGroup(id)
   }
 
+  async reorderGroups(boardId: string, orderedIds: string[]): Promise<void> {
+    return this.repo.reorderGroups(boardId, orderedIds)
+  }
+
   async createTask(raw: CreateTaskInput & { created_by: string; group_id?: string }): Promise<TaskRow> {
     const data = createTaskSchema.parse(raw)
     return this.repo.createTask({ ...data, created_by: raw.created_by, group_id: raw.group_id })
@@ -46,6 +50,10 @@ export class TaskService {
 
   async deleteTask(id: string): Promise<void> {
     return this.repo.deleteTask(id)
+  }
+
+  async reorderTasks(groupId: string | null, orderedIds: string[]): Promise<void> {
+    return this.repo.reorderTasks(groupId, orderedIds)
   }
 
   async setColumnValue(taskId: string, columnId: string, value: string | null): Promise<void> {
