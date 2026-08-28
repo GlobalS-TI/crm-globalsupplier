@@ -27,6 +27,11 @@ const securityHeaders = [
         : "script-src 'self' 'unsafe-inline'",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https://*.supabase.co",
+      // Sin esto, frame-src y media-src caen a default-src 'self' y el navegador
+      // bloquea el <iframe> del preview de PDF/YouTube y el <video> de Contenido,
+      // ya que apuntan al dominio de Supabase Storage / YouTube, no al propio.
+      `media-src 'self' ${process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''} https://*.supabase.co`,
+      `frame-src 'self' ${process.env.NEXT_PUBLIC_SUPABASE_URL ?? ''} https://*.supabase.co https://www.youtube.com`,
       "font-src 'self'",
       "frame-ancestors 'none'",
       "object-src 'none'",
