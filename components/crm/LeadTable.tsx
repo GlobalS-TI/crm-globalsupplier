@@ -5,6 +5,7 @@ import Link from 'next/link'
 import type { Route } from 'next'
 import { ExternalLink, FileDown, Mail, Phone, Trash2 } from 'lucide-react'
 import { LeadImportButton } from '@/components/crm/LeadImportButton'
+import { LeadExportButton } from '@/components/crm/LeadExportButton'
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
@@ -72,12 +73,15 @@ export function LeadTable({ leads, section, sectionId, canManageLeads, isLeadsMa
             <p className="text-sm text-muted-foreground mt-0.5">{section.descripcion}</p>
           )}
         </div>
-        {canManageLeads && (
-          <div className="flex items-center gap-2">
-            <LeadImportButton sectionId={sectionId} />
-            <NewLeadButton sectionId={sectionId} assignableUsers={assignableUsers} />
-          </div>
-        )}
+        <div className="flex items-center gap-2">
+          <LeadExportButton leads={leads} sectionName={section?.nombre} />
+          {canManageLeads && (
+            <>
+              <LeadImportButton sectionId={sectionId} />
+              <NewLeadButton sectionId={sectionId} assignableUsers={assignableUsers} />
+            </>
+          )}
+        </div>
       </div>
 
       {/* Table */}
