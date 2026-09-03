@@ -160,6 +160,8 @@ export const ADMIN_ROLES: UserRole[] = ['administracion']
 
 export const LEADS_ROLES: UserRole[] = ['marketing', 'director_general', 'direccion_comercial', 'administracion']
 
+export const LEADS_EXPORT_ROLES: UserRole[] = ['director_general', 'marketing', 'administracion']
+
 export const LEAD_SOURCES: LeadSource[] = [
   'referido', 'meta', 'web', 'linkedin', 'llamada_en_frio', 'evento', 'alianza', 'otro',
 ]

@@ -56,13 +56,14 @@ interface Props {
   section:          LeadSectionRow | null
   sectionId:        string
   canManageLeads:   boolean
+  canExportLeads:   boolean
   isLeadsManager:   boolean
   assignableUsers:  AssignableUser[]
   requirementUrls?: Record<string, string>
   search?:          string
 }
 
-export function LeadTable({ leads, section, sectionId, canManageLeads, isLeadsManager, assignableUsers, requirementUrls, search }: Props) {
+export function LeadTable({ leads, section, sectionId, canManageLeads, canExportLeads, isLeadsManager, assignableUsers, requirementUrls, search }: Props) {
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -74,7 +75,7 @@ export function LeadTable({ leads, section, sectionId, canManageLeads, isLeadsMa
           )}
         </div>
         <div className="flex items-center gap-2">
-          <LeadExportButton leads={leads} sectionName={section?.nombre} />
+          {canExportLeads && <LeadExportButton leads={leads} sectionName={section?.nombre} />}
           {canManageLeads && (
             <>
               <LeadImportButton sectionId={sectionId} />
