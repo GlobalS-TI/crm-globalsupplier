@@ -28,10 +28,11 @@ export function LeadExportButton({ leads, sectionName }: Props) {
         'Nombre':            lead.nombre,
         'Empresa':           lead.empresa ?? '',
         'Numero de contacto': lead.telefono ?? '',
+        'Correo electronico': lead.email ?? '',
       }))
 
       const sheet    = XLSX.utils.json_to_sheet(rows)
-      sheet['!cols'] = [{ wch: 28 }, { wch: 24 }, { wch: 20 }]
+      sheet['!cols'] = [{ wch: 28 }, { wch: 24 }, { wch: 20 }, { wch: 28 }]
 
       const workbook = XLSX.utils.book_new()
       XLSX.utils.book_append_sheet(workbook, sheet, 'Leads')
