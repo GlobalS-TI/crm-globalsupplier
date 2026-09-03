@@ -10,7 +10,7 @@ import { LeadTable } from '@/components/crm/LeadTable'
 import { CreateSectionButton } from '@/components/crm/LeadSectionModal'
 import { SearchInput } from '@/components/crm/SearchInput'
 import type { AssignableUser } from '@/components/crm/LeadModal'
-import { LEADS_ROLES } from '@/lib/types'
+import { LEADS_ROLES, LEADS_EXPORT_ROLES } from '@/lib/types'
 import type { UserRole } from '@/lib/types'
 
 export const metadata = { title: 'Leads | Supply' }
@@ -36,6 +36,7 @@ export default async function LeadsPage({ searchParams }: PageProps) {
 
   const isLeadsManager = ['marketing', 'director_general'].includes(role)
   const canManageLeads = ['marketing', 'director_general', 'direccion_comercial'].includes(role)
+  const canExportLeads = LEADS_EXPORT_ROLES.includes(role)
 
   const svc      = new LeadService(new LeadSectionRepository(), new LeadRepository(), new ProfileRepository())
   const sections = await svc.listSections()
@@ -96,6 +97,7 @@ export default async function LeadsPage({ searchParams }: PageProps) {
               section={selectedSection}
               sectionId={sec}
               canManageLeads={canManageLeads}
+              canExportLeads={canExportLeads}
               isLeadsManager={isLeadsManager}
               assignableUsers={assignableUsers}
               requirementUrls={requirementUrls}
