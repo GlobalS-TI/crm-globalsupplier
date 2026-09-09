@@ -34,9 +34,10 @@ interface Profile { id: string; full_name: string }
 
 interface OpportunityFiltersProps {
   profiles: Profile[]
+  canFilterByOwner: boolean
 }
 
-export function OpportunityFilters({ profiles }: OpportunityFiltersProps) {
+export function OpportunityFilters({ profiles, canFilterByOwner }: OpportunityFiltersProps) {
   const router     = useRouter()
   const pathname   = usePathname()
   const params     = useSearchParams()
@@ -50,21 +51,23 @@ export function OpportunityFilters({ profiles }: OpportunityFiltersProps) {
 
   return (
     <div className="flex items-center gap-2 flex-wrap">
-      {/* Vendedor */}
-      <Select
-        value={params.get('owner') ?? 'all'}
-        onValueChange={v => update('owner', v)}
-      >
-        <SelectTrigger className="h-8 w-44 text-xs">
-          <SelectValue placeholder="Vendedor" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">Todos los vendedores</SelectItem>
-          {profiles.map(p => (
-            <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
+      {/* Vendedor — solo director_general (OPPORTUNITY_OWNER_FILTER_ROLES) */}
+      {canFilterByOwner && (
+        <Select
+          value={params.get('owner') ?? 'all'}
+          onValueChange={v => update('owner', v)}
+        >
+          <SelectTrigger className="h-8 w-44 text-xs">
+            <SelectValue placeholder="Vendedor" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos los vendedores</SelectItem>
+            {profiles.map(p => (
+              <SelectItem key={p.id} value={p.id}>{p.full_name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      )}
 
       {/* Unidad de negocio */}
       <Select

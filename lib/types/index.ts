@@ -162,6 +162,10 @@ export const LEADS_ROLES: UserRole[] = ['marketing', 'director_general', 'direcc
 
 export const LEADS_EXPORT_ROLES: UserRole[] = ['director_general', 'marketing', 'administracion']
 
+// Quién puede filtrar el pipeline de oportunidades por vendedor (gating de UI —
+// RLS es la seguridad real, ver ADR-003).
+export const OPPORTUNITY_OWNER_FILTER_ROLES: UserRole[] = ['director_general']
+
 export const LEAD_SOURCES: LeadSource[] = [
   'referido', 'meta', 'web', 'linkedin', 'llamada_en_frio', 'evento', 'alianza', 'otro',
 ]
