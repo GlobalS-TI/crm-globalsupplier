@@ -11,6 +11,8 @@ import { ViewToggle } from '@/components/crm/ViewToggle'
 import { Button } from '@/components/ui/button'
 import type { OpportunityFilters as Filters } from '@/lib/repositories/interfaces/IOpportunityRepository'
 import type { OpportunityStage, BusinessUnit } from '@/lib/validations/opportunity'
+import { OPPORTUNITY_OWNER_FILTER_ROLES } from '@/lib/types'
+import type { UserRole } from '@/lib/types'
 
 export const metadata = { title: 'Oportunidades | Supply' }
 export const dynamic = 'force-dynamic'
@@ -32,9 +34,21 @@ export default async function OportunidadesPage({ searchParams }: PageProps) {
   const boardKey = `${sp.owner ?? ''}-${sp.unit ?? ''}-${sp.stage ?? ''}-${sp.stale ?? ''}`
 
   const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  const { data: currentProfile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user!.id)
+    .single()
+
+  const role = (currentProfile?.role ?? '') as UserRole
+  const canFilterByOwner = OPPORTUNITY_OWNER_FILTER_ROLES.includes(role)
+
   const [opportunities, profilesResult] = await Promise.all([
     new OpportunityService(new OpportunityRepository()).listPipeline(filters),
-    supabase.from('profiles').select('id, full_name').order('full_name'),
+    canFilterByOwner
+      ? supabase.from('profiles').select('id, full_name').order('full_name')
+      : Promise.resolve({ data: [] }),
   ])
   const profiles = profilesResult.data ?? []
 
@@ -45,7 +59,7 @@ export default async function OportunidadesPage({ searchParams }: PageProps) {
         <h1 className="text-2xl font-bold shrink-0">Oportunidades</h1>
         <div className="flex items-center gap-3 flex-wrap flex-1 justify-end">
           <Suspense>
-            <OpportunityFilters profiles={profiles} />
+            <OpportunityFilters profiles={profiles} canFilterByOwner={canFilterByOwner} />
             <ViewToggle />
           </Suspense>
           <Button asChild size="sm">
