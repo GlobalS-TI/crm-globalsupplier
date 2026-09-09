@@ -219,6 +219,7 @@ function TaskRow({ task, columns, users, allowedBusinessUnits, onTituloSave, onD
             value={task.column_values[col.id] ?? null}
             users={users}
             taskId={task.id}
+            taskTitulo={task.titulo}
             allowedBusinessUnits={allowedBusinessUnits}
             onChange={val => onCellChange(col.id, val)}
             onOptionsUpdate={onOptionsUpdate}

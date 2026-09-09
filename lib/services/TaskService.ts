@@ -1,6 +1,6 @@
-import type { ITaskRepository, BoardWithColumns, TaskWithValues, TaskBoardColumnRow, TaskGroupRow, TaskRow } from '@/lib/repositories/interfaces/ITaskRepository'
-import type { CreateTaskInput, UpdateTaskInput, CreateBoardColumnInput, UpdateBoardColumnInput, ColumnConfig, ImportTasksInput } from '@/lib/validations/task'
-import { createTaskSchema, updateTaskSchema, createBoardColumnSchema, updateBoardColumnSchema, upsertColumnValueSchema, importTasksSchema } from '@/lib/validations/task'
+import type { ITaskRepository, BoardWithColumns, TaskWithValues, TaskBoardColumnRow, TaskGroupRow, TaskRow, TaskNoteMessageRow } from '@/lib/repositories/interfaces/ITaskRepository'
+import type { CreateTaskInput, UpdateTaskInput, CreateBoardColumnInput, UpdateBoardColumnInput, ColumnConfig, ImportTasksInput, CreateTaskNoteMessageInput } from '@/lib/validations/task'
+import { createTaskSchema, updateTaskSchema, createBoardColumnSchema, updateBoardColumnSchema, upsertColumnValueSchema, importTasksSchema, createTaskNoteMessageSchema } from '@/lib/validations/task'
 import type { Json } from '@/lib/types/database'
 
 export class TaskService {
@@ -83,5 +83,14 @@ export class TaskService {
   async batchImportTasks(raw: ImportTasksInput, userId: string): Promise<number> {
     const { board_id, group_id, rows } = importTasksSchema.parse(raw)
     return this.repo.batchCreateTasks(rows, board_id, userId, group_id)
+  }
+
+  async getNoteMessages(taskId: string, columnId: string): Promise<TaskNoteMessageRow[]> {
+    return this.repo.findNoteMessages(taskId, columnId)
+  }
+
+  async addNoteMessage(raw: CreateTaskNoteMessageInput, authorId: string): Promise<TaskNoteMessageRow> {
+    const data = createTaskNoteMessageSchema.parse(raw)
+    return this.repo.addNoteMessage({ ...data, author_id: authorId })
   }
 }

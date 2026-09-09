@@ -23,6 +23,7 @@ const TIPO_LABELS: Record<TaskColumnType, string> = {
   business_unit:  'Marca',
   archivo:        'Archivo adjunto',
   priority:       'Prioridad',
+  notas:          'Notas (chat)',
 }
 
 const SELECTOR_PALETTE = [

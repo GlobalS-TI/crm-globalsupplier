@@ -10,6 +10,10 @@ export type TaskGroupRow        = Database['public']['Tables']['task_groups']['R
 export type TaskRow             = Database['public']['Tables']['tasks']['Row']
 export type TaskColumnValueRow  = Database['public']['Tables']['task_column_values']['Row']
 
+export type TaskNoteMessageRow = Database['public']['Tables']['task_note_messages']['Row'] & {
+  author: { full_name: string } | null
+}
+
 export type TaskWithValues = TaskRow & {
   column_values: Record<string, string | null>
 }
@@ -37,4 +41,6 @@ export interface ITaskRepository {
   deleteColumn(id: string): Promise<void>
   reorderColumns(boardId: string, orderedIds: string[]): Promise<void>
   batchCreateTasks(rows: ImportTaskRow[], boardId: string, createdBy: string, groupId?: string): Promise<number>
+  findNoteMessages(taskId: string, columnId: string): Promise<TaskNoteMessageRow[]>
+  addNoteMessage(data: { task_id: string; column_id: string; content: string; author_id: string }): Promise<TaskNoteMessageRow>
 }

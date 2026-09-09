@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/server'
 import { TaskRepository } from '@/lib/repositories/supabase/TaskRepository'
 import { TaskService } from '@/lib/services/TaskService'
 import type { UpdateTaskInput, CreateBoardColumnInput, UpdateBoardColumnInput, ColumnConfig, ImportTaskRow } from '@/lib/validations/task'
+import type { TaskNoteMessageRow } from '@/lib/repositories/interfaces/ITaskRepository'
 
 function makeService() {
   return new TaskService(new TaskRepository())
@@ -155,6 +156,25 @@ export async function reorderBoardColumns(boardId: string, orderedIds: string[])
   try {
     await makeService().reorderColumns(boardId, orderedIds)
     return {}
+  } catch (e) {
+    return { error: (e as Error).message }
+  }
+}
+
+export async function getTaskNoteMessages(taskId: string, columnId: string): Promise<{ messages: TaskNoteMessageRow[] } | { error: string }> {
+  try {
+    const messages = await makeService().getNoteMessages(taskId, columnId)
+    return { messages }
+  } catch (e) {
+    return { error: (e as Error).message }
+  }
+}
+
+export async function addTaskNoteMessage(taskId: string, columnId: string, content: string): Promise<{ message: TaskNoteMessageRow } | { error: string }> {
+  try {
+    const userId = await getCurrentUserId()
+    const message = await makeService().addNoteMessage({ task_id: taskId, column_id: columnId, content }, userId)
+    return { message }
   } catch (e) {
     return { error: (e as Error).message }
   }

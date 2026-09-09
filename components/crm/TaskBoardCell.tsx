@@ -3,11 +3,12 @@
 import { useState, useCallback, useRef } from 'react'
 import { format, parseISO } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { CalendarIcon, ExternalLink, Plus, Check, ChevronDown, Paperclip, Loader2, X } from 'lucide-react'
+import { CalendarIcon, ExternalLink, Plus, Check, ChevronDown, Paperclip, Loader2, X, MessageSquare } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Calendar } from '@/components/ui/calendar'
 import { createClient } from '@/lib/supabase/client'
+import { TaskNotesModal } from '@/components/crm/TaskNotesModal'
 import type { TaskBoardColumnRow } from '@/lib/repositories/interfaces/ITaskRepository'
 import type { SelectorOption, ColumnConfig } from '@/lib/validations/task'
 import { updateColumnConfig } from '@/app/(dashboard)/actividades/task-actions'
@@ -196,6 +197,15 @@ export function DisplayValue({ col, value, users }: { col: TaskBoardColumnRow; v
 
   if (col.tipo === 'number') {
     return <span className="text-xs tabular-nums">{Number(value).toLocaleString('es-MX')}</span>
+  }
+
+  if (col.tipo === 'notas') {
+    return (
+      <span className="flex items-center gap-1 text-xs truncate max-w-[140px]">
+        <MessageSquare className="h-3 w-3 text-muted-foreground/50 shrink-0" />
+        <span className="truncate">{value}</span>
+      </span>
+    )
   }
 
   return <span className="text-xs truncate max-w-[140px] block">{value}</span>
@@ -791,6 +801,44 @@ function ArchivoCell({ taskId, value, onChange }: {
 }
 
 // ----------------------------------------------------------------
+// Notas cell — abre un modal tipo chat en vez de editar en línea
+// ----------------------------------------------------------------
+function NotasCell({ column, value, taskId, taskTitulo, onChange }: {
+  column:     TaskBoardColumnRow
+  value:      string | null
+  taskId:     string
+  taskTitulo: string
+  onChange:   (v: string | null) => void
+}) {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <>
+      <button
+        className="w-full min-h-[32px] flex items-center gap-1.5 px-2 rounded hover:bg-muted/30 transition-colors text-left"
+        onClick={() => setOpen(true)}
+      >
+        <MessageSquare className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
+        {value ? (
+          <span className="text-xs truncate">{value}</span>
+        ) : (
+          <span className="text-muted-foreground/30 text-xs">—</span>
+        )}
+      </button>
+      <TaskNotesModal
+        open={open}
+        onOpenChange={setOpen}
+        taskId={taskId}
+        columnId={column.id}
+        columnNombre={column.nombre}
+        taskTitulo={taskTitulo}
+        onMessageSent={onChange}
+      />
+    </>
+  )
+}
+
+// ----------------------------------------------------------------
 // TaskBoardCell — dispatcher
 // ----------------------------------------------------------------
 interface TaskBoardCellProps {
@@ -798,12 +846,13 @@ interface TaskBoardCellProps {
   value:                string | null
   users:                User[]
   taskId:               string
+  taskTitulo:           string
   allowedBusinessUnits: string[]
   onChange:             (value: string | null) => void
   onOptionsUpdate:      (columnId: string, opts: SelectorOption[]) => void
 }
 
-export function TaskBoardCell({ column, value, users, taskId, allowedBusinessUnits, onChange, onOptionsUpdate }: TaskBoardCellProps) {
+export function TaskBoardCell({ column, value, users, taskId, taskTitulo, allowedBusinessUnits, onChange, onOptionsUpdate }: TaskBoardCellProps) {
   const cfg = parseConfig(column.config)
 
   const handleOptionsUpdate = useCallback((opts: SelectorOption[]) => {
@@ -852,6 +901,10 @@ export function TaskBoardCell({ column, value, users, taskId, allowedBusinessUni
 
   if (column.tipo === 'date') {
     return <DateCell value={value} onChange={onChange} />
+  }
+
+  if (column.tipo === 'notas') {
+    return <NotasCell column={column} value={value} taskId={taskId} taskTitulo={taskTitulo} onChange={onChange} />
   }
 
   return <InlineTextCell value={value} onChange={onChange} tipo={column.tipo as 'text' | 'number' | 'url'} />
