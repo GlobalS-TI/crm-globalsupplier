@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import type {
   ITaskRepository, BoardWithColumns, TaskWithValues,
-  TaskBoardColumnRow, TaskGroupRow, TaskRow,
+  TaskBoardColumnRow, TaskGroupRow, TaskRow, TaskNoteMessageRow,
 } from '@/lib/repositories/interfaces/ITaskRepository'
 import type {
   CreateBoardColumnInput, UpdateBoardColumnInput,
@@ -289,5 +289,28 @@ export class TaskRepository implements ITaskRepository {
     const { data, error } = await supabase.from('tasks').insert(inserts).select('id')
     if (error) throw error
     return data?.length ?? 0
+  }
+
+  async findNoteMessages(taskId: string, columnId: string): Promise<TaskNoteMessageRow[]> {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+      .from('task_note_messages')
+      .select('*, author:profiles!author_id(full_name)')
+      .eq('task_id', taskId)
+      .eq('column_id', columnId)
+      .order('created_at', { ascending: true })
+    if (error) throw error
+    return (data ?? []) as TaskNoteMessageRow[]
+  }
+
+  async addNoteMessage(data: { task_id: string; column_id: string; content: string; author_id: string }): Promise<TaskNoteMessageRow> {
+    const supabase = await createClient()
+    const { data: created, error } = await supabase
+      .from('task_note_messages')
+      .insert(data)
+      .select('*, author:profiles!author_id(full_name)')
+      .single()
+    if (error) throw error
+    return created as TaskNoteMessageRow
   }
 }

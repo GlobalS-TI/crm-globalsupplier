@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 export const taskColumnTypeSchema = z.enum([
   'text', 'number', 'date', 'selector', 'multi_selector',
-  'person', 'url', 'business_unit', 'archivo', 'priority',
+  'person', 'url', 'business_unit', 'archivo', 'priority', 'notas',
 ])
 
 export const selectorOptionSchema = z.object({
@@ -48,6 +48,12 @@ export const upsertColumnValueSchema = z.object({
   value:     z.string().nullable(),
 })
 
+export const createTaskNoteMessageSchema = z.object({
+  task_id:   z.string().uuid(),
+  column_id: z.string().uuid(),
+  content:   z.string().min(1).max(4000),
+})
+
 export const importTaskRowSchema = z.object({
   titulo:        z.string().min(1).max(500),
   fecha_entrega: z.string().date().optional(),
@@ -69,3 +75,4 @@ export type UpdateTaskInput        = z.infer<typeof updateTaskSchema>
 export type UpsertColumnValueInput = z.infer<typeof upsertColumnValueSchema>
 export type ImportTaskRow          = z.infer<typeof importTaskRowSchema>
 export type ImportTasksInput       = z.infer<typeof importTasksSchema>
+export type CreateTaskNoteMessageInput = z.infer<typeof createTaskNoteMessageSchema>

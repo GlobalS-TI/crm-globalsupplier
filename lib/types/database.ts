@@ -1484,6 +1484,55 @@ export type Database = {
           },
         ]
       }
+      task_note_messages: {
+        Row: {
+          author_id: string | null
+          column_id: string
+          content: string
+          created_at: string
+          id: string
+          task_id: string
+        }
+        Insert: {
+          author_id?: string | null
+          column_id: string
+          content: string
+          created_at?: string
+          id?: string
+          task_id: string
+        }
+        Update: {
+          author_id?: string | null
+          column_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_note_messages_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_note_messages_column_id_fkey"
+            columns: ["column_id"]
+            isOneToOne: false
+            referencedRelation: "task_board_columns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_note_messages_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tasks: {
         Row: {
           assigned_to: string | null
@@ -1652,6 +1701,7 @@ export type Database = {
         | "archivo"
         | "multi_selector"
         | "priority"
+        | "notas"
       user_role:
         | "director_general"
         | "direccion_comercial"
@@ -1856,6 +1906,7 @@ export const Constants = {
         "archivo",
         "multi_selector",
         "priority",
+        "notas",
       ],
       user_role: [
         "director_general",
