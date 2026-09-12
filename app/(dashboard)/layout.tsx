@@ -19,7 +19,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (!profile?.is_active) redirect('/login')
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex flex-col md:flex-row h-screen overflow-hidden">
       <AppSidebar
         userId={user.id}
         userFullName={profile?.full_name ?? user.email ?? 'Usuario'}

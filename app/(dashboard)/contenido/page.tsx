@@ -56,14 +56,14 @@ export default async function ContenidoPage({ searchParams }: PageProps) {
   )
 
   return (
-    <div className="flex h-full">
+    <div className="flex flex-col md:flex-row h-full overflow-hidden">
       <ContentCategoryNav
         categories={categories}
         selectedId={cat}
         isContentManager={isContentManager}
       />
 
-      <div className="flex-1 overflow-y-auto p-8 space-y-6">
+      <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6">
         {!cat ? (
           <div className="flex flex-col items-center justify-center h-64 gap-3 text-muted-foreground">
             <Library className="h-10 w-10 opacity-30" />

@@ -2,7 +2,7 @@
 
 import { useState, useTransition, useEffect } from 'react'
 import Link from 'next/link'
-import { Folder, Trash2, GripVertical } from 'lucide-react'
+import { Folder, Trash2, GripVertical, Menu } from 'lucide-react'
 import {
   DndContext,
   closestCenter,
@@ -24,6 +24,9 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { cn } from '@/lib/utils'
+import { useIsMobile } from '@/hooks/use-mobile'
+import { Button } from '@/components/ui/button'
+import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
 import { CreateCategoryButton, EditCategoryButton } from '@/components/crm/ContentCategoryModal'
 import { deleteCategory, reorderCategories } from '@/app/(dashboard)/contenido/actions'
 import type { ContentCategoryRow } from '@/lib/repositories/interfaces/IContentRepository'
@@ -126,10 +129,13 @@ interface Props {
 }
 
 export function ContentCategoryNav({ categories, selectedId, isContentManager }: Props) {
-  const [items, setItems]   = useState(categories)
-  const [, startTransition] = useTransition()
+  const [items, setItems]     = useState(categories)
+  const [, startTransition]   = useTransition()
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const isMobile = useIsMobile()
 
   useEffect(() => { setItems(categories) }, [categories])
+  useEffect(() => { setMobileOpen(false) }, [selectedId])
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } })
@@ -146,9 +152,11 @@ export function ContentCategoryNav({ categories, selectedId, isContentManager }:
     startTransition(async () => { await reorderCategories(next.map(c => c.id)) })
   }
 
-  return (
-    <aside className="w-56 shrink-0 border-r h-full overflow-y-auto bg-card flex flex-col">
-      <div className="flex-1 px-3 py-4 space-y-0.5">
+  const selectedCategory = items.find(c => c.id === selectedId)
+
+  const navBody = (
+    <>
+      <div className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
           <SortableContext items={items.map(c => c.id)} strategy={verticalListSortingStrategy}>
             {items.map(cat => (
@@ -164,10 +172,42 @@ export function ContentCategoryNav({ categories, selectedId, isContentManager }:
       </div>
 
       {isContentManager && (
-        <div className="border-t px-3 py-2">
+        <div className="border-t px-3 py-2 shrink-0">
           <CreateCategoryButton />
         </div>
       )}
+    </>
+  )
+
+  if (isMobile) {
+    return (
+      <>
+        <div className="flex items-center px-4 py-3 border-b bg-card shrink-0">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="gap-2 max-w-full"
+            onClick={() => setMobileOpen(true)}
+          >
+            <Menu className="h-4 w-4 shrink-0" />
+            <span className="truncate">{selectedCategory ? selectedCategory.nombre : 'Categorías'}</span>
+          </Button>
+        </div>
+
+        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+          <SheetContent side="left" className="w-72 p-0 flex flex-col gap-0">
+            <SheetTitle className="sr-only">Categorías de contenido</SheetTitle>
+            {navBody}
+          </SheetContent>
+        </Sheet>
+      </>
+    )
+  }
+
+  return (
+    <aside className="flex w-56 shrink-0 border-r h-full overflow-y-auto bg-card flex-col">
+      {navBody}
     </aside>
   )
 }
