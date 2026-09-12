@@ -24,6 +24,7 @@ import {
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
@@ -54,6 +55,7 @@ interface AppSidebarProps {
 
 export function AppSidebar({ userFullName, userEmail, userRole, userId }: AppSidebarProps) {
   const pathname = usePathname()
+  const isMobile = useIsMobile()
   const { resolvedTheme } = useTheme()
   const [bouncing, setBouncing] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -225,37 +227,41 @@ export function AppSidebar({ userFullName, userEmail, userRole, userId }: AppSid
     </>
   )
 
-  return (
-    <>
-      {/* Mobile topbar */}
-      <div className="md:hidden flex items-center justify-between px-4 py-3 border-b bg-card shrink-0">
-        <div className="flex items-center gap-2">
-          <Image src="/logo.png" alt="" width={24} height={24} className="rounded-sm" />
-          <span className="font-semibold text-sm tracking-tight">Supply</span>
+  // Solo una copia de sidebarBody se monta a la vez: NotificationBell abre un
+  // canal de Supabase Realtime keyed por userId, y montarlo dos veces a la vez
+  // (aside oculto + drawer) hace que el segundo .subscribe() truene.
+  if (isMobile) {
+    return (
+      <>
+        <div className="flex items-center justify-between px-4 py-3 border-b bg-card shrink-0">
+          <div className="flex items-center gap-2">
+            <Image src="/logo.png" alt="" width={24} height={24} className="rounded-sm" />
+            <span className="font-semibold text-sm tracking-tight">Supply</span>
+          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            aria-label="Abrir menú"
+            onClick={() => setMobileOpen(true)}
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
         </div>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          aria-label="Abrir menú"
-          onClick={() => setMobileOpen(true)}
-        >
-          <Menu className="h-5 w-5" />
-        </Button>
-      </div>
 
-      {/* Desktop sidebar */}
-      <aside className="hidden md:flex flex-col w-60 h-screen bg-card border-r shrink-0">
-        {sidebarBody}
-      </aside>
+        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+          <SheetContent side="left" className="w-72 p-0 flex flex-col gap-0">
+            <SheetTitle className="sr-only">Menú de navegación</SheetTitle>
+            {sidebarBody}
+          </SheetContent>
+        </Sheet>
+      </>
+    )
+  }
 
-      {/* Mobile drawer */}
-      <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-        <SheetContent side="left" className="w-72 p-0 flex flex-col gap-0">
-          <SheetTitle className="sr-only">Menú de navegación</SheetTitle>
-          {sidebarBody}
-        </SheetContent>
-      </Sheet>
-    </>
+  return (
+    <aside className="flex flex-col w-60 h-screen bg-card border-r shrink-0">
+      {sidebarBody}
+    </aside>
   )
 }
