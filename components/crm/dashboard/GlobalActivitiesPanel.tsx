@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { Route } from 'next'
 import { Badge } from '@/components/ui/badge'
+import { cn } from '@/lib/utils'
 import type { GlobalPendingActivity } from '@/lib/repositories/interfaces/IActivityRepository'
 
 const TYPE_LABELS: Record<string, string> = {
@@ -52,8 +53,8 @@ export function GlobalActivitiesPanel({ activities }: Props) {
 
 function ActivityTable({ rows, overdue = false }: { rows: GlobalPendingActivity[]; overdue?: boolean }) {
   return (
-    <div className="rounded-md border overflow-hidden">
-      <table className="w-full text-sm">
+    <div className="rounded-md border overflow-x-auto">
+      <table className="w-full min-w-[640px] text-sm">
         <thead className="bg-muted/50">
           <tr>
             <th className="px-3 py-2 text-left font-medium text-muted-foreground">Actividad</th>
@@ -70,10 +71,10 @@ function ActivityTable({ rows, overdue = false }: { rows: GlobalPendingActivity[
                   <Badge variant="outline" className="text-xs shrink-0">
                     {TYPE_LABELS[a.tipo] ?? a.tipo}
                   </Badge>
-                  <span className={overdue ? 'text-destructive font-medium' : ''}>{a.titulo}</span>
+                  <span className={cn('whitespace-nowrap', overdue && 'text-destructive font-medium')}>{a.titulo}</span>
                 </div>
               </td>
-              <td className="px-3 py-2 text-muted-foreground">
+              <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">
                 {a.opportunity ? (
                   <Link
                     href={`/oportunidades/${a.opportunity.id}` as Route}
@@ -83,7 +84,7 @@ function ActivityTable({ rows, overdue = false }: { rows: GlobalPendingActivity[
                   </Link>
                 ) : '—'}
               </td>
-              <td className="px-3 py-2 text-muted-foreground">
+              <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">
                 {a.owner?.full_name ?? '—'}
               </td>
               <td className="px-3 py-2 text-muted-foreground whitespace-nowrap">
