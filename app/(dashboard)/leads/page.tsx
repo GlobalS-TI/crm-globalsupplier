@@ -69,14 +69,14 @@ export default async function LeadsPage({ searchParams }: PageProps) {
   }
 
   return (
-    <div className="flex h-full">
+    <div className="flex flex-col md:flex-row h-full overflow-hidden">
       <LeadSectionNav
         sections={sections}
         selectedId={sec}
         isLeadsManager={isLeadsManager}
       />
 
-      <div className="flex-1 overflow-y-auto p-8 space-y-6">
+      <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <h1 className="text-2xl font-bold">Leads</h1>
           {isLeadsManager && <CreateSectionButton />}

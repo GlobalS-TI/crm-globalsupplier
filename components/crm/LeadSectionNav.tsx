@@ -1,9 +1,12 @@
 'use client'
 
-import { useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import Link from 'next/link'
-import { Users, Trash2 } from 'lucide-react'
+import { Users, Trash2, Menu } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useIsMobile } from '@/hooks/use-mobile'
+import { Button } from '@/components/ui/button'
+import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
@@ -55,50 +58,86 @@ interface Props {
 }
 
 export function LeadSectionNav({ sections, selectedId, isLeadsManager }: Props) {
-  return (
-    <aside className="w-56 shrink-0 border-r h-full overflow-y-auto bg-card flex flex-col">
-      <div className="flex-1 px-3 py-4 space-y-0.5">
-        {sections.length === 0 && (
-          <p className="px-3 py-2 text-xs text-muted-foreground">Sin secciones aún</p>
-        )}
-        {sections.map(sec => {
-          const isActive = sec.id === selectedId
-          const count    = Number(sec.leads?.[0]?.count ?? 0)
+  const isMobile = useIsMobile()
+  const [mobileOpen, setMobileOpen] = useState(false)
 
-          return (
-            <div key={sec.id} className="group flex items-center gap-1">
-              <Link
-                href={`/leads?sec=${sec.id}`}
-                className={cn(
-                  'flex-1 flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-colors min-w-0',
-                  isActive
-                    ? 'bg-primary text-primary-foreground font-medium'
-                    : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
-                )}
-              >
-                <Users className="h-4 w-4 shrink-0" />
-                <span className="truncate flex-1">{sec.nombre}</span>
-                {count > 0 && (
-                  <span className={cn(
-                    'text-xs tabular-nums shrink-0 rounded-full px-1.5',
-                    isActive ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted text-muted-foreground'
-                  )}>
-                    {count}
-                  </span>
-                )}
-              </Link>
+  useEffect(() => { setMobileOpen(false) }, [selectedId])
 
-              {isLeadsManager && (
-                <div className="flex items-center shrink-0">
-                  <EditSectionButton section={sec} />
-                  <DeleteSectionButton section={sec} />
-                </div>
+  const selectedSection = sections.find(s => s.id === selectedId)
+
+  const navBody = (
+    <div className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
+      {sections.length === 0 && (
+        <p className="px-3 py-2 text-xs text-muted-foreground">Sin secciones aún</p>
+      )}
+      {sections.map(sec => {
+        const isActive = sec.id === selectedId
+        const count    = Number(sec.leads?.[0]?.count ?? 0)
+
+        return (
+          <div key={sec.id} className="group flex items-center gap-1">
+            <Link
+              href={`/leads?sec=${sec.id}`}
+              className={cn(
+                'flex-1 flex items-center gap-2.5 px-3 py-2 rounded-md text-sm transition-colors min-w-0',
+                isActive
+                  ? 'bg-primary text-primary-foreground font-medium'
+                  : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
               )}
-            </div>
-          )
-        })}
-      </div>
+            >
+              <Users className="h-4 w-4 shrink-0" />
+              <span className="truncate flex-1">{sec.nombre}</span>
+              {count > 0 && (
+                <span className={cn(
+                  'text-xs tabular-nums shrink-0 rounded-full px-1.5',
+                  isActive ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-muted text-muted-foreground'
+                )}>
+                  {count}
+                </span>
+              )}
+            </Link>
 
+            {isLeadsManager && (
+              <div className="flex items-center shrink-0">
+                <EditSectionButton section={sec} />
+                <DeleteSectionButton section={sec} />
+              </div>
+            )}
+          </div>
+        )
+      })}
+    </div>
+  )
+
+  if (isMobile) {
+    return (
+      <>
+        <div className="flex items-center px-4 py-3 border-b bg-card shrink-0">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="gap-2 max-w-full"
+            onClick={() => setMobileOpen(true)}
+          >
+            <Menu className="h-4 w-4 shrink-0" />
+            <span className="truncate">{selectedSection ? selectedSection.nombre : 'Secciones'}</span>
+          </Button>
+        </div>
+
+        <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+          <SheetContent side="left" className="w-72 p-0 flex flex-col gap-0">
+            <SheetTitle className="sr-only">Secciones de leads</SheetTitle>
+            {navBody}
+          </SheetContent>
+        </Sheet>
+      </>
+    )
+  }
+
+  return (
+    <aside className="flex w-56 shrink-0 border-r h-full overflow-y-auto bg-card flex-col">
+      {navBody}
     </aside>
   )
 }
