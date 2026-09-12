@@ -20,12 +20,14 @@ import {
   Shield,
   LifeBuoy,
   LogOut,
+  Menu,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
+import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
 import { logout } from '@/app/(dashboard)/actions'
 import { ThemeToggle } from './ThemeToggle'
 import { NotificationBell } from './NotificationBell'
@@ -54,6 +56,7 @@ export function AppSidebar({ userFullName, userEmail, userRole, userId }: AppSid
   const pathname = usePathname()
   const { resolvedTheme } = useTheme()
   const [bouncing, setBouncing] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
   const prevTheme = useRef<string | undefined>(undefined)
 
   useEffect(() => {
@@ -69,6 +72,10 @@ export function AppSidebar({ userFullName, userEmail, userRole, userId }: AppSid
     }
   }, [resolvedTheme])
 
+  useEffect(() => {
+    setMobileOpen(false)
+  }, [pathname])
+
   const initials = userFullName
     .split(' ')
     .slice(0, 2)
@@ -76,8 +83,8 @@ export function AppSidebar({ userFullName, userEmail, userRole, userId }: AppSid
     .join('')
     .toUpperCase()
 
-  return (
-    <aside className="flex flex-col w-60 h-screen bg-card border-r shrink-0">
+  const sidebarBody = (
+    <>
       {/* Brand */}
       <div className="px-4 py-5 flex items-center gap-2">
         <Image src="/logo.png" alt="" width={24} height={24} className="rounded-sm" />
@@ -215,6 +222,40 @@ export function AppSidebar({ userFullName, userEmail, userRole, userId }: AppSid
           </Button>
         </form>
       </div>
-    </aside>
+    </>
+  )
+
+  return (
+    <>
+      {/* Mobile topbar */}
+      <div className="md:hidden flex items-center justify-between px-4 py-3 border-b bg-card shrink-0">
+        <div className="flex items-center gap-2">
+          <Image src="/logo.png" alt="" width={24} height={24} className="rounded-sm" />
+          <span className="font-semibold text-sm tracking-tight">Supply</span>
+        </div>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          aria-label="Abrir menú"
+          onClick={() => setMobileOpen(true)}
+        >
+          <Menu className="h-5 w-5" />
+        </Button>
+      </div>
+
+      {/* Desktop sidebar */}
+      <aside className="hidden md:flex flex-col w-60 h-screen bg-card border-r shrink-0">
+        {sidebarBody}
+      </aside>
+
+      {/* Mobile drawer */}
+      <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+        <SheetContent side="left" className="w-72 p-0 flex flex-col gap-0">
+          <SheetTitle className="sr-only">Menú de navegación</SheetTitle>
+          {sidebarBody}
+        </SheetContent>
+      </Sheet>
+    </>
   )
 }
