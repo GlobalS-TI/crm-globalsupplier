@@ -16,9 +16,12 @@ function parseForm(form: FormData): Record<string, unknown> {
   const obj: Record<string, unknown> = {}
   for (const [key, value] of form.entries()) {
     if (value === '' || value === 'null') continue
-    // datetime-local gives "YYYY-MM-DDTHH:mm" without offset — append Z for UTC
+    // El cliente ya envia 'fecha' en ISO con offset (ver ActivityForm). Este
+    // fallback es solo por si llega un naive "YYYY-MM-DDTHH:mm" — new Date()
+    // aqui correria en el servidor y lo interpretaria en la TZ del servidor
+    // (no la del usuario), asi que se fuerza UTC explicito en vez de adivinar.
     if (key === 'fecha' && typeof value === 'string' && !value.includes('Z') && !value.includes('+')) {
-      obj[key] = new Date(value).toISOString()
+      obj[key] = new Date(`${value}:00Z`).toISOString()
     } else {
       obj[key] = value
     }

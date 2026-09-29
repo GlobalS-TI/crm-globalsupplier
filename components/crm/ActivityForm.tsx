@@ -1,12 +1,20 @@
 'use client'
 
 import { useActionState, useRef } from 'react'
+import type { ChangeEvent } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import type { ActionState } from '@/app/(dashboard)/actividades/actions'
+
+// datetime-local espera hora LOCAL — usar toISOString() (UTC) aqui desfasaba
+// el valor mostrado por el offset de zona horaria del navegador.
+function toLocalInputValue(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
+}
 
 const TYPES = [
   { value: 'llamada',     label: 'Llamada' },
@@ -26,6 +34,7 @@ interface ActivityFormProps {
 
 export function ActivityForm({ opportunityId, action, onSuccess }: ActivityFormProps) {
   const formRef = useRef<HTMLFormElement>(null)
+  const hiddenFechaRef = useRef<HTMLInputElement>(null)
   const [state, formAction, pending] = useActionState(
     async (prev: ActionState, form: FormData) => {
       const result = await action(prev, form)
@@ -35,7 +44,16 @@ export function ActivityForm({ opportunityId, action, onSuccess }: ActivityFormP
     null
   )
 
-  const defaultFecha = new Date(Date.now() + 3600_000).toISOString().slice(0, 16)
+  const defaultDate = new Date(Date.now() + 3600_000)
+  const defaultLocalFecha = toLocalInputValue(defaultDate)
+
+  function handleFechaChange(e: ChangeEvent<HTMLInputElement>) {
+    if (hiddenFechaRef.current && e.target.value) {
+      // e.target.value es "YYYY-MM-DDTHH:mm" sin offset — new Date() aqui
+      // corre en el navegador, asi que usa la zona horaria real del usuario.
+      hiddenFechaRef.current.value = new Date(e.target.value).toISOString()
+    }
+  }
 
   return (
     <form ref={formRef} action={formAction} className="space-y-5">
@@ -55,7 +73,13 @@ export function ActivityForm({ opportunityId, action, onSuccess }: ActivityFormP
           le toca compartiendo columna con Tipo, si no el valor se corta. */}
       <div className="space-y-2">
         <Label>Fecha *</Label>
-        <Input name="fecha" type="datetime-local" defaultValue={defaultFecha} required />
+        <input type="hidden" name="fecha" ref={hiddenFechaRef} defaultValue={defaultDate.toISOString()} />
+        <Input
+          type="datetime-local"
+          defaultValue={defaultLocalFecha}
+          onChange={handleFechaChange}
+          required
+        />
       </div>
 
       <div className="space-y-2">
