@@ -217,8 +217,12 @@ export function EditLeadButton({ lead, assignableUsers, requirementUrl }: EditPr
           </div>
 
           <div className="flex justify-end gap-2 pt-1">
-            <Button type="submit" disabled={pending}>
-              {pending ? 'Guardando…' : 'Guardar cambios'}
+            {/* Bloqueado también mientras `replacing`: si se adjunta el archivo y se asigna
+                vendedor en la misma sesión, guardar antes de que la subida termine dispara la
+                auto-conversión con requirements_file_path todavía vacío, y el archivo nunca
+                se arrastra a la oportunidad. */}
+            <Button type="submit" disabled={pending || replacing}>
+              {pending ? 'Guardando…' : replacing ? 'Subiendo archivo…' : 'Guardar cambios'}
             </Button>
           </div>
         </form>
