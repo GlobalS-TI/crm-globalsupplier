@@ -18,11 +18,8 @@ info:
     - Límite por cliente: 20 llamadas por minuto y 300 por día, incluidas las fallidas.
     - No existe ninguna operación de borrado.
 servers:
-  - url: https://{dominio}/api/integrations/v1
-    variables:
-      dominio:
-        default: dominio-del-crm
-        description: Dominio de producción de Supply CRM
+  - url: https://crm.globalsupplier.com.mx/api/integrations/v1
+    description: Producción
 security:
   - apiKey: []
 tags:

@@ -36,7 +36,7 @@ desactiva en el CRM, la integración deja de funcionar automáticamente.
 
 ## Contrato de la API
 
-Base: `https://<dominio-del-crm>/api/integrations/v1`
+Base: `https://crm.globalsupplier.com.mx/api/integrations/v1`
 Header: `Authorization: Bearer sint_…` · Cuerpo JSON · Respuesta `{ "data": … }` o `{ "error": "…" }`
 
 | Método | Ruta | Qué hace |
