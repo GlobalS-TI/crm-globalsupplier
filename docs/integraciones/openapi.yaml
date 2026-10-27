@@ -1,0 +1,634 @@
+openapi: 3.1.0
+info:
+  title: Supply CRM — API de integración
+  version: 1.0.0
+  description: |
+    API para que sistemas externos consulten y registren información comercial en Supply CRM.
+    Cada cliente de integración está limitado a una unidad de negocio y a un usuario dueño;
+    el CRM aplica esas reglas en la base de datos (ver ADR-007).
+
+    **Autenticación:** `Authorization: Bearer sint_<64 hex>`. La key se usa sólo desde un
+    servidor: nunca en un navegador, en código de frontend, en el prompt de un modelo de IA ni
+    en logs. La API no acepta llamadas desde navegadores (sin CORS).
+
+    **Convenciones**
+    - Respuesta exitosa: `{ "data": … }`. Error: `{ "error": "…", "detail"?: "…", "issues"?: […] }`.
+    - Fechas en ISO 8601 con zona horaria (`2026-11-03T10:00:00-06:00`). Las respuestas vienen en UTC.
+    - `PATCH` es parcial: sólo se envían los campos que cambian; `null` borra un campo opcional.
+    - Límite por cliente: 20 llamadas por minuto y 300 por día, incluidas las fallidas.
+    - No existe ninguna operación de borrado.
+servers:
+  - url: https://{dominio}/api/integrations/v1
+    variables:
+      dominio:
+        default: dominio-del-crm
+        description: Dominio de producción de Supply CRM
+security:
+  - apiKey: []
+tags:
+  - name: Búsqueda
+    description: Detección de duplicados antes de crear registros.
+  - name: Empresas
+    description: Alta y consulta de empresas.
+  - name: Contactos
+    description: Alta y consulta de contactos.
+  - name: Oportunidades
+    description: |
+      Unidad, dueño y fuente los fija el CRM según el cliente de integración. Las etapas `ganado`,
+      `perdido` y `sin_respuesta` las asigna sólo una persona; desde ese momento la oportunidad
+      queda en solo lectura para la integración (`editable: false`).
+  - name: Actividades
+    description: Llamadas, emails, reuniones y seguimientos sobre oportunidades de la integración.
+
+paths:
+  /lookup:
+    get:
+      tags: [Búsqueda]
+      operationId: buscarDuplicados
+      summary: Buscar empresas y contactos existentes
+      description: |
+        Coincidencia exacta normalizada: RFC sin espacios ni distinción de mayúsculas, email sin
+        distinción de mayúsculas, teléfono por sus últimos 10 dígitos (`+52 81 1234 5678` = `8112345678`).
+        Devuelve hasta 10 resultados por tipo, sólo con los datos mínimos para identificarlos.
+        Un resultado con `autorizado: false` se puede ligar a una oportunidad por su `id`, pero su
+        detalle no es consultable.
+      parameters:
+        - name: rfc
+          in: query
+          schema: { type: string, minLength: 12, maxLength: 13 }
+          example: PND010101AB1
+        - name: email
+          in: query
+          schema: { type: string, format: email }
+          example: compras@promosdelnorte.mx
+        - name: telefono
+          in: query
+          description: Al menos 10 dígitos; se aceptan espacios, guiones y lada.
+          schema: { type: string }
+          example: '8112345678'
+      responses:
+        '200':
+          description: Coincidencias (listas vacías si no hay)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/LookupResult' }
+              example:
+                data:
+                  empresas:
+                    - id: 78758862-1dd3-497e-a678-ce6e477a4ed5
+                      nombre: Promos del Norte SA
+                      coincidencia: telefono
+                      autorizado: false
+                  contactos: []
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+
+  /companies:
+    post:
+      tags: [Empresas]
+      operationId: crearEmpresa
+      summary: Crear empresa
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CompanyCreate' }
+            example:
+              nombre: Promos del Norte SA
+              rfc: PND010101AB1
+              telefono: '8112345678'
+              ciudad: Monterrey
+              estado: Nuevo León
+      responses:
+        '201':
+          description: Empresa creada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Company' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+
+  /companies/{id}:
+    get:
+      tags: [Empresas]
+      operationId: verEmpresa
+      summary: Ver detalle de una empresa
+      description: Sólo empresas creadas por la integración o ligadas a una oportunidad de su unidad registrada por una persona.
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: Empresa
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Company' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+
+  /contacts:
+    post:
+      tags: [Contactos]
+      operationId: crearContacto
+      summary: Crear contacto
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ContactCreate' }
+            example:
+              nombre: Laura
+              apellido: Garza
+              puesto: Compras
+              email: laura.garza@promosdelnorte.mx
+              celular: '8187654321'
+              company_id: 78758862-1dd3-497e-a678-ce6e477a4ed5
+      responses:
+        '201':
+          description: Contacto creado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Contact' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+
+  /contacts/{id}:
+    get:
+      tags: [Contactos]
+      operationId: verContacto
+      summary: Ver detalle de un contacto
+      description: Sólo contactos creados por la integración o ligados a una oportunidad de su unidad registrada por una persona.
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: Contacto
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Contact' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+
+  /opportunities:
+    get:
+      tags: [Oportunidades]
+      operationId: listarOportunidades
+      summary: Listar oportunidades creadas por la integración
+      description: Hasta 100, las actualizadas más recientemente primero, cada una con sus actividades.
+      parameters:
+        - name: etapa
+          in: query
+          schema: { $ref: '#/components/schemas/Etapa' }
+      responses:
+        '200':
+          description: Oportunidades
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Opportunity' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+    post:
+      tags: [Oportunidades]
+      operationId: crearOportunidad
+      summary: Crear oportunidad
+      description: |
+        Se crea en la unidad del cliente, a nombre de su usuario dueño, con `fuente = otro` y la
+        etiqueta del cliente al inicio de `notas` (p. ej. `[THOREN_AI]`). Campos como `owner_id`,
+        `business_unit`, `fuente` o `monto_final` se ignoran si se envían.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OpportunityCreate' }
+            example:
+              nombre: Termos personalizados 500 pzas
+              company_id: 78758862-1dd3-497e-a678-ce6e477a4ed5
+              contact_id: 1eac6418-ba83-4952-8330-c3327bede93f
+              monto_estimado: 45000
+              probabilidad: 30
+              next_activity_at: '2026-11-03T10:00:00-06:00'
+              notas: Lead por WhatsApp, pide muestra física
+      responses:
+        '201':
+          description: Oportunidad creada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Opportunity' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+
+  /opportunities/{id}:
+    get:
+      tags: [Oportunidades]
+      operationId: verOportunidad
+      summary: Ver una oportunidad con sus actividades
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      responses:
+        '200':
+          description: Oportunidad
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Opportunity' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+    patch:
+      tags: [Oportunidades]
+      operationId: actualizarOportunidad
+      summary: Actualizar una oportunidad (parcial)
+      description: Sólo oportunidades creadas por la integración y que sigan abiertas.
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OpportunityUpdate' }
+            example:
+              etapa: diagnostico
+              probabilidad: 40
+      responses:
+        '200':
+          description: Oportunidad actualizada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Opportunity' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+
+  /activities:
+    post:
+      tags: [Actividades]
+      operationId: registrarActividad
+      summary: Registrar una actividad
+      description: |
+        Sólo en oportunidades abiertas creadas por la integración. Responde la oportunidad completa;
+        la actividad nueva viene en `actividades` con `creada_por_integracion: true`. El CRM recalcula
+        `next_activity_at` con la actividad pendiente más próxima.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ActivityCreate' }
+            example:
+              opportunity_id: 1df3b761-5e6d-4670-8f5c-615cb85ec348
+              tipo: llamada
+              titulo: Confirmar colores y fecha de entrega
+              fecha: '2026-11-04T11:00:00-06:00'
+      responses:
+        '201':
+          description: Oportunidad con la actividad registrada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Opportunity' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+
+  /activities/{id}:
+    patch:
+      tags: [Actividades]
+      operationId: actualizarActividad
+      summary: Actualizar una actividad (parcial)
+      description: Sólo actividades registradas por la integración, en oportunidades abiertas.
+      parameters:
+        - $ref: '#/components/parameters/Id'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ActivityUpdate' }
+            example:
+              estatus: completada
+      responses:
+        '200':
+          description: Oportunidad con la actividad actualizada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/Opportunity' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+
+components:
+  securitySchemes:
+    apiKey:
+      type: http
+      scheme: bearer
+      bearerFormat: sint_<64 caracteres hexadecimales>
+      description: Emitida y revocada por el administrador del CRM. Se entrega una sola vez.
+
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+
+  schemas:
+    Etapa:
+      type: string
+      description: Etapas de oportunidad. La integración sólo puede asignar las seis primeras.
+      enum: [nuevo_lead, contactado, diagnostico, cotizacion_enviada, seguimiento, negociacion, ganado, perdido, sin_respuesta]
+    EtapaPermitida:
+      type: string
+      enum: [nuevo_lead, contactado, diagnostico, cotizacion_enviada, seguimiento, negociacion]
+    TipoActividad:
+      type: string
+      enum: [llamada, email, reunion, demo, propuesta, seguimiento, otro]
+    FechaHora:
+      type: string
+      format: date-time
+      description: ISO 8601 con zona horaria
+      example: '2026-11-03T10:00:00-06:00'
+
+    LookupMatch:
+      type: object
+      required: [id, nombre, coincidencia, autorizado]
+      properties:
+        id: { type: string, format: uuid }
+        nombre: { type: string }
+        coincidencia: { type: string, enum: [rfc, email, telefono] }
+        autorizado:
+          type: boolean
+          description: true si el detalle se puede consultar con GET /companies/{id} o /contacts/{id}
+    ContactMatch:
+      allOf:
+        - $ref: '#/components/schemas/LookupMatch'
+        - type: object
+          properties:
+            apellido: { type: [string, 'null'] }
+            company_id:
+              type: [string, 'null']
+              format: uuid
+              description: null también cuando el contacto no está autorizado
+    LookupResult:
+      type: object
+      properties:
+        empresas:
+          type: array
+          maxItems: 10
+          items: { $ref: '#/components/schemas/LookupMatch' }
+        contactos:
+          type: array
+          maxItems: 10
+          items: { $ref: '#/components/schemas/ContactMatch' }
+
+    CompanyCreate:
+      type: object
+      required: [nombre]
+      properties:
+        nombre: { type: string, maxLength: 255 }
+        rfc: { type: string, maxLength: 13, description: 'Único: si ya existe responde 409' }
+        industria: { type: string, maxLength: 100 }
+        sitio_web: { type: string, format: uri, maxLength: 255 }
+        telefono: { type: string, maxLength: 30 }
+        ciudad: { type: string, maxLength: 100 }
+        estado: { type: string, maxLength: 100 }
+        notas: { type: string, maxLength: 2000 }
+    Company:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        nombre: { type: string }
+        rfc: { type: [string, 'null'] }
+        industria: { type: [string, 'null'] }
+        sitio_web: { type: [string, 'null'] }
+        telefono: { type: [string, 'null'] }
+        ciudad: { type: [string, 'null'] }
+        estado: { type: [string, 'null'] }
+        notas: { type: [string, 'null'] }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    ContactCreate:
+      type: object
+      required: [nombre]
+      properties:
+        nombre: { type: string, maxLength: 255 }
+        apellido: { type: string, maxLength: 255 }
+        company_id: { type: string, format: uuid }
+        puesto: { type: string, maxLength: 150 }
+        email: { type: string, format: email, maxLength: 255, description: 'Único: si ya existe responde 409' }
+        telefono: { type: string, maxLength: 30 }
+        celular: { type: string, maxLength: 30 }
+        notas: { type: string, maxLength: 2000 }
+    Contact:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        company_id: { type: [string, 'null'], format: uuid }
+        nombre: { type: string }
+        apellido: { type: [string, 'null'] }
+        puesto: { type: [string, 'null'] }
+        email: { type: [string, 'null'] }
+        telefono: { type: [string, 'null'] }
+        celular: { type: [string, 'null'] }
+        notas: { type: [string, 'null'] }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    OpportunityCreate:
+      type: object
+      required: [nombre, next_activity_at]
+      properties:
+        nombre: { type: string, maxLength: 255 }
+        next_activity_at: { $ref: '#/components/schemas/FechaHora' }
+        company_id: { type: string, format: uuid }
+        contact_id: { type: string, format: uuid }
+        etapa:
+          allOf: [{ $ref: '#/components/schemas/EtapaPermitida' }]
+          default: nuevo_lead
+        moneda: { type: string, enum: [MXN, USD], default: MXN }
+        monto_estimado: { type: number, minimum: 0, default: 0 }
+        tipo_cambio_estimado: { type: number, exclusiveMinimum: 0, description: Obligatorio si moneda = USD }
+        probabilidad: { type: integer, minimum: 0, maximum: 100, default: 0 }
+        fecha_cierre_estimada: { type: string, format: date, example: '2026-12-15' }
+        notas: { type: string, maxLength: 2000 }
+    OpportunityUpdate:
+      type: object
+      minProperties: 1
+      properties:
+        nombre: { type: string, maxLength: 255 }
+        etapa: { $ref: '#/components/schemas/EtapaPermitida' }
+        next_activity_at: { $ref: '#/components/schemas/FechaHora' }
+        company_id: { type: [string, 'null'], format: uuid }
+        contact_id: { type: [string, 'null'], format: uuid }
+        moneda: { type: string, enum: [MXN, USD] }
+        monto_estimado: { type: number, minimum: 0 }
+        tipo_cambio_estimado: { type: [number, 'null'], exclusiveMinimum: 0 }
+        probabilidad: { type: integer, minimum: 0, maximum: 100 }
+        fecha_cierre_estimada: { type: [string, 'null'], format: date }
+        notas: { type: [string, 'null'], maxLength: 2000 }
+    Opportunity:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        nombre: { type: string }
+        business_unit: { type: string, example: juno_promotional }
+        etapa: { $ref: '#/components/schemas/Etapa' }
+        fuente: { type: string, example: otro }
+        moneda: { type: string, enum: [MXN, USD] }
+        monto_estimado: { type: number }
+        tipo_cambio_estimado: { type: [number, 'null'] }
+        monto_final: { type: [number, 'null'], description: Lo registra una persona al ganar }
+        probabilidad: { type: integer }
+        fecha_cierre_estimada: { type: [string, 'null'], format: date }
+        next_activity_at: { type: [string, 'null'], format: date-time }
+        last_activity_at: { type: string, format: date-time }
+        stale: { type: boolean, description: Sin actividad en más de 7 días }
+        notas: { type: [string, 'null'], example: '[THOREN_AI] Lead por WhatsApp, pide muestra física' }
+        company_id: { type: [string, 'null'], format: uuid }
+        contact_id: { type: [string, 'null'], format: uuid }
+        editable: { type: boolean, description: false cuando una persona ya la cerró }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+        actividades:
+          type: array
+          items: { $ref: '#/components/schemas/Activity' }
+
+    ActivityCreate:
+      type: object
+      required: [opportunity_id, tipo, titulo, fecha]
+      properties:
+        opportunity_id: { type: string, format: uuid }
+        tipo: { $ref: '#/components/schemas/TipoActividad' }
+        titulo: { type: string, maxLength: 255 }
+        descripcion: { type: string, maxLength: 2000 }
+        fecha: { $ref: '#/components/schemas/FechaHora' }
+        estatus: { type: string, enum: [pendiente, completada], default: pendiente }
+    ActivityUpdate:
+      type: object
+      minProperties: 1
+      properties:
+        tipo: { $ref: '#/components/schemas/TipoActividad' }
+        titulo: { type: string, maxLength: 255 }
+        descripcion: { type: string, maxLength: 2000 }
+        fecha: { $ref: '#/components/schemas/FechaHora' }
+        estatus: { type: string, enum: [pendiente, completada, cancelada] }
+    Activity:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        tipo: { $ref: '#/components/schemas/TipoActividad' }
+        estatus: { type: string, enum: [pendiente, completada, cancelada] }
+        titulo: { type: string }
+        descripcion: { type: [string, 'null'] }
+        fecha: { type: string, format: date-time }
+        completed_at: { type: [string, 'null'], format: date-time }
+        creada_por_integracion: { type: boolean }
+
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error: { type: string }
+        detail: { type: string, description: 'En 409, el id del registro existente' }
+    ValidationError:
+      type: object
+      required: [error, issues]
+      properties:
+        error: { type: string, example: Datos inválidos }
+        issues:
+          type: array
+          items:
+            type: object
+            properties:
+              path: { type: array, items: { type: [string, integer] } }
+              message: { type: string }
+              code: { type: string }
+
+  responses:
+    Unauthorized:
+      description: Key ausente, mal formada o revocada. No reintentar.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: API key inválida o revocada }
+    Forbidden:
+      description: Fuera del alcance de la integración (oportunidad cerrada por una persona o usuario dueño desactivado). No reintentar.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: 'La oportunidad está en perdido; sólo una persona puede modificarla' }
+    NotFound:
+      description: No existe o la integración no está autorizada a verlo.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: Oportunidad no encontrada }
+    Conflict:
+      description: Ya existe un registro con ese RFC o email; `detail` trae su id.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: Ya existe una empresa con ese RFC, detail: 78758862-1dd3-497e-a678-ce6e477a4ed5 }
+    Unprocessable:
+      description: Datos inválidos, campos faltantes o etapa reservada.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ValidationError' }
+          example:
+            error: Datos inválidos
+            issues:
+              - code: invalid_enum_value
+                path: [etapa]
+                message: "Invalid enum value. Expected 'nuevo_lead' | 'contactado' | 'diagnostico' | 'cotizacion_enviada' | 'seguimiento' | 'negociacion', received 'ganado'"
+    TooManyRequests:
+      description: Límite excedido (20 por minuto o 300 por día). Esperar 60 segundos antes de reintentar.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: Límite de llamadas excedido }
