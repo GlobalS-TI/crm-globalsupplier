@@ -7,6 +7,8 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|manifest.json|manifest.webmanifest|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    // api/integrations no usa sesión de Supabase: se autentica por API key en cada
+    // route handler (ADR-007). Sin esta exclusión el middleware la redirige a /login.
+    '/((?!_next/static|_next/image|favicon.ico|manifest.json|manifest.webmanifest|api/integrations/|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }
