@@ -1,4 +1,5 @@
 import type { Database } from '@/lib/types/database'
+import type { OpportunityFilters, ReportSourceOpportunity } from '@/lib/repositories/interfaces/IOpportunityRepository'
 import type {
   IntegrationLookupInput,
   IntegrationCreateCompanyInput,
@@ -80,6 +81,30 @@ export interface IntegrationOpportunity {
   actividades:           IntegrationActivity[]
 }
 
+// ── Lectura de análisis ──
+// Oportunidad de cualquier unidad tal como la devuelve integration_analytics_opportunities.
+// email/telefono/celular del contacto vienen null si el cliente no tiene can_read_contact_pii.
+export type IntegrationAnalyticsSource = ReportSourceOpportunity & {
+  fecha_cierre_estimada: string | null
+  notas:                 string | null
+  contact: (NonNullable<ReportSourceOpportunity['contact']> & {
+    puesto:  string | null
+    celular: string | null
+  }) | null
+}
+
+export interface IntegrationAnalyticsQuery {
+  operation: 'analytics_opportunities' | 'analytics_indicators'  // nombre en la bitácora
+  filters:   OpportunityFilters
+  limit?:    number   // sin limit = todas (indicadores)
+  offset?:   number
+}
+
+export interface IntegrationAnalyticsPage {
+  total: number
+  rows:  IntegrationAnalyticsSource[]
+}
+
 // Todas las operaciones reciben el hash SHA-256 de la API key; la DB resuelve el cliente
 // y su alcance. No hay operaciones de borrado.
 export interface IIntegrationRepository {
@@ -94,4 +119,6 @@ export interface IIntegrationRepository {
   updateOpportunity(keyHash: string, id: string, data: IntegrationUpdateOpportunityInput): Promise<IntegrationOpportunity>
   createActivity(keyHash: string, data: IntegrationCreateActivityInput): Promise<IntegrationOpportunity>
   updateActivity(keyHash: string, id: string, data: IntegrationUpdateActivityInput): Promise<IntegrationOpportunity>
+  // Sólo lectura, todas las unidades; requiere can_read_analytics (lo valida la DB).
+  findAnalyticsOpportunities(keyHash: string, query: IntegrationAnalyticsQuery): Promise<IntegrationAnalyticsPage>
 }

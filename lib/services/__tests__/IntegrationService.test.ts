@@ -18,6 +18,7 @@ function makeMockRepo(overrides: Partial<IIntegrationRepository> = {}): IIntegra
     updateOpportunity: vi.fn().mockResolvedValue({}),
     createActivity:    vi.fn().mockResolvedValue({}),
     updateActivity:    vi.fn().mockResolvedValue({}),
+    findAnalyticsOpportunities: vi.fn().mockResolvedValue({ total: 0, rows: [] }),
     ...overrides,
   }
 }

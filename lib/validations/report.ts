@@ -16,7 +16,7 @@ export const reportAlertSchema = z.enum([
 // Qué fecha filtra el rango desde/hasta: creación de la oportunidad o su cierre (closed_at).
 export const reportDateFieldSchema = z.enum(['creacion', 'cierre'])
 
-const dayKeySchema = z
+export const dayKeySchema = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/)
   .refine(s => !Number.isNaN(Date.parse(s)))

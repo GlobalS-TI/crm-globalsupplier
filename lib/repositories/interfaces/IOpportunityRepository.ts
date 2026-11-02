@@ -9,6 +9,18 @@ export type OpportunityWithRelations = OpportunityRow & {
   owner:   { full_name: string } | null
 }
 
+// Lo mínimo que necesita una fila de Reportes (toReportRow). Lo cumplen tanto las
+// oportunidades de la app como las que devuelve la lectura de análisis de integraciones.
+export type ReportSourceOpportunity = Pick<OpportunityRow,
+  | 'id' | 'nombre' | 'business_unit' | 'owner_id' | 'etapa' | 'probabilidad' | 'fuente'
+  | 'monto_estimado' | 'moneda' | 'monto_estimado_mxn' | 'monto_final_mxn'
+  | 'created_at' | 'last_completed_activity_at' | 'next_activity_at' | 'closed_at' | 'stale'
+> & {
+  company: { nombre: string } | null
+  contact: { nombre: string; apellido: string | null; email: string | null; telefono: string | null } | null
+  owner:   { full_name: string } | null
+}
+
 export type DashboardStats = {
   openCount:          number
   wonCount:           number

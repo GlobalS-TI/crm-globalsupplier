@@ -404,6 +404,8 @@ export type Database = {
       integration_clients: {
         Row: {
           business_unit: Database["public"]["Enums"]["business_unit"]
+          can_read_analytics: boolean
+          can_read_contact_pii: boolean
           created_at: string
           etiqueta: string
           id: string
@@ -415,11 +417,15 @@ export type Database = {
           max_calls_per_minute: number
           nombre: string
           owner_id: string
+          permissions_updated_at: string | null
+          permissions_updated_by: string | null
           revoked_at: string | null
           updated_at: string
         }
         Insert: {
           business_unit: Database["public"]["Enums"]["business_unit"]
+          can_read_analytics?: boolean
+          can_read_contact_pii?: boolean
           created_at?: string
           etiqueta: string
           id?: string
@@ -431,11 +437,15 @@ export type Database = {
           max_calls_per_minute?: number
           nombre: string
           owner_id: string
+          permissions_updated_at?: string | null
+          permissions_updated_by?: string | null
           revoked_at?: string | null
           updated_at?: string
         }
         Update: {
           business_unit?: Database["public"]["Enums"]["business_unit"]
+          can_read_analytics?: boolean
+          can_read_contact_pii?: boolean
           created_at?: string
           etiqueta?: string
           id?: string
@@ -447,6 +457,8 @@ export type Database = {
           max_calls_per_minute?: number
           nombre?: string
           owner_id?: string
+          permissions_updated_at?: string | null
+          permissions_updated_by?: string | null
           revoked_at?: string | null
           updated_at?: string
         }
@@ -454,6 +466,13 @@ export type Database = {
           {
             foreignKeyName: "integration_clients_owner_id_fkey"
             columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "integration_clients_permissions_updated_by_fkey"
+            columns: ["permissions_updated_by"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -1762,10 +1781,29 @@ export type Database = {
       can_manage_leads: { Args: never; Returns: boolean }
       can_manage_projects: { Args: never; Returns: boolean }
       can_view_it_ticket: { Args: { p_ticket_id: string }; Returns: boolean }
+      integration_analytics_match: {
+        Args: {
+          o: Database["public"]["Tables"]["opportunities"]["Row"]
+          p: Json
+        }
+        Returns: boolean
+      }
+      integration_analytics_opportunities: {
+        Args: {
+          p_filters?: Json
+          p_key_hash: string
+          p_limit?: number
+          p_offset?: number
+          p_operacion: string
+        }
+        Returns: Json
+      }
       integration_authenticate: {
         Args: { p_key_hash: string }
         Returns: {
           business_unit: Database["public"]["Enums"]["business_unit"]
+          can_read_analytics: boolean
+          can_read_contact_pii: boolean
           created_at: string
           etiqueta: string
           id: string
@@ -1777,6 +1815,8 @@ export type Database = {
           max_calls_per_minute: number
           nombre: string
           owner_id: string
+          permissions_updated_at: string | null
+          permissions_updated_by: string | null
           revoked_at: string | null
           updated_at: string
         }
@@ -1866,6 +1906,14 @@ export type Database = {
       }
       integration_revoke_key: {
         Args: { p_client_id: string }
+        Returns: undefined
+      }
+      integration_set_permissions: {
+        Args: {
+          p_can_read_analytics: boolean
+          p_can_read_contact_pii: boolean
+          p_client_id: string
+        }
         Returns: undefined
       }
       integration_stage_allowed: {

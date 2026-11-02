@@ -20,6 +20,7 @@ import {
   BarChart2,
   Shield,
   LifeBuoy,
+  Plug,
   LogOut,
   Menu,
 } from 'lucide-react'
@@ -33,7 +34,7 @@ import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
 import { logout } from '@/app/(dashboard)/actions'
 import { ThemeToggle } from './ThemeToggle'
 import { NotificationBell } from './NotificationBell'
-import { PROJECT_ROLES, COMISIONES_ROLES, ADMIN_ROLES, LEADS_ROLES } from '@/lib/types'
+import { PROJECT_ROLES, COMISIONES_ROLES, ADMIN_ROLES, LEADS_ROLES, INTEGRATION_ADMIN_ROLES } from '@/lib/types'
 import type { UserRole } from '@/lib/types'
 
 const NAV_ITEMS: { href: Route; label: string; icon: LucideIcon }[] = [
@@ -178,6 +179,26 @@ export function AppSidebar({ userFullName, userEmail, userRole, userId }: AppSid
           </Link>
         )}
 
+        {/* Integraciones — director_general y administracion (la DB revalida el permiso) */}
+        {INTEGRATION_ADMIN_ROLES.includes(userRole) && (
+          <Link href={'/integraciones' as Route}>
+            <span
+              key={`integraciones-${bouncing}`}
+              className={cn(
+                'flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors',
+                bouncing && 'nav-bounce-item',
+                pathname === '/integraciones' || pathname.startsWith('/integraciones/')
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+              )}
+              style={{ '--nav-i': NAV_ITEMS.length + 3 } as React.CSSProperties}
+            >
+              <Plug className="h-4 w-4 shrink-0" />
+              Integraciones
+            </span>
+          </Link>
+        )}
+
         {/* Admin — solo administracion (RLS es la seguridad real) */}
         {ADMIN_ROLES.includes(userRole) && (
           <Link href={'/admin/usuarios' as Route}>
@@ -190,7 +211,7 @@ export function AppSidebar({ userFullName, userEmail, userRole, userId }: AppSid
                   ? 'bg-primary text-primary-foreground'
                   : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
               )}
-              style={{ '--nav-i': NAV_ITEMS.length + 3 } as React.CSSProperties}
+              style={{ '--nav-i': NAV_ITEMS.length + 4 } as React.CSSProperties}
             >
               <Shield className="h-4 w-4 shrink-0" />
               Admin

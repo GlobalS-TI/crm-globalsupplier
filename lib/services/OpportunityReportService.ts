@@ -1,4 +1,4 @@
-import type { IOpportunityRepository, OpportunityFilters, OpportunityWithRelations } from '@/lib/repositories/interfaces/IOpportunityRepository'
+import type { IOpportunityRepository, OpportunityFilters, ReportSourceOpportunity } from '@/lib/repositories/interfaces/IOpportunityRepository'
 import type { BusinessUnit, Currency, LeadSource, OpportunityStage } from '@/lib/types'
 import { BRAND_LABELS, CLOSED_STAGES, OPPORTUNITY_STAGES } from '@/lib/types'
 import { opportunityReportFiltersSchema } from '@/lib/validations/report'
@@ -92,7 +92,7 @@ export function toRepositoryFilters(filters: OpportunityReportFilters, now: Date
   }
 }
 
-export function toReportRow(opp: OpportunityWithRelations, now: Date): OpportunityReportRow {
+export function toReportRow(opp: ReportSourceOpportunity, now: Date): OpportunityReportRow {
   const estado  = STAGE_STATUS[opp.etapa]
   const contact = opp.contact
     ? [opp.contact.nombre, opp.contact.apellido].filter(Boolean).join(' ')
