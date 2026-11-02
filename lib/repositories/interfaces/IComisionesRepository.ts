@@ -9,7 +9,7 @@ export type WonOpportunityRow = {
   moneda: Currency
   tipo_cambio_final: number | null
   business_unit: string
-  updated_at: string
+  closed_at: string  // fecha en que se marcó ganada (trigger, ver migración 20261102130000)
   company_nombre: string | null
   owner_full_name: string | null
   costo: number | null

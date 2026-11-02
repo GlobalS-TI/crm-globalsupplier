@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { businessDayStartISO } from '@/lib/utils/date'
 import type { IComisionesRepository, WonOpportunityRow } from '@/lib/repositories/interfaces/IComisionesRepository'
 import type { UpsertOpportunityCostInput } from '@/lib/validations/comisiones'
 
@@ -16,16 +17,16 @@ export class ComisionesRepository implements IComisionesRepository {
         moneda,
         tipo_cambio_final,
         business_unit,
-        updated_at,
+        closed_at,
         company:companies ( nombre ),
         owner:profiles!owner_id ( full_name ),
         opportunity_costs ( costo, costo_mxn, moneda, notas )
       `)
       .eq('etapa', 'ganado')
       .not('monto_final', 'is', null)
-      .gte('updated_at', `${year}-01-01`)
-      .lt('updated_at', `${year + 1}-01-01`)
-      .order('updated_at', { ascending: false })
+      .gte('closed_at', businessDayStartISO(`${year}-01-01`))
+      .lt('closed_at', businessDayStartISO(`${year + 1}-01-01`))
+      .order('closed_at', { ascending: false })
 
     if (error) throw error
 
@@ -39,7 +40,8 @@ export class ComisionesRepository implements IComisionesRepository {
         moneda:            row.moneda,
         tipo_cambio_final: row.tipo_cambio_final,
         business_unit:     row.business_unit,
-        updated_at:        row.updated_at,
+        // El filtro gte/lt sobre closed_at ya excluye nulls.
+        closed_at:         row.closed_at as string,
         company_nombre:    (row.company as { nombre: string } | null)?.nombre ?? null,
         owner_full_name:   (row.owner as { full_name: string } | null)?.full_name ?? null,
         costo:             cost?.costo ?? null,

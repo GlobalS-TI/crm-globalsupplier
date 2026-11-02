@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { businessDayStartISO, businessMonth } from '@/lib/utils/date'
 import type { ISalesTargetRepository, SalesTargetRow } from '@/lib/repositories/interfaces/ISalesTargetRepository'
 import type { UpsertSalesTargetInput } from '@/lib/validations/salesTarget'
 
@@ -20,18 +21,19 @@ export class SalesTargetRepository implements ISalesTargetRepository {
     const supabase = await createClient()
     const { data, error } = await supabase
       .from('opportunities')
-      .select('monto_final_mxn, updated_at')
+      .select('monto_final_mxn, closed_at')
       .eq('owner_id', vendedorId)
       .eq('etapa', 'ganado')
       .not('monto_final', 'is', null)
-      .gte('updated_at', `${year}-01-01`)
-      .lt('updated_at', `${year + 1}-01-01`)
+      .gte('closed_at', businessDayStartISO(`${year}-01-01`))
+      .lt('closed_at', businessDayStartISO(`${year + 1}-01-01`))
 
     if (error) throw error
 
     const totals: Record<number, number> = {}
     for (const row of data ?? []) {
-      const m = new Date(row.updated_at).getMonth() + 1
+      // El filtro gte/lt sobre closed_at ya excluye nulls.
+      const m = businessMonth(row.closed_at as string)
       totals[m] = (totals[m] ?? 0) + (row.monto_final_mxn ?? 0)
     }
     return totals
