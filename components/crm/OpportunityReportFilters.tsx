@@ -104,7 +104,7 @@ export function OpportunityReportFilters({ profiles, canFilterByOwner }: Opportu
       </Select>
 
       <Select value={params.get('estado') ?? 'all'} onValueChange={v => update('estado', v)}>
-        <SelectTrigger className="h-8 w-36 text-xs">
+        <SelectTrigger className="h-8 w-40 text-xs">
           <SelectValue placeholder="Estado" />
         </SelectTrigger>
         <SelectContent>
