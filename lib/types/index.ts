@@ -1,3 +1,5 @@
+import type { ReportStatus, ReportAlert } from '@/lib/validations/report'
+
 export type UserRole =
   | 'director_general'
   | 'direccion_comercial'
@@ -165,6 +167,36 @@ export const LEADS_EXPORT_ROLES: UserRole[] = ['director_general', 'marketing', 
 // Quién puede filtrar el pipeline de oportunidades por vendedor (gating de UI —
 // RLS es la seguridad real, ver ADR-003).
 export const OPPORTUNITY_OWNER_FILTER_ROLES: UserRole[] = ['director_general']
+
+// Quién puede sacar reportes por vendedor además del general. El resto ve sólo lo que
+// RLS le deja ver (un vendedor, sus propias oportunidades) — gating de UI, ver ADR-003.
+export const REPORT_OWNER_FILTER_ROLES: UserRole[] = ['director_general', 'direccion_comercial']
+
+export const OPPORTUNITY_STAGE_LABELS: Record<OpportunityStage, string> = {
+  nuevo_lead:         'Nuevo lead',
+  contactado:         'Contactado',
+  diagnostico:        'Diagnóstico',
+  cotizacion_enviada: 'Cotización enviada',
+  seguimiento:        'Seguimiento',
+  negociacion:        'Negociación',
+  sin_respuesta:      'Sin respuesta',
+  ganado:             'Ganado',
+  perdido:            'Perdido',
+}
+
+export const REPORT_STATUS_LABELS: Record<ReportStatus, string> = {
+  abierta:       'Abierta',
+  ganada:        'Ganada',
+  perdida:       'Perdida',
+  sin_respuesta: 'Sin respuesta',
+}
+
+export const REPORT_ALERT_LABELS: Record<ReportAlert, string> = {
+  sin_seguimiento:      'Sin seguimiento',
+  seguimiento_vencido:  'Seguimiento vencido',
+  sin_actividad:        'Sin actividad (7+ días)',
+  cotizacion_pendiente: 'Cotización pendiente de respuesta',
+}
 
 export const LEAD_SOURCES: LeadSource[] = [
   'referido', 'meta', 'web', 'linkedin', 'llamada_en_frio', 'evento', 'alianza', 'otro',

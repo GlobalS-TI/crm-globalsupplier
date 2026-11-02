@@ -9,6 +9,7 @@ import type { Route } from 'next'
 import {
   LayoutDashboard,
   Briefcase,
+  FileSpreadsheet,
   Building2,
   Users,
   Activity,
@@ -38,6 +39,7 @@ import type { UserRole } from '@/lib/types'
 const NAV_ITEMS: { href: Route; label: string; icon: LucideIcon }[] = [
   { href: '/dashboard',     label: 'Dashboard',     icon: LayoutDashboard },
   { href: '/oportunidades', label: 'Oportunidades', icon: Briefcase },
+  { href: '/reportes',      label: 'Reportes',      icon: FileSpreadsheet },
   { href: '/empresas',      label: 'Empresas',      icon: Building2 },
   { href: '/contactos',     label: 'Contactos',     icon: Users },
   { href: '/actividades',   label: 'Actividades',   icon: Activity },

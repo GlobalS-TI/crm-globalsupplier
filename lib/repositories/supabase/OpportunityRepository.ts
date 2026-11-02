@@ -48,6 +48,11 @@ export class OpportunityRepository implements IOpportunityRepository {
     if (filters.businessUnit) query = query.eq('business_unit', filters.businessUnit)
     if (filters.stage)        query = query.eq('etapa', filters.stage)
     if (filters.stale !== undefined) query = query.eq('stale', filters.stale)
+    if (filters.stages)              query = query.in('etapa', filters.stages)
+    if (filters.createdFrom)         query = query.gte('created_at', filters.createdFrom)
+    if (filters.createdBefore)       query = query.lt('created_at', filters.createdBefore)
+    if (filters.nextActivityMissing) query = query.is('next_activity_at', null)
+    if (filters.nextActivityBefore)  query = query.lt('next_activity_at', filters.nextActivityBefore)
 
     query = query.order('updated_at', { ascending: false })
 
