@@ -1,8 +1,9 @@
 import { z } from 'zod'
 import { createCompanySchema } from './company'
 import { createContactSchema } from './contact'
-import { createOpportunitySchema, opportunityStageSchema, updateOpportunitySchema } from './opportunity'
+import { businessUnitSchema, createOpportunitySchema, opportunityStageSchema, updateOpportunitySchema } from './opportunity'
 import { activityStatusSchema, createActivitySchema, updateActivitySchema } from './activity'
+import { dayKeySchema, reportAlertSchema, reportDateFieldSchema, reportStatusSchema } from './report'
 
 // ----------------------------------------------------------------
 // Esquemas de la API de integración (ADR-007). Derivan de los de la app (ADR-004);
@@ -76,6 +77,37 @@ export const integrationUpdateActivitySchema = updateActivitySchema
   .omit({ completed_at: true })
   .refine((d) => Object.keys(d).length > 0, { message: 'Sin campos para actualizar' })
 
+// ── Lectura de análisis (sólo lectura, todas las unidades) ──
+// Mismos filtros que /reportes, pero estrictos: un filtro desconocido o mal escrito
+// responde 422 en vez de ignorarse, para que quien llama nunca crea que filtró sin hacerlo.
+const analyticsFilterShape = {
+  fecha:  reportDateFieldSchema.default('creacion'),
+  desde:  dayKeySchema.optional(),
+  hasta:  dayKeySchema.optional(),
+  owner:  z.string().uuid().optional(),
+  unit:   businessUnitSchema.optional(),
+  stage:  opportunityStageSchema.optional(),
+  estado: reportStatusSchema.optional(),
+  alerta: reportAlertSchema.optional(),
+}
+
+const rangeIsOrdered = (d: { desde?: string; hasta?: string }) => !d.desde || !d.hasta || d.desde <= d.hasta
+const rangeMessage   = { message: '"desde" no puede ser posterior a "hasta"', path: ['desde'] }
+
+export const integrationAnalyticsFiltersSchema = z
+  .object(analyticsFilterShape)
+  .strict()
+  .refine(rangeIsOrdered, rangeMessage)
+
+export const integrationAnalyticsListSchema = z
+  .object({
+    ...analyticsFilterShape,
+    limit:  z.coerce.number().int().min(1).max(500).default(100),
+    offset: z.coerce.number().int().min(0).default(0),
+  })
+  .strict()
+  .refine(rangeIsOrdered, rangeMessage)
+
 export type IntegrationLookupInput            = z.infer<typeof integrationLookupSchema>
 export type IntegrationCreateCompanyInput     = z.infer<typeof integrationCreateCompanySchema>
 export type IntegrationCreateContactInput     = z.infer<typeof integrationCreateContactSchema>
@@ -84,3 +116,14 @@ export type IntegrationUpdateOpportunityInput = z.infer<typeof integrationUpdate
 export type IntegrationListOpportunitiesInput = z.infer<typeof integrationListOpportunitiesSchema>
 export type IntegrationCreateActivityInput    = z.infer<typeof integrationCreateActivitySchema>
 export type IntegrationUpdateActivityInput    = z.infer<typeof integrationUpdateActivitySchema>
+export type IntegrationAnalyticsFiltersInput  = z.infer<typeof integrationAnalyticsFiltersSchema>
+export type IntegrationAnalyticsListInput     = z.infer<typeof integrationAnalyticsListSchema>
+
+// Switch de permisos desde /integraciones (director_general / administracion)
+export const integrationPermissionsSchema = z.object({
+  client_id:            z.string().uuid(),
+  can_read_analytics:   z.boolean(),
+  can_read_contact_pii: z.boolean(),
+})
+
+export type IntegrationPermissionsInput = z.infer<typeof integrationPermissionsSchema>

@@ -160,6 +160,10 @@ export const COMISIONES_ROLES: UserRole[] = ['director_general', 'administracion
 
 export const ADMIN_ROLES: UserRole[] = ['administracion']
 
+// Quién ve /integraciones y cambia los permisos de lectura de THÖREN. Gating de UI: la DB
+// lo revalida en integration_set_permissions() (ADR-003).
+export const INTEGRATION_ADMIN_ROLES: UserRole[] = ['director_general', 'administracion']
+
 export const LEADS_ROLES: UserRole[] = ['marketing', 'director_general', 'direccion_comercial', 'administracion']
 
 export const LEADS_EXPORT_ROLES: UserRole[] = ['director_general', 'marketing', 'administracion']

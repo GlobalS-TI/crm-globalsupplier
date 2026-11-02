@@ -7,7 +7,10 @@ import {
   type IntegrationCompany,
   type IntegrationContact,
   type IntegrationOpportunity,
+  type IntegrationAnalyticsQuery,
+  type IntegrationAnalyticsPage,
 } from '@/lib/repositories/interfaces/IIntegrationRepository'
+import type { OpportunityFilters } from '@/lib/repositories/interfaces/IOpportunityRepository'
 import type {
   IntegrationLookupInput,
   IntegrationCreateCompanyInput,
@@ -69,6 +72,23 @@ async function callIntegration<T>(
   throw new IntegrationError(status, error.message, error.details || undefined)
 }
 
+// OpportunityFilters → llaves que entiende integration_analytics_match(). Las llaves
+// undefined se descartan al serializar a JSON (= sin filtro).
+function toAnalyticsFilters(f: OpportunityFilters): Record<string, unknown> {
+  return {
+    owner_id:              f.ownerId,
+    business_unit:         f.businessUnit,
+    stages:                f.stages ?? (f.stage ? [f.stage] : undefined),
+    created_from:          f.createdFrom,
+    created_before:        f.createdBefore,
+    closed_from:           f.closedFrom,
+    closed_before:         f.closedBefore,
+    next_activity_missing: f.nextActivityMissing,
+    next_activity_before:  f.nextActivityBefore,
+    stale:                 f.stale,
+  }
+}
+
 export class IntegrationRepository implements IIntegrationRepository {
   lookup(keyHash: string, query: IntegrationLookupInput): Promise<IntegrationLookupResult> {
     return callIntegration(keyHash, 'lookup', {
@@ -116,5 +136,14 @@ export class IntegrationRepository implements IIntegrationRepository {
 
   updateActivity(keyHash: string, id: string, data: IntegrationUpdateActivityInput): Promise<IntegrationOpportunity> {
     return callIntegration(keyHash, 'update_activity', { p_activity_id: id, p_data: data })
+  }
+
+  findAnalyticsOpportunities(keyHash: string, query: IntegrationAnalyticsQuery): Promise<IntegrationAnalyticsPage> {
+    return callIntegration(keyHash, 'analytics_opportunities', {
+      p_operacion: query.operation,
+      p_filters:   toAnalyticsFilters(query.filters),
+      p_limit:     query.limit ?? null,
+      p_offset:    query.offset ?? 0,
+    })
   }
 }

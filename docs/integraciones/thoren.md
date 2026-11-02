@@ -62,6 +62,29 @@ Reglas que aplica el CRM (no se pueden saltar desde la API):
 - La aprobación de cotizaciones antes de enviarlas vive del lado de THÖREN/n8n: el CRM
   sólo registra la etapa `cotizacion_enviada` cuando THÖREN la reporta.
 
+### Análisis (sólo lectura, todas las unidades)
+
+| Método | Ruta | Qué hace |
+|---|---|---|
+| GET | `/analytics/opportunities` | Oportunidades de todas las unidades con estado y seguimiento. Paginado: `limit` (1–500, default 100) y `offset` |
+| GET | `/analytics/indicators` | Indicadores de la sección Reportes: abiertas, pipeline, cotizaciones, sin seguimiento, vencidas, ganadas, perdidas, conversión, por unidad y por vendedor |
+
+- Requiere **Acceso de análisis**, que dirección o administración activan en Supply →
+  **Integraciones**. Sin él: 403.
+- Email, teléfono y celular de contactos llegan `null` salvo que también esté activo
+  **Ver email y teléfono de contactos** (mismo lugar).
+- Filtros (los mismos de Reportes): `fecha=creacion|cierre`, `desde`, `hasta` (YYYY-MM-DD, hora de
+  México, inclusivos), `owner` (id del vendedor), `unit`, `stage`, `estado`
+  (`abierta|ganada|perdida|sin_respuesta`) y `alerta`
+  (`sin_seguimiento|seguimiento_vencido|sin_actividad|cotizacion_pendiente`). Un filtro
+  desconocido o inválido responde 422.
+- Cada llamada cuenta para el límite diario. No hay ningún método de escritura (405).
+
+```bash
+curl "$BASE/analytics/indicators?fecha=cierre&desde=2026-10-01&hasta=2026-10-31" \
+  -H "Authorization: Bearer $THOREN_KEY"
+```
+
 Códigos: 401 key inválida/revocada · 403 fuera de alcance (etapa reservada, opp cerrada)
 · 404 no existe o no autorizado · 409 duplicado · 422 datos inválidos · 429 límite excedido.
 

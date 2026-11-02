@@ -1,11 +1,14 @@
 openapi: 3.1.0
 info:
   title: Supply CRM — API de integración
-  version: 1.0.0
+  version: 1.1.0
   description: |
     API para que sistemas externos consulten y registren información comercial en Supply CRM.
     Cada cliente de integración está limitado a una unidad de negocio y a un usuario dueño;
     el CRM aplica esas reglas en la base de datos (ver ADR-007).
+
+    Las rutas de **Análisis** (`/analytics/*`) son de sólo lectura y abarcan todas las
+    unidades; requieren que el CRM le haya dado al cliente el permiso de análisis.
 
     **Autenticación:** `Authorization: Bearer sint_<64 hex>`. La key se usa sólo desde un
     servidor: nunca en un navegador, en código de frontend, en el prompt de un modelo de IA ni
@@ -36,6 +39,13 @@ tags:
       queda en solo lectura para la integración (`editable: false`).
   - name: Actividades
     description: Llamadas, emails, reuniones y seguimientos sobre oportunidades de la integración.
+  - name: Análisis
+    description: |
+      Sólo lectura, todas las unidades de negocio. Requiere el permiso **Acceso de análisis**,
+      que dirección o administración activan en Supply (pantalla Integraciones); sin él, 403.
+      Email, teléfono y celular de los contactos vienen `null` salvo que también esté activo
+      **Ver email y teléfono de contactos**. Mismos filtros e indicadores que la sección
+      Reportes del CRM. Sólo `GET`: cualquier otro método responde 405.
 
 paths:
   /lookup:
@@ -359,6 +369,75 @@ paths:
         '422': { $ref: '#/components/responses/Unprocessable' }
         '429': { $ref: '#/components/responses/TooManyRequests' }
 
+  /analytics/opportunities:
+    get:
+      tags: [Análisis]
+      operationId: analisisOportunidades
+      summary: Oportunidades de todas las unidades (sólo lectura)
+      description: |
+        Las actualizadas más recientemente primero, paginadas. Un filtro desconocido o con valor
+        inválido responde 422 (no se ignora).
+      parameters:
+        - $ref: '#/components/parameters/Fecha'
+        - $ref: '#/components/parameters/Desde'
+        - $ref: '#/components/parameters/Hasta'
+        - $ref: '#/components/parameters/Owner'
+        - $ref: '#/components/parameters/Unit'
+        - $ref: '#/components/parameters/Stage'
+        - $ref: '#/components/parameters/Estado'
+        - $ref: '#/components/parameters/Alerta'
+        - name: limit
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 500, default: 100 }
+        - name: offset
+          in: query
+          schema: { type: integer, minimum: 0, default: 0 }
+      responses:
+        '200':
+          description: Página de oportunidades
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/AnalyticsList' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/AnalyticsForbidden' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+
+  /analytics/indicators:
+    get:
+      tags: [Análisis]
+      operationId: analisisIndicadores
+      summary: Indicadores comerciales (sólo lectura)
+      description: |
+        Calculados sobre todas las oportunidades que cumplen los filtros (sin paginación). Montos
+        en MXN (equivalente para USD). Conversión = ganadas ÷ (ganadas + perdidas + sin respuesta);
+        `null` si no hay cerradas.
+      parameters:
+        - $ref: '#/components/parameters/Fecha'
+        - $ref: '#/components/parameters/Desde'
+        - $ref: '#/components/parameters/Hasta'
+        - $ref: '#/components/parameters/Owner'
+        - $ref: '#/components/parameters/Unit'
+        - $ref: '#/components/parameters/Stage'
+        - $ref: '#/components/parameters/Estado'
+        - $ref: '#/components/parameters/Alerta'
+      responses:
+        '200':
+          description: Indicadores
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data: { $ref: '#/components/schemas/AnalyticsIndicators' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/AnalyticsForbidden' }
+        '422': { $ref: '#/components/responses/Unprocessable' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+
 components:
   securitySchemes:
     apiKey:
@@ -374,7 +453,58 @@ components:
       required: true
       schema: { type: string, format: uuid }
 
+    Fecha:
+      name: fecha
+      in: query
+      description: A qué fecha aplica el rango `desde`/`hasta`.
+      schema: { type: string, enum: [creacion, cierre], default: creacion }
+    Desde:
+      name: desde
+      in: query
+      description: Día inicial, inclusivo, en hora de México.
+      schema: { type: string, format: date, example: '2026-10-01' }
+    Hasta:
+      name: hasta
+      in: query
+      description: Día final, inclusivo, en hora de México.
+      schema: { type: string, format: date, example: '2026-10-31' }
+    Owner:
+      name: owner
+      in: query
+      description: Id del vendedor.
+      schema: { type: string, format: uuid }
+    Unit:
+      name: unit
+      in: query
+      schema: { $ref: '#/components/schemas/BusinessUnit' }
+    Stage:
+      name: stage
+      in: query
+      schema: { $ref: '#/components/schemas/Etapa' }
+    Estado:
+      name: estado
+      in: query
+      schema: { $ref: '#/components/schemas/EstadoComercial' }
+    Alerta:
+      name: alerta
+      in: query
+      description: |
+        Sólo oportunidades abiertas. `sin_seguimiento`: sin actividad pendiente.
+        `seguimiento_vencido`: la actividad pendiente es de un día anterior a hoy.
+        `sin_actividad`: 7+ días sin actividad registrada. `cotizacion_pendiente`: cotización
+        enviada que el cliente aún no confirma.
+      schema:
+        type: string
+        enum: [sin_seguimiento, seguimiento_vencido, sin_actividad, cotizacion_pendiente]
+
   schemas:
+    BusinessUnit:
+      type: string
+      enum: [global_supplier_mty, cotizia, thunder_safety, thunder_led, got_fresh_breath, gtx_systems, juno_promotional, fire_spot]
+    EstadoComercial:
+      type: string
+      description: Derivado de la etapa.
+      enum: [abierta, ganada, perdida, sin_respuesta]
     Etapa:
       type: string
       description: Etapas de oportunidad. La integración sólo puede asignar las seis primeras.
@@ -567,6 +697,96 @@ components:
         completed_at: { type: [string, 'null'], format: date-time }
         creada_por_integracion: { type: boolean }
 
+    AnalyticsOpportunity:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        nombre: { type: string }
+        business_unit: { $ref: '#/components/schemas/BusinessUnit' }
+        etapa: { $ref: '#/components/schemas/Etapa' }
+        estado: { $ref: '#/components/schemas/EstadoComercial' }
+        seguimiento:
+          type: [string, 'null']
+          enum: [vencida, hoy, programada, sin_seguimiento, null]
+          description: Estado de la próxima actividad; `null` en oportunidades cerradas.
+        sin_actividad: { type: boolean, description: '7+ días sin actividad registrada' }
+        fuente: { type: string }
+        probabilidad: { type: integer }
+        moneda: { type: string, enum: [MXN, USD] }
+        monto_estimado: { type: number }
+        monto_estimado_mxn: { type: number }
+        monto_final_mxn: { type: [number, 'null'] }
+        fecha_cierre_estimada: { type: [string, 'null'], format: date }
+        created_at: { $ref: '#/components/schemas/FechaHora' }
+        last_completed_activity_at: { type: [string, 'null'], format: date-time, description: Última actividad completada }
+        next_activity_at: { type: [string, 'null'], format: date-time }
+        closed_at: { type: [string, 'null'], format: date-time, description: Cuándo pasó a ganado/perdido/sin_respuesta }
+        notas: { type: [string, 'null'] }
+        empresa: { type: [string, 'null'] }
+        contacto:
+          type: [object, 'null']
+          properties:
+            nombre: { type: string }
+            puesto: { type: [string, 'null'] }
+            email: { type: [string, 'null'], description: '`null` sin el permiso de datos de contacto' }
+            telefono: { type: [string, 'null'], description: '`null` sin el permiso de datos de contacto' }
+            celular: { type: [string, 'null'], description: '`null` sin el permiso de datos de contacto' }
+        vendedor:
+          type: object
+          properties:
+            id: { type: string, format: uuid }
+            nombre: { type: [string, 'null'] }
+    AnalyticsList:
+      type: object
+      properties:
+        total: { type: integer, description: Oportunidades que cumplen los filtros (todas las páginas) }
+        limit: { type: integer }
+        offset: { type: integer }
+        oportunidades:
+          type: array
+          items: { $ref: '#/components/schemas/AnalyticsOpportunity' }
+    IndicatorBreakdown:
+      type: object
+      properties:
+        key: { type: string, description: Unidad de negocio o id del vendedor }
+        label: { type: string }
+        abiertas: { type: integer }
+        pipelineMxn: { type: number }
+        ponderadoMxn: { type: number, description: pipeline × probabilidad }
+        ganadas: { type: integer }
+        ganadoMxn: { type: number }
+        perdidas: { type: integer, description: perdido + sin_respuesta }
+        conversion: { type: [number, 'null'], description: '0–1' }
+    AnalyticsIndicators:
+      type: object
+      properties:
+        total: { type: integer }
+        indicadores:
+          type: object
+          properties:
+            abiertas:
+              type: object
+              properties: { count: { type: integer }, pipelineMxn: { type: number }, ponderadoMxn: { type: number } }
+            cotizacionesEnviadas:
+              type: object
+              properties: { count: { type: integer }, montoMxn: { type: number } }
+            sinSeguimiento: { type: integer }
+            seguimientosVencidos: { type: integer }
+            sinActividad: { type: integer }
+            ganadas:
+              type: object
+              properties: { count: { type: integer }, montoMxn: { type: number } }
+            perdidas:
+              type: object
+              properties: { count: { type: integer }, sinRespuesta: { type: integer }, montoMxn: { type: number } }
+            conversion: { type: [number, 'null'], description: '0–1' }
+            porUnidad:
+              type: array
+              items: { $ref: '#/components/schemas/IndicatorBreakdown' }
+            porVendedor:
+              type: array
+              items: { $ref: '#/components/schemas/IndicatorBreakdown' }
+
     Error:
       type: object
       required: [error]
@@ -600,6 +820,12 @@ components:
         application/json:
           schema: { $ref: '#/components/schemas/Error' }
           example: { error: 'La oportunidad está en perdido; sólo una persona puede modificarla' }
+    AnalyticsForbidden:
+      description: El cliente no tiene el permiso de análisis activo en Supply (o su usuario dueño está desactivado). No reintentar.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { error: La integración no tiene acceso de análisis }
     NotFound:
       description: No existe o la integración no está autorizada a verlo.
       content:
