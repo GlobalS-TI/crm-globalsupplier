@@ -13,6 +13,7 @@ import type {
 import type { BusinessUnit, OpportunityStage } from '@/lib/validations/opportunity'
 import type { CreateOpportunityInput, UpdateOpportunityInput } from '@/lib/validations/opportunity'
 import type { Database } from '@/lib/types/database'
+import { businessMonthStartISO } from '@/lib/utils/date'
 
 type OppInsert = Database['public']['Tables']['opportunities']['Insert']
 type OppUpdate = Database['public']['Tables']['opportunities']['Update']
@@ -81,7 +82,7 @@ export class OpportunityRepository implements IOpportunityRepository {
     const opps  = oppsResult.data  ?? []
     const acts  = activitiesResult.data ?? []
     const now   = new Date()
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
+    const monthStart = businessMonthStartISO(now)
 
     const openOpps = opps.filter(o => !CLOSED_STAGES.includes(o.etapa as OpportunityStage))
 
@@ -94,7 +95,7 @@ export class OpportunityRepository implements IOpportunityRepository {
       totalPipeline:    openOpps.reduce((s, o) => s + Number(o.monto_estimado_mxn), 0),
 
       wonThisMonth:     opps
-        .filter(o => o.etapa === 'ganado' && o.updated_at >= monthStart)
+        .filter(o => o.etapa === 'ganado' && o.closed_at !== null && o.closed_at >= monthStart)
         .reduce((s, o) => s + Number(o.monto_final_mxn ?? 0), 0),
 
       weightedForecast: openOpps.reduce(
@@ -115,7 +116,7 @@ export class OpportunityRepository implements IOpportunityRepository {
     const supabase = await createClient()
 
     const [oppsResult, profilesResult] = await Promise.all([
-      supabase.from('opportunities').select('etapa, business_unit, moneda, monto_estimado, monto_estimado_mxn, monto_final_mxn, probabilidad, owner_id, created_at, updated_at'),
+      supabase.from('opportunities').select('etapa, business_unit, moneda, monto_estimado, monto_estimado_mxn, monto_final_mxn, probabilidad, owner_id, created_at, closed_at'),
       supabase.from('profiles').select('id, full_name'),
     ])
 
@@ -126,16 +127,17 @@ export class OpportunityRepository implements IOpportunityRepository {
     const profiles = profilesResult.data ?? []
     const profileMap = new Map(profiles.map(p => [p.id, p.full_name]))
 
-    const now        = new Date()
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
-    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString()
+    const now            = new Date()
+    const monthStart     = businessMonthStartISO(now)
+    const lastMonthStart = businessMonthStartISO(now, -1)
 
     const wonOpps  = opps.filter(o => o.etapa === 'ganado')
     const openOpps = opps.filter(o => !CLOSED_STAGES.includes(o.etapa as OpportunityStage))
 
     // KPIs
-    const wonThisMonth  = wonOpps.filter(o => o.updated_at >= monthStart).reduce((s, o) => s + Number(o.monto_final_mxn ?? 0), 0)
-    const wonLastMonth  = wonOpps.filter(o => o.updated_at >= lastMonthStart && o.updated_at < monthStart).reduce((s, o) => s + Number(o.monto_final_mxn ?? 0), 0)
+    // Fecha de venta = closed_at (antes updated_at, que se movía con cualquier edición).
+    const wonThisMonth  = wonOpps.filter(o => o.closed_at !== null && o.closed_at >= monthStart).reduce((s, o) => s + Number(o.monto_final_mxn ?? 0), 0)
+    const wonLastMonth  = wonOpps.filter(o => o.closed_at !== null && o.closed_at >= lastMonthStart && o.closed_at < monthStart).reduce((s, o) => s + Number(o.monto_final_mxn ?? 0), 0)
     const pipelineTotal = openOpps.reduce((s, o) => s + Number(o.monto_estimado_mxn ?? 0), 0)
     const pipelineTotalUSD = openOpps
       .filter(o => o.moneda === 'USD')

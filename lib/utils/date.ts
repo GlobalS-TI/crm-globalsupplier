@@ -62,3 +62,18 @@ export function formatBusinessDateTime(iso: string): string {
 export function formatBusinessDate(iso: string): string {
   return shortDateFormatter.format(new Date(iso))
 }
+
+/**
+ * Inicio (ISO UTC) del mes calendario del negocio que contiene `date`, desplazado `offset`
+ * meses (-1 = mes anterior). Evita que una venta cerrada el último día del mes por la
+ * noche (hora de México) caiga en el mes siguiente por estar ya en UTC.
+ */
+export function businessMonthStartISO(date: Date, offset = 0): string {
+  const [y, m] = businessDayKey(date).split('-').map(Number)
+  return businessDayStartISO(new Date(Date.UTC(y, m - 1 + offset, 1)).toISOString().slice(0, 10))
+}
+
+/** Mes (1–12) de `iso` en la zona del negocio. */
+export function businessMonth(iso: string): number {
+  return Number(businessDayKey(new Date(iso)).slice(5, 7))
+}

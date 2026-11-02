@@ -237,7 +237,7 @@ export function ComisionesTable({ rows, summary, year, years }: Props) {
             </thead>
             <tbody>
               {rows.map((row, i) => {
-                const month = new Date(row.updated_at).toLocaleDateString('es-MX', { month: 'short', year: 'numeric' })
+                const month = new Date(row.closed_at).toLocaleDateString('es-MX', { month: 'short', year: 'numeric', timeZone: 'America/Mexico_City' })
                 const utilidad = row.costo != null ? row.utilidad : null
                 const margen   = row.costo != null ? row.margen : null
                 return (
