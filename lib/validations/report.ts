@@ -13,6 +13,9 @@ export const reportAlertSchema = z.enum([
   'sin_seguimiento', 'seguimiento_vencido', 'sin_actividad', 'cotizacion_pendiente',
 ])
 
+// Qué fecha filtra el rango desde/hasta: creación de la oportunidad o su cierre (closed_at).
+export const reportDateFieldSchema = z.enum(['creacion', 'cierre'])
+
 const dayKeySchema = z
   .string()
   .regex(/^\d{4}-\d{2}-\d{2}$/)
@@ -20,6 +23,7 @@ const dayKeySchema = z
 
 // Los filtros llegan de la URL: un valor inválido se descarta en vez de romper la página.
 export const opportunityReportFiltersSchema = z.object({
+  fecha:  reportDateFieldSchema.default('creacion').catch('creacion'),
   desde:  dayKeySchema.optional().catch(undefined),
   hasta:  dayKeySchema.optional().catch(undefined),
   owner:  z.string().uuid().optional().catch(undefined),
@@ -31,4 +35,5 @@ export const opportunityReportFiltersSchema = z.object({
 
 export type ReportStatus             = z.infer<typeof reportStatusSchema>
 export type ReportAlert              = z.infer<typeof reportAlertSchema>
+export type ReportDateField          = z.infer<typeof reportDateFieldSchema>
 export type OpportunityReportFilters = z.infer<typeof opportunityReportFiltersSchema>

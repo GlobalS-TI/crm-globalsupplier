@@ -61,6 +61,8 @@ export type OpportunityFilters = {
   stages?:              OpportunityStage[]  // etapa IN (…)
   createdFrom?:         string              // ISO, inclusivo
   createdBefore?:       string              // ISO, exclusivo
+  closedFrom?:          string              // closed_at ISO, inclusivo
+  closedBefore?:        string              // closed_at ISO, exclusivo
   nextActivityMissing?: boolean             // next_activity_at IS NULL
   nextActivityBefore?:  string              // next_activity_at < ISO
 }

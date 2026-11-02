@@ -51,6 +51,8 @@ export class OpportunityRepository implements IOpportunityRepository {
     if (filters.stages)              query = query.in('etapa', filters.stages)
     if (filters.createdFrom)         query = query.gte('created_at', filters.createdFrom)
     if (filters.createdBefore)       query = query.lt('created_at', filters.createdBefore)
+    if (filters.closedFrom)          query = query.gte('closed_at', filters.closedFrom)
+    if (filters.closedBefore)        query = query.lt('closed_at', filters.closedBefore)
     if (filters.nextActivityMissing) query = query.is('next_activity_at', null)
     if (filters.nextActivityBefore)  query = query.lt('next_activity_at', filters.nextActivityBefore)
 
