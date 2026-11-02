@@ -24,7 +24,10 @@ jobs:
       - name: Setup Supabase CLI
         uses: supabase/setup-cli@v1
         with:
-          version: latest
+          # Fija la misma versión que package.json / local. Con "latest" la v3 rompió el
+          # workflow: ya no acepta [inbucket] en supabase/config.toml (ahora [local_smtp]).
+          # Subir de versión a propósito, junto con la migración del config.
+          version: 2.105.0
 
       - name: Link project
         run: supabase link --project-ref "$SUPABASE_PROJECT_REF"
