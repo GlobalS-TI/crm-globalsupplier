@@ -23,12 +23,15 @@ function toExportRecord(row: OpportunityReportRow) {
     'Oportunidad':              row.oportunidad,
     'Vendedor':                 row.vendedor ?? '',
     'Etapa':                    OPPORTUNITY_STAGE_LABELS[row.etapa],
+    'Probabilidad %':           row.probabilidad,
     'Monto estimado':           row.montoEstimado,
     'Moneda':                   row.moneda,
     'Monto estimado (MXN)':     row.montoEstimadoMxn,
+    'Monto final (MXN)':        row.montoFinalMxn ?? '',
     'Fecha de creación':        formatBusinessDateTime(row.creadaEl),
-    'Última actividad':         formatBusinessDateTime(row.ultimaActividadEl),
+    'Última actividad':         row.ultimaActividadEl ? formatBusinessDateTime(row.ultimaActividadEl) : '',
     'Próximo seguimiento':      row.proximoSeguimientoEl ? formatBusinessDateTime(row.proximoSeguimientoEl) : '',
+    'Fecha de cierre':          row.cerradaEl ? formatBusinessDateTime(row.cerradaEl) : '',
     'Estado':                   REPORT_STATUS_LABELS[row.estado],
     'Seguimiento':              row.seguimiento ? FOLLOW_UP_LABELS[row.seguimiento] : '',
     'Sin actividad (7+ días)':  row.sinActividad ? 'Sí' : 'No',
@@ -36,7 +39,7 @@ function toExportRecord(row: OpportunityReportRow) {
   }
 }
 
-const COLUMN_WIDTHS = [28, 24, 28, 16, 22, 32, 22, 18, 14, 8, 18, 17, 17, 19, 13, 15, 10, 16]
+const COLUMN_WIDTHS = [28, 24, 28, 16, 22, 32, 22, 18, 12, 14, 8, 18, 16, 17, 17, 19, 17, 13, 15, 10, 16]
 
 function downloadBlob(blob: Blob, filename: string) {
   const url  = URL.createObjectURL(blob)

@@ -15,7 +15,7 @@ import {
 } from '@/lib/types'
 import type { ReportAlert, ReportStatus } from '@/lib/validations/report'
 
-const FILTER_KEYS = ['desde', 'hasta', 'owner', 'unit', 'stage', 'estado', 'alerta'] as const
+const FILTER_KEYS = ['fecha', 'desde', 'hasta', 'owner', 'unit', 'stage', 'estado', 'alerta'] as const
 
 interface Profile { id: string; full_name: string }
 
@@ -42,9 +42,21 @@ export function OpportunityReportFilters({ profiles, canFilterByOwner }: Opportu
 
   return (
     <div className="flex items-end gap-2 flex-wrap">
-      {/* Fecha de creación */}
+      {/* Rango por fecha de creación o de cierre */}
       <label className="flex flex-col gap-1 text-[11px] text-muted-foreground">
-        Creada desde
+        Fecha de
+        <Select value={params.get('fecha') ?? 'creacion'} onValueChange={v => update('fecha', v === 'creacion' ? 'all' : v)}>
+          <SelectTrigger className="h-8 w-28 text-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="creacion">Creación</SelectItem>
+            <SelectItem value="cierre">Cierre</SelectItem>
+          </SelectContent>
+        </Select>
+      </label>
+      <label className="flex flex-col gap-1 text-[11px] text-muted-foreground">
+        Desde
         <Input
           type="date"
           className="h-8 w-36 text-xs"
@@ -132,7 +144,11 @@ export function OpportunityReportFilters({ profiles, canFilterByOwner }: Opportu
           variant="ghost"
           size="sm"
           className="h-8 text-xs"
-          onClick={() => router.push(pathname as Route)}
+          onClick={() => {
+            const next = new URLSearchParams(params.toString())
+            FILTER_KEYS.forEach(k => next.delete(k))
+            router.push(`${pathname}?${next.toString()}` as Route)
+          }}
         >
           <X className="h-3.5 w-3.5 mr-1" />
           Limpiar

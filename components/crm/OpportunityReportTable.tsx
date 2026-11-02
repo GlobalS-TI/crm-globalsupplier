@@ -40,6 +40,7 @@ export function OpportunityReportTable({ rows }: OpportunityReportTableProps) {
             <TableHead>Creada</TableHead>
             <TableHead>Última actividad</TableHead>
             <TableHead>Próximo seguimiento</TableHead>
+            <TableHead>Cierre</TableHead>
             <TableHead>Estado</TableHead>
             <TableHead>Origen</TableHead>
           </TableRow>
@@ -70,7 +71,7 @@ export function OpportunityReportTable({ rows }: OpportunityReportTableProps) {
                   : '—'}
               </TableCell>
               <TableCell className="text-muted-foreground whitespace-nowrap">{formatBusinessDate(row.creadaEl)}</TableCell>
-              <TableCell className="text-muted-foreground whitespace-nowrap">{formatBusinessDate(row.ultimaActividadEl)}</TableCell>
+              <TableCell className="text-muted-foreground whitespace-nowrap">{row.ultimaActividadEl ? formatBusinessDate(row.ultimaActividadEl) : '—'}</TableCell>
               <TableCell className="whitespace-nowrap">
                 <div className="flex items-center gap-2">
                   <span className="text-muted-foreground">
@@ -79,6 +80,7 @@ export function OpportunityReportTable({ rows }: OpportunityReportTableProps) {
                   {row.estado === 'abierta' && <ActivityStatusBadge nextActivityAt={row.proximoSeguimientoEl} />}
                 </div>
               </TableCell>
+              <TableCell className="text-muted-foreground whitespace-nowrap">{row.cerradaEl ? formatBusinessDate(row.cerradaEl) : '—'}</TableCell>
               <TableCell className="whitespace-nowrap">{REPORT_STATUS_LABELS[row.estado]}</TableCell>
               <TableCell className="text-muted-foreground whitespace-nowrap">{LEAD_SOURCE_LABELS[row.origen]}</TableCell>
             </TableRow>

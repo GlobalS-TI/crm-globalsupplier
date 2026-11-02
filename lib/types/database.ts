@@ -42,6 +42,7 @@ export type Database = {
           estatus: Database["public"]["Enums"]["activity_status"]
           fecha: string
           id: string
+          integration_client_id: string | null
           opportunity_id: string
           owner_id: string
           tipo: Database["public"]["Enums"]["activity_type"]
@@ -55,6 +56,7 @@ export type Database = {
           estatus?: Database["public"]["Enums"]["activity_status"]
           fecha: string
           id?: string
+          integration_client_id?: string | null
           opportunity_id: string
           owner_id: string
           tipo: Database["public"]["Enums"]["activity_type"]
@@ -68,6 +70,7 @@ export type Database = {
           estatus?: Database["public"]["Enums"]["activity_status"]
           fecha?: string
           id?: string
+          integration_client_id?: string | null
           opportunity_id?: string
           owner_id?: string
           tipo?: Database["public"]["Enums"]["activity_type"]
@@ -75,6 +78,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "activities_integration_client_id_fkey"
+            columns: ["integration_client_id"]
+            isOneToOne: false
+            referencedRelation: "integration_clients"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "activities_opportunity_id_fkey"
             columns: ["opportunity_id"]
@@ -98,6 +108,7 @@ export type Database = {
           estado: string | null
           id: string
           industria: string | null
+          integration_client_id: string | null
           nombre: string
           notas: string | null
           owner_id: string
@@ -112,6 +123,7 @@ export type Database = {
           estado?: string | null
           id?: string
           industria?: string | null
+          integration_client_id?: string | null
           nombre: string
           notas?: string | null
           owner_id: string
@@ -126,6 +138,7 @@ export type Database = {
           estado?: string | null
           id?: string
           industria?: string | null
+          integration_client_id?: string | null
           nombre?: string
           notas?: string | null
           owner_id?: string
@@ -135,6 +148,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "companies_integration_client_id_fkey"
+            columns: ["integration_client_id"]
+            isOneToOne: false
+            referencedRelation: "integration_clients"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "companies_owner_id_fkey"
             columns: ["owner_id"]
@@ -152,6 +172,7 @@ export type Database = {
           created_at: string
           email: string | null
           id: string
+          integration_client_id: string | null
           nombre: string
           notas: string | null
           owner_id: string
@@ -166,6 +187,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          integration_client_id?: string | null
           nombre: string
           notas?: string | null
           owner_id: string
@@ -180,6 +202,7 @@ export type Database = {
           created_at?: string
           email?: string | null
           id?: string
+          integration_client_id?: string | null
           nombre?: string
           notas?: string | null
           owner_id?: string
@@ -193,6 +216,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "contacts_integration_client_id_fkey"
+            columns: ["integration_client_id"]
+            isOneToOne: false
+            referencedRelation: "integration_clients"
             referencedColumns: ["id"]
           },
           {
@@ -326,6 +356,103 @@ export type Database = {
           },
           {
             foreignKeyName: "content_items_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      integration_audit_log: {
+        Row: {
+          client_id: string
+          created_at: string
+          error: string | null
+          id: number
+          ok: boolean
+          operacion: string
+          target_id: string | null
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          error?: string | null
+          id?: never
+          ok: boolean
+          operacion: string
+          target_id?: string | null
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          error?: string | null
+          id?: never
+          ok?: boolean
+          operacion?: string
+          target_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "integration_audit_log_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "integration_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      integration_clients: {
+        Row: {
+          business_unit: Database["public"]["Enums"]["business_unit"]
+          created_at: string
+          etiqueta: string
+          id: string
+          key_hash: string | null
+          key_issued_at: string | null
+          key_prefix: string | null
+          last_used_at: string | null
+          max_calls_per_day: number
+          max_calls_per_minute: number
+          nombre: string
+          owner_id: string
+          revoked_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          business_unit: Database["public"]["Enums"]["business_unit"]
+          created_at?: string
+          etiqueta: string
+          id?: string
+          key_hash?: string | null
+          key_issued_at?: string | null
+          key_prefix?: string | null
+          last_used_at?: string | null
+          max_calls_per_day?: number
+          max_calls_per_minute?: number
+          nombre: string
+          owner_id: string
+          revoked_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          business_unit?: Database["public"]["Enums"]["business_unit"]
+          created_at?: string
+          etiqueta?: string
+          id?: string
+          key_hash?: string | null
+          key_issued_at?: string | null
+          key_prefix?: string | null
+          last_used_at?: string | null
+          max_calls_per_day?: number
+          max_calls_per_minute?: number
+          nombre?: string
+          owner_id?: string
+          revoked_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "integration_clients_owner_id_fkey"
             columns: ["owner_id"]
             isOneToOne: false
             referencedRelation: "profiles"
@@ -706,6 +833,7 @@ export type Database = {
       opportunities: {
         Row: {
           business_unit: Database["public"]["Enums"]["business_unit"]
+          closed_at: string | null
           company_id: string | null
           contact_id: string | null
           cotizacion_path: string | null
@@ -714,7 +842,9 @@ export type Database = {
           fecha_cierre_estimada: string | null
           fuente: Database["public"]["Enums"]["lead_source"]
           id: string
+          integration_client_id: string | null
           last_activity_at: string
+          last_completed_activity_at: string | null
           moneda: Database["public"]["Enums"]["currency"]
           monto_estimado: number
           monto_estimado_mxn: number | null
@@ -733,6 +863,7 @@ export type Database = {
         }
         Insert: {
           business_unit: Database["public"]["Enums"]["business_unit"]
+          closed_at?: string | null
           company_id?: string | null
           contact_id?: string | null
           cotizacion_path?: string | null
@@ -741,7 +872,9 @@ export type Database = {
           fecha_cierre_estimada?: string | null
           fuente: Database["public"]["Enums"]["lead_source"]
           id?: string
+          integration_client_id?: string | null
           last_activity_at?: string
+          last_completed_activity_at?: string | null
           moneda?: Database["public"]["Enums"]["currency"]
           monto_estimado?: number
           monto_estimado_mxn?: number | null
@@ -760,6 +893,7 @@ export type Database = {
         }
         Update: {
           business_unit?: Database["public"]["Enums"]["business_unit"]
+          closed_at?: string | null
           company_id?: string | null
           contact_id?: string | null
           cotizacion_path?: string | null
@@ -768,7 +902,9 @@ export type Database = {
           fecha_cierre_estimada?: string | null
           fuente?: Database["public"]["Enums"]["lead_source"]
           id?: string
+          integration_client_id?: string | null
           last_activity_at?: string
+          last_completed_activity_at?: string | null
           moneda?: Database["public"]["Enums"]["currency"]
           monto_estimado?: number
           monto_estimado_mxn?: number | null
@@ -798,6 +934,13 @@ export type Database = {
             columns: ["contact_id"]
             isOneToOne: false
             referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "opportunities_integration_client_id_fkey"
+            columns: ["integration_client_id"]
+            isOneToOne: false
+            referencedRelation: "integration_clients"
             referencedColumns: ["id"]
           },
           {
@@ -1619,6 +1762,124 @@ export type Database = {
       can_manage_leads: { Args: never; Returns: boolean }
       can_manage_projects: { Args: never; Returns: boolean }
       can_view_it_ticket: { Args: { p_ticket_id: string }; Returns: boolean }
+      integration_authenticate: {
+        Args: { p_key_hash: string }
+        Returns: {
+          business_unit: Database["public"]["Enums"]["business_unit"]
+          created_at: string
+          etiqueta: string
+          id: string
+          key_hash: string | null
+          key_issued_at: string | null
+          key_prefix: string | null
+          last_used_at: string | null
+          max_calls_per_day: number
+          max_calls_per_minute: number
+          nombre: string
+          owner_id: string
+          revoked_at: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "integration_clients"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      integration_can_read_company: {
+        Args: {
+          p_client_id: string
+          p_company_id: string
+          p_unit: Database["public"]["Enums"]["business_unit"]
+        }
+        Returns: boolean
+      }
+      integration_can_read_contact: {
+        Args: {
+          p_client_id: string
+          p_contact_id: string
+          p_unit: Database["public"]["Enums"]["business_unit"]
+        }
+        Returns: boolean
+      }
+      integration_create_activity: {
+        Args: { p_data: Json; p_key_hash: string }
+        Returns: Json
+      }
+      integration_create_company: {
+        Args: { p_data: Json; p_key_hash: string }
+        Returns: Json
+      }
+      integration_create_contact: {
+        Args: { p_data: Json; p_key_hash: string }
+        Returns: Json
+      }
+      integration_create_opportunity: {
+        Args: { p_data: Json; p_key_hash: string }
+        Returns: Json
+      }
+      integration_get_company: {
+        Args: { p_company_id: string; p_key_hash: string }
+        Returns: Json
+      }
+      integration_get_contact: {
+        Args: { p_contact_id: string; p_key_hash: string }
+        Returns: Json
+      }
+      integration_get_opportunity: {
+        Args: { p_key_hash: string; p_opp_id: string }
+        Returns: Json
+      }
+      integration_issue_key: { Args: { p_client_id: string }; Returns: string }
+      integration_list_opportunities: {
+        Args: { p_etapa?: string; p_key_hash: string }
+        Returns: Json
+      }
+      integration_log: {
+        Args: { p_client_id: string; p_operacion: string; p_target_id: string }
+        Returns: undefined
+      }
+      integration_log_failure: {
+        Args: { p_error: string; p_key_hash: string; p_operacion: string }
+        Returns: undefined
+      }
+      integration_lookup: {
+        Args: {
+          p_email?: string
+          p_key_hash: string
+          p_rfc?: string
+          p_telefono?: string
+        }
+        Returns: Json
+      }
+      integration_mark_notes: {
+        Args: { p_etiqueta: string; p_notas: string }
+        Returns: string
+      }
+      integration_normalize_email: { Args: { p: string }; Returns: string }
+      integration_normalize_phone: { Args: { p: string }; Returns: string }
+      integration_normalize_rfc: { Args: { p: string }; Returns: string }
+      integration_opportunity_json: {
+        Args: { p_opp_id: string }
+        Returns: Json
+      }
+      integration_revoke_key: {
+        Args: { p_client_id: string }
+        Returns: undefined
+      }
+      integration_stage_allowed: {
+        Args: { p_etapa: Database["public"]["Enums"]["opportunity_stage"] }
+        Returns: boolean
+      }
+      integration_update_activity: {
+        Args: { p_activity_id: string; p_data: Json; p_key_hash: string }
+        Returns: Json
+      }
+      integration_update_opportunity: {
+        Args: { p_data: Json; p_key_hash: string; p_opp_id: string }
+        Returns: Json
+      }
       is_active_owner: { Args: never; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
       is_comisiones_viewer: { Args: never; Returns: boolean }
