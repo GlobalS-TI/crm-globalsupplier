@@ -1,38 +1,18 @@
 import { cn } from '@/lib/utils'
-import { businessDayKey } from '@/lib/utils/date'
+import { resolveFollowUpStatus, FOLLOW_UP_LABELS, type FollowUpStatus } from '@/lib/utils/followUp'
 
-const STATUS_LABELS = {
-  vencida:          'Vencida',
-  hoy:              'Hoy',
-  programada:       'Programada',
-  sin_seguimiento:  'Sin seguimiento',
-} as const
-
-const STATUS_STYLES = {
+const STATUS_STYLES: Record<FollowUpStatus, string> = {
   vencida:          'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
   hoy:              'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
   programada:       'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/40 dark:text-indigo-300',
   sin_seguimiento:  'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400',
-} as const
+}
 
-const STATUS_DOTS = {
+const STATUS_DOTS: Record<FollowUpStatus, string> = {
   vencida:          'bg-red-500',
   hoy:              'bg-amber-500',
   programada:       'bg-indigo-500',
   sin_seguimiento:  'bg-slate-400',
-} as const
-
-type ActivityStatus = keyof typeof STATUS_LABELS
-
-function resolveStatus(nextActivityAt: string | null): ActivityStatus {
-  if (!nextActivityAt) return 'sin_seguimiento'
-
-  const targetKey = businessDayKey(new Date(nextActivityAt))
-  const todayKey  = businessDayKey(new Date())
-
-  if (targetKey < todayKey) return 'vencida'
-  if (targetKey === todayKey) return 'hoy'
-  return 'programada'
 }
 
 interface Props {
@@ -43,7 +23,7 @@ interface Props {
 // Estado de la próxima actividad de la oportunidad (next_activity_at), no confundir
 // con el flag `stale` (StaleBadge), que mira hacia atrás en vez de hacia adelante.
 export function ActivityStatusBadge({ nextActivityAt, className }: Props) {
-  const status = resolveStatus(nextActivityAt)
+  const status = resolveFollowUpStatus(nextActivityAt)
 
   return (
     <span className={cn(
@@ -52,7 +32,7 @@ export function ActivityStatusBadge({ nextActivityAt, className }: Props) {
       className,
     )}>
       <span className={cn('h-1.5 w-1.5 rounded-full', STATUS_DOTS[status])} />
-      {STATUS_LABELS[status]}
+      {FOLLOW_UP_LABELS[status]}
     </span>
   )
 }

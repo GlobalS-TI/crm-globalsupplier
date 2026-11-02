@@ -58,6 +58,11 @@ export type OpportunityFilters = {
   businessUnit?: BusinessUnit
   stage?:        OpportunityStage
   stale?:        boolean
+  stages?:              OpportunityStage[]  // etapa IN (…)
+  createdFrom?:         string              // ISO, inclusivo
+  createdBefore?:       string              // ISO, exclusivo
+  nextActivityMissing?: boolean             // next_activity_at IS NULL
+  nextActivityBefore?:  string              // next_activity_at < ISO
 }
 
 export interface IOpportunityRepository {
