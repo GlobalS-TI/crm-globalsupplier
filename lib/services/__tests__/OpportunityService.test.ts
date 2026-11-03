@@ -28,7 +28,11 @@ const BASE_ROW: OpportunityRow = {
   notas:                 null,
   cotizacion_path:       null,
   orden_compra_path:     null,
-  is_stale:              false,
+  stale:                 false,
+  closed_at:             null,
+  integration_client_id: null,
+  last_activity_at:      '2026-06-01T00:00:00.000Z',
+  last_completed_activity_at: null,
   created_at:            '2026-06-01T00:00:00.000Z',
   updated_at:            '2026-06-01T00:00:00.000Z',
 }
