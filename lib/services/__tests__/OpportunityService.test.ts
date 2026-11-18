@@ -30,6 +30,8 @@ const BASE_ROW: OpportunityRow = {
   orden_compra_path:     null,
   stale:                 false,
   closed_at:             null,
+  closed_by:             null,
+  seller_id:             '00000000-0000-0000-0000-000000000001',
   integration_client_id: null,
   last_activity_at:      '2026-06-01T00:00:00.000Z',
   last_completed_activity_at: null,
@@ -42,6 +44,7 @@ const BASE_WITH_RELATIONS: OpportunityWithRelations = {
   company: null,
   contact: null,
   owner:   { full_name: 'Jane Doe' },
+  closer:  null,
 }
 
 // ---------------------------------------------------------------------------
@@ -249,6 +252,7 @@ describe('OpportunityService.moveToStage()', () => {
       company: null,
       contact: null,
       owner:   { full_name: 'Jane Doe' },
+      closer:  null,
     }
 
     const repo = makeMockRepo({

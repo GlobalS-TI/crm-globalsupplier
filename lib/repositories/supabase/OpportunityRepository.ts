@@ -23,7 +23,7 @@ type OppUpdate = Database['public']['Tables']['opportunities']['Update']
 const toInsert = (d: CreateOpportunityInput): OppInsert => d as unknown as OppInsert
 const toUpdate = (d: UpdateOpportunityInput): OppUpdate => d as unknown as OppUpdate
 
-const WITH_RELATIONS = '*, company:companies(nombre), contact:contacts(nombre, apellido, email, telefono), owner:profiles!owner_id(full_name)'
+const WITH_RELATIONS = '*, company:companies(nombre), contact:contacts(nombre, apellido, email, telefono), owner:profiles!owner_id(full_name), closer:profiles!closed_by(full_name)'
 
 // Etapas cerradas — excluidas del pipeline abierto (forecast, totales, conteos).
 const CLOSED_STAGES: OpportunityStage[] = ['ganado', 'perdido', 'sin_respuesta']
@@ -46,14 +46,23 @@ export class OpportunityRepository implements IOpportunityRepository {
     let query = supabase.from('opportunities').select(WITH_RELATIONS)
 
     if (filters.ownerId)      query = query.eq('owner_id', filters.ownerId)
+    if (filters.sellerId)     query = query.eq('seller_id', filters.sellerId)
     if (filters.businessUnit) query = query.eq('business_unit', filters.businessUnit)
     if (filters.stage)        query = query.eq('etapa', filters.stage)
     if (filters.stale !== undefined) query = query.eq('stale', filters.stale)
     if (filters.stages)              query = query.in('etapa', filters.stages)
     if (filters.createdFrom)         query = query.gte('created_at', filters.createdFrom)
     if (filters.createdBefore)       query = query.lt('created_at', filters.createdBefore)
-    if (filters.closedFrom)          query = query.gte('closed_at', filters.closedFrom)
-    if (filters.closedBefore)        query = query.lt('closed_at', filters.closedBefore)
+    if (filters.includeOpen && (filters.closedFrom || filters.closedBefore)) {
+      const range = [
+        filters.closedFrom   && `closed_at.gte.${filters.closedFrom}`,
+        filters.closedBefore && `closed_at.lt.${filters.closedBefore}`,
+      ].filter(Boolean).join(',')
+      query = query.or(`closed_at.is.null,and(${range})`)
+    } else {
+      if (filters.closedFrom)        query = query.gte('closed_at', filters.closedFrom)
+      if (filters.closedBefore)      query = query.lt('closed_at', filters.closedBefore)
+    }
     if (filters.nextActivityMissing) query = query.is('next_activity_at', null)
     if (filters.nextActivityBefore)  query = query.lt('next_activity_at', filters.nextActivityBefore)
 

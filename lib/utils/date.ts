@@ -77,3 +77,12 @@ export function businessMonthStartISO(date: Date, offset = 0): string {
 export function businessMonth(iso: string): number {
   return Number(businessDayKey(new Date(iso)).slice(5, 7))
 }
+
+/** Primer y último día ("YYYY-MM-DD") del mes calendario del negocio que contiene `date`. */
+export function businessMonthRange(date: Date): { desde: string; hasta: string } {
+  const [y, m] = businessDayKey(date).split('-').map(Number)
+  return {
+    desde: new Date(Date.UTC(y, m - 1, 1)).toISOString().slice(0, 10),
+    hasta: new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10),
+  }
+}

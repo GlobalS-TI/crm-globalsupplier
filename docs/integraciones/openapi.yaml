@@ -456,7 +456,7 @@ components:
     Fecha:
       name: fecha
       in: query
-      description: A qué fecha aplica el rango `desde`/`hasta`.
+      description: A qué fecha aplica el rango `desde`/`hasta`. Con `cierre` el rango filtra las cerradas y las abiertas se incluyen todas.
       schema: { type: string, enum: [creacion, cierre], default: creacion }
     Desde:
       name: desde
@@ -471,7 +471,7 @@ components:
     Owner:
       name: owner
       in: query
-      description: Id del vendedor.
+      description: Id del vendedor al que se acredita la oportunidad — quien la cerró, o el dueño actual si sigue abierta.
       schema: { type: string, format: uuid }
     Unit:
       name: unit
@@ -733,6 +733,7 @@ components:
             celular: { type: [string, 'null'], description: '`null` sin el permiso de datos de contacto' }
         vendedor:
           type: object
+          description: Quien la cerró (dueño al momento del cierre); si sigue abierta, el dueño actual.
           properties:
             id: { type: string, format: uuid }
             nombre: { type: [string, 'null'] }

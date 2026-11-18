@@ -853,6 +853,7 @@ export type Database = {
         Row: {
           business_unit: Database["public"]["Enums"]["business_unit"]
           closed_at: string | null
+          closed_by: string | null
           company_id: string | null
           contact_id: string | null
           cotizacion_path: string | null
@@ -875,6 +876,7 @@ export type Database = {
           orden_compra_path: string | null
           owner_id: string
           probabilidad: number
+          seller_id: string
           stale: boolean
           tipo_cambio_estimado: number | null
           tipo_cambio_final: number | null
@@ -883,6 +885,7 @@ export type Database = {
         Insert: {
           business_unit: Database["public"]["Enums"]["business_unit"]
           closed_at?: string | null
+          closed_by?: string | null
           company_id?: string | null
           contact_id?: string | null
           cotizacion_path?: string | null
@@ -905,6 +908,7 @@ export type Database = {
           orden_compra_path?: string | null
           owner_id: string
           probabilidad?: number
+          seller_id?: never
           stale?: boolean
           tipo_cambio_estimado?: number | null
           tipo_cambio_final?: number | null
@@ -913,6 +917,7 @@ export type Database = {
         Update: {
           business_unit?: Database["public"]["Enums"]["business_unit"]
           closed_at?: string | null
+          closed_by?: string | null
           company_id?: string | null
           contact_id?: string | null
           cotizacion_path?: string | null
@@ -935,12 +940,20 @@ export type Database = {
           orden_compra_path?: string | null
           owner_id?: string
           probabilidad?: number
+          seller_id?: never
           stale?: boolean
           tipo_cambio_estimado?: number | null
           tipo_cambio_final?: number | null
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "opportunities_closed_by_fkey"
+            columns: ["closed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "opportunities_company_id_fkey"
             columns: ["company_id"]

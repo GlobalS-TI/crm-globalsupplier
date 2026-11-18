@@ -7,6 +7,7 @@ export type OpportunityWithRelations = OpportunityRow & {
   company: { nombre: string } | null
   contact: { nombre: string; apellido: string | null; email: string | null; telefono: string | null } | null
   owner:   { full_name: string } | null
+  closer:  { full_name: string } | null  // closed_by; null si está abierta
 }
 
 // Lo mínimo que necesita una fila de Reportes (toReportRow). Lo cumplen tanto las
@@ -14,11 +15,12 @@ export type OpportunityWithRelations = OpportunityRow & {
 export type ReportSourceOpportunity = Pick<OpportunityRow,
   | 'id' | 'nombre' | 'business_unit' | 'owner_id' | 'etapa' | 'probabilidad' | 'fuente'
   | 'monto_estimado' | 'moneda' | 'monto_estimado_mxn' | 'monto_final_mxn'
-  | 'created_at' | 'last_completed_activity_at' | 'next_activity_at' | 'closed_at' | 'stale'
+  | 'created_at' | 'last_completed_activity_at' | 'next_activity_at' | 'closed_at' | 'closed_by' | 'stale'
 > & {
   company: { nombre: string } | null
   contact: { nombre: string; apellido: string | null; email: string | null; telefono: string | null } | null
   owner:   { full_name: string } | null
+  closer:  { full_name: string } | null
 }
 
 export type DashboardStats = {
@@ -67,6 +69,7 @@ export type ExecutiveDashboard = {
 
 export type OpportunityFilters = {
   ownerId?:      string
+  sellerId?:     string              // seller_id: quien cerró, o el owner si está abierta
   businessUnit?: BusinessUnit
   stage?:        OpportunityStage
   stale?:        boolean
@@ -75,6 +78,7 @@ export type OpportunityFilters = {
   createdBefore?:       string              // ISO, exclusivo
   closedFrom?:          string              // closed_at ISO, inclusivo
   closedBefore?:        string              // closed_at ISO, exclusivo
+  includeOpen?:         boolean             // con closedFrom/closedBefore: las abiertas entran igual
   nextActivityMissing?: boolean             // next_activity_at IS NULL
   nextActivityBefore?:  string              // next_activity_at < ISO
 }
