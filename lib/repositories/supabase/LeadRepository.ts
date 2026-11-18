@@ -151,7 +151,10 @@ export class LeadRepository implements ILeadRepository {
 
   async update(id: string, data: UpdateLeadInput): Promise<LeadRow> {
     const supabase = await db()
-    const payload = { ...data, email: data.email || null }
+    // Solo normalizar email ('' → null) si viene en el update: los updates parciales
+    // (converted_opportunity_id al convertir, requirements_file_path) no lo traen, y
+    // forzar `email: null` ahí borraba el correo del lead.
+    const payload = 'email' in data ? { ...data, email: data.email || null } : data
     const { data: updated, error } = await supabase
       .from('leads')
       .update(payload)
