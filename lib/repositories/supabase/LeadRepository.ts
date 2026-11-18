@@ -104,6 +104,25 @@ export class LeadRepository implements ILeadRepository {
     return (data ?? []) as LeadWithRelations[]
   }
 
+  // PostgREST corta cada respuesta en max_rows (1000, supabase/config.toml) — se pagina
+  // con un orden estable (id como desempate) para no perder ni duplicar filas.
+  async listAll(): Promise<LeadWithRelations[]> {
+    const supabase = await db()
+    const PAGE = 1000
+    const all: LeadWithRelations[] = []
+    for (let from = 0; ; from += PAGE) {
+      const { data, error } = await supabase
+        .from('leads')
+        .select(LEAD_WITH_RELATIONS)
+        .order('created_at', { ascending: false })
+        .order('id')
+        .range(from, from + PAGE - 1)
+      if (error) throw error
+      all.push(...((data ?? []) as LeadWithRelations[]))
+      if (!data || data.length < PAGE) return all
+    }
+  }
+
   async findById(id: string): Promise<LeadWithRelations | null> {
     const supabase = await db()
     const { data, error } = await supabase
