@@ -74,7 +74,8 @@ Reglas que aplica el CRM (no se pueden saltar desde la API):
 - Email, teléfono y celular de contactos llegan `null` salvo que también esté activo
   **Ver email y teléfono de contactos** (mismo lugar).
 - Filtros (los mismos de Reportes): `fecha=creacion|cierre`, `desde`, `hasta` (YYYY-MM-DD, hora de
-  México, inclusivos), `owner` (id del vendedor), `unit`, `stage`, `estado`
+  México, inclusivos; con `fecha=cierre` el rango aplica a las cerradas y las abiertas entran
+  todas), `owner` (id del vendedor: quien la cerró, o el dueño si sigue abierta), `unit`, `stage`, `estado`
   (`abierta|ganada|perdida|sin_respuesta`) y `alerta`
   (`sin_seguimiento|seguimiento_vencido|sin_actividad|cotizacion_pendiente`). Un filtro
   desconocido o inválido responde 422.

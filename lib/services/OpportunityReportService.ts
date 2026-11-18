@@ -36,7 +36,7 @@ export type OpportunityReportRow = {
   contactoEmail:        string | null
   contactoTelefono:     string | null
   unidad:               BusinessUnit
-  vendedorId:           string
+  vendedorId:           string         // quien la cerró (closed_by); si está abierta, el owner actual
   vendedor:             string | null
   etapa:                OpportunityStage
   probabilidad:         number
@@ -64,6 +64,9 @@ export type OpportunityReportSummary = {
  * restringen la etapa cada uno por su lado; se combinan por intersección, así que una
  * combinación contradictoria (p. ej. estado "ganada" + alerta "sin seguimiento") da
  * `stages: []`, que significa "sin resultados".
+ *
+ * Con fecha "cierre" el rango aplica a las cerradas (closed_at) y las abiertas entran
+ * todas: el pipeline es lo que está vivo hoy, no tiene fecha de cierre.
  */
 export function toRepositoryFilters(filters: OpportunityReportFilters, now: Date): OpportunityFilters {
   const stageSets = [
@@ -81,11 +84,12 @@ export function toRepositoryFilters(filters: OpportunityReportFilters, now: Date
   const byClose = filters.fecha === 'cierre'
 
   return {
-    ...(filters.owner  && { ownerId:      filters.owner }),
+    ...(filters.owner  && { sellerId:     filters.owner }),
     ...(filters.unit   && { businessUnit: filters.unit }),
     ...(stages         && { stages }),
     ...(from   && (byClose ? { closedFrom:   from }   : { createdFrom:   from })),
     ...(before && (byClose ? { closedBefore: before } : { createdBefore: before })),
+    ...(byClose && (from || before) && { includeOpen: true }),
     ...(filters.alerta === 'sin_seguimiento'     && { nextActivityMissing: true }),
     ...(filters.alerta === 'seguimiento_vencido' && { nextActivityBefore: businessDayStartISO(businessDayKey(now)) }),
     ...(filters.alerta === 'sin_actividad'       && { stale: true }),
@@ -106,8 +110,8 @@ export function toReportRow(opp: ReportSourceOpportunity, now: Date): Opportunit
     contactoEmail:        opp.contact?.email ?? null,
     contactoTelefono:     opp.contact?.telefono ?? null,
     unidad:               opp.business_unit,
-    vendedorId:           opp.owner_id,
-    vendedor:             opp.owner?.full_name ?? null,
+    vendedorId:           opp.closed_by ?? opp.owner_id,
+    vendedor:             (opp.closed_by ? opp.closer : opp.owner)?.full_name ?? null,
     etapa:                opp.etapa,
     probabilidad:         opp.probabilidad,
     montoEstimado:        Number(opp.monto_estimado),
@@ -196,7 +200,7 @@ function groupBreakdown(
   }
   return Array.from(groups.values())
     .map(g => ({ ...g, conversion: conversionRate(g.ganadas, g.perdidas) }))
-    .sort((a, b) => b.pipelineMxn - a.pipelineMxn || b.ganadoMxn - a.ganadoMxn)
+    .sort((a, b) => b.ganadoMxn - a.ganadoMxn || b.pipelineMxn - a.pipelineMxn)
 }
 
 export function computeIndicators(rows: OpportunityReportRow[]): OpportunityReportIndicators {

@@ -42,16 +42,16 @@ export function OpportunityReportFilters({ profiles, canFilterByOwner }: Opportu
 
   return (
     <div className="flex items-end gap-2 flex-wrap">
-      {/* Rango por fecha de creación o de cierre */}
+      {/* Rango por fecha de cierre (las abiertas entran todas) o de creación */}
       <label className="flex flex-col gap-1 text-[11px] text-muted-foreground">
         Fecha de
-        <Select value={params.get('fecha') ?? 'creacion'} onValueChange={v => update('fecha', v === 'creacion' ? 'all' : v)}>
+        <Select value={params.get('fecha') ?? 'cierre'} onValueChange={v => update('fecha', v === 'cierre' ? 'all' : v)}>
           <SelectTrigger className="h-8 w-28 text-xs">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="creacion">Creación</SelectItem>
             <SelectItem value="cierre">Cierre</SelectItem>
+            <SelectItem value="creacion">Creación</SelectItem>
           </SelectContent>
         </Select>
       </label>

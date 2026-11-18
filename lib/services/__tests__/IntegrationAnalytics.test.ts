@@ -29,12 +29,14 @@ const SOURCE: IntegrationAnalyticsSource = {
   last_completed_activity_at: '2026-10-25T16:00:00.000Z',
   next_activity_at:           '2026-10-30T16:00:00.000Z',
   closed_at:                  null,
+  closed_by:                  null,
   stale:                      true,
   fecha_cierre_estimada:      '2026-11-30',
   notas:                      'Piden muestra',
   company: { nombre: 'Acme SA' },
   contact: { nombre: 'Ana', apellido: 'López', puesto: 'Compras', email: null, telefono: null, celular: null },
   owner:   { full_name: 'Jane Doe' },
+  closer:  null,
 }
 
 function makeRepo(rows: IntegrationAnalyticsSource[] = [SOURCE], total = rows.length) {

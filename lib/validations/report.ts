@@ -14,6 +14,7 @@ export const reportAlertSchema = z.enum([
 ])
 
 // Qué fecha filtra el rango desde/hasta: creación de la oportunidad o su cierre (closed_at).
+// Con "cierre" las abiertas entran todas (ver toRepositoryFilters).
 export const reportDateFieldSchema = z.enum(['creacion', 'cierre'])
 
 export const dayKeySchema = z
@@ -23,7 +24,7 @@ export const dayKeySchema = z
 
 // Los filtros llegan de la URL: un valor inválido se descarta en vez de romper la página.
 export const opportunityReportFiltersSchema = z.object({
-  fecha:  reportDateFieldSchema.default('creacion').catch('creacion'),
+  fecha:  reportDateFieldSchema.default('cierre').catch('cierre'),
   desde:  dayKeySchema.optional().catch(undefined),
   hasta:  dayKeySchema.optional().catch(undefined),
   owner:  z.string().uuid().optional().catch(undefined),

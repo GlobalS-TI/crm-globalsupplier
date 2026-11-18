@@ -38,6 +38,8 @@ const BASE_OPP: OpportunityWithRelations = {
   last_activity_at:      '2026-11-05T16:00:00.000Z',
   last_completed_activity_at: '2026-10-30T16:00:00.000Z',
   closed_at:             null,
+  closed_by:             null,
+  seller_id:             OWNER_ID,
   notas:                 null,
   cotizacion_path:       null,
   orden_compra_path:     null,
@@ -48,6 +50,7 @@ const BASE_OPP: OpportunityWithRelations = {
   company: { nombre: 'Acme SA' },
   contact: { nombre: 'Ana', apellido: 'López', email: 'ana@acme.mx', telefono: '8112345678' },
   owner:   { full_name: 'Jane Doe' },
+  closer:  null,
 } as OpportunityWithRelations
 
 function makeMockRepo(rows: OpportunityWithRelations[] = []): IOpportunityRepository {
@@ -74,9 +77,9 @@ describe('toRepositoryFilters', () => {
     expect(toRepositoryFilters({ fecha: 'creacion' }, NOW)).toEqual({})
   })
 
-  it('pasa vendedor y unidad tal cual', () => {
+  it('vendedor filtra por a quién se le acredita (seller_id), unidad tal cual', () => {
     expect(toRepositoryFilters({ fecha: 'creacion', owner: OWNER_ID, unit: 'thunder_led' }, NOW))
-      .toEqual({ ownerId: OWNER_ID, businessUnit: 'thunder_led' })
+      .toEqual({ sellerId: OWNER_ID, businessUnit: 'thunder_led' })
   })
 
   it('el rango de fechas cubre días completos en hora de México', () => {
@@ -87,11 +90,16 @@ describe('toRepositoryFilters', () => {
     expect(f.closedFrom).toBeUndefined()
   })
 
-  it('con fecha de cierre el rango filtra closed_at', () => {
+  it('con fecha de cierre el rango filtra closed_at y las abiertas entran todas', () => {
     const f = toRepositoryFilters({ fecha: 'cierre', desde: '2026-10-01', hasta: '2026-10-31' }, NOW)
     expect(f.closedFrom).toBe('2026-10-01T06:00:00.000Z')
     expect(f.closedBefore).toBe('2026-11-01T06:00:00.000Z')
+    expect(f.includeOpen).toBe(true)
     expect(f.createdFrom).toBeUndefined()
+  })
+
+  it('fecha de cierre sin rango no agrega includeOpen', () => {
+    expect(toRepositoryFilters({ fecha: 'cierre' }, NOW)).toEqual({})
   })
 
   it('estado abierta → etapas abiertas', () => {
@@ -167,6 +175,19 @@ describe('toReportRow', () => {
     })
   })
 
+  it('cerrada: se acredita a quien la cerró aunque después se haya reasignado', () => {
+    const CLOSER_ID = '00000000-0000-4000-8000-000000000009'
+    const row = toReportRow({
+      ...BASE_OPP,
+      etapa:     'ganado',
+      closed_at: '2026-11-10T18:00:00.000Z',
+      closed_by: CLOSER_ID,
+      closer:    { full_name: 'Karla' },
+    }, NOW)
+    expect(row.vendedorId).toBe(CLOSER_ID)
+    expect(row.vendedor).toBe('Karla')
+  })
+
   it('contacto sin apellido y sin empresa', () => {
     const row = toReportRow({
       ...BASE_OPP,
@@ -213,10 +234,11 @@ describe('computeIndicators', () => {
     opp({ id: 'b', etapa: 'seguimiento', moneda: 'MXN', monto_estimado: 10000, monto_estimado_mxn: 10000, probabilidad: 20, next_activity_at: null, stale: true }),
     // Jane — thunder_led: abierta vencida (5,000, 10%)
     opp({ id: 'c', etapa: 'negociacion', business_unit: 'thunder_led', moneda: 'MXN', monto_estimado: 5000, monto_estimado_mxn: 5000, probabilidad: 10, next_activity_at: '2026-10-20T16:00:00.000Z' }),
-    // Otro vendedor — thunder_led: ganada 40,000 y perdida 7,000 y sin respuesta 3,000
-    opp({ id: 'd', etapa: 'ganado', business_unit: 'thunder_led', owner_id: OTHER_OWNER, owner: { full_name: 'Bob' }, moneda: 'MXN', monto_estimado: 35000, monto_estimado_mxn: 35000, monto_final_mxn: 40000 }),
-    opp({ id: 'e', etapa: 'perdido', business_unit: 'thunder_led', owner_id: OTHER_OWNER, owner: { full_name: 'Bob' }, moneda: 'MXN', monto_estimado: 7000, monto_estimado_mxn: 7000 }),
-    opp({ id: 'f', etapa: 'sin_respuesta', business_unit: 'thunder_led', owner_id: OTHER_OWNER, owner: { full_name: 'Bob' }, moneda: 'MXN', monto_estimado: 3000, monto_estimado_mxn: 3000 }),
+    // Bob las cerró — thunder_led: ganada 40,000 y perdida 7,000 y sin respuesta 3,000. La
+    // ganada hoy es de Jane (reasignada después de cerrar) pero se le sigue acreditando a Bob.
+    opp({ id: 'd', etapa: 'ganado', business_unit: 'thunder_led', closed_by: OTHER_OWNER, closer: { full_name: 'Bob' }, moneda: 'MXN', monto_estimado: 35000, monto_estimado_mxn: 35000, monto_final_mxn: 40000 }),
+    opp({ id: 'e', etapa: 'perdido', business_unit: 'thunder_led', owner_id: OTHER_OWNER, owner: { full_name: 'Bob' }, closed_by: OTHER_OWNER, closer: { full_name: 'Bob' }, moneda: 'MXN', monto_estimado: 7000, monto_estimado_mxn: 7000 }),
+    opp({ id: 'f', etapa: 'sin_respuesta', business_unit: 'thunder_led', owner_id: OTHER_OWNER, owner: { full_name: 'Bob' }, closed_by: OTHER_OWNER, closer: { full_name: 'Bob' }, moneda: 'MXN', monto_estimado: 3000, monto_estimado_mxn: 3000 }),
   ]
 
   it('totales de pipeline, seguimiento y resultados', () => {
@@ -231,17 +253,18 @@ describe('computeIndicators', () => {
     expect(k.conversion).toBeCloseTo(1 / 3)
   })
 
-  it('desglose por unidad ordenado por pipeline', () => {
-    const [juno, led] = computeIndicators(rows).porUnidad
+  it('desglose por unidad ordenado por monto ganado y luego pipeline', () => {
+    const [led, juno] = computeIndicators(rows).porUnidad
     expect(juno).toMatchObject({ key: 'juno_promotional', label: 'Juno Promotional', abiertas: 2, pipelineMxn: 28500, ganadas: 0, conversion: null })
     expect(led).toMatchObject({ key: 'thunder_led', abiertas: 1, pipelineMxn: 5000, ganadas: 1, ganadoMxn: 40000, perdidas: 2 })
     expect(led.conversion).toBeCloseTo(1 / 3)
   })
 
-  it('desglose por vendedor', () => {
+  it('desglose por vendedor: cerradas a quien las cerró, abiertas al owner', () => {
     const porVendedor = computeIndicators(rows).porVendedor
-    expect(porVendedor.map(v => v.label)).toEqual(['Jane Doe', 'Bob'])
-    expect(porVendedor[1]).toMatchObject({ key: OTHER_OWNER, abiertas: 0, ganadas: 1, perdidas: 2 })
+    expect(porVendedor.map(v => v.label)).toEqual(['Bob', 'Jane Doe'])
+    expect(porVendedor[0]).toMatchObject({ key: OTHER_OWNER, abiertas: 0, ganadas: 1, ganadoMxn: 40000, perdidas: 2 })
+    expect(porVendedor[1]).toMatchObject({ key: OWNER_ID, abiertas: 3, ganadas: 0, ganadoMxn: 0 })
   })
 
   it('sin filas no divide entre cero', () => {
@@ -308,10 +331,10 @@ describe('OpportunityReportService.listOpportunities', () => {
     expect(repo.findAll).toHaveBeenCalledWith({ stages: ['ganado'] })
   })
 
-  it('fecha inválida cae a creación', async () => {
+  it('por default (o con fecha inválida) el rango es de cierre e incluye las abiertas', async () => {
     const repo = makeMockRepo()
     await new OpportunityReportService(repo).listOpportunities({ fecha: 'otra', desde: '2026-10-01' }, NOW)
-    expect(repo.findAll).toHaveBeenCalledWith({ createdFrom: '2026-10-01T06:00:00.000Z' })
+    expect(repo.findAll).toHaveBeenCalledWith({ closedFrom: '2026-10-01T06:00:00.000Z', includeOpen: true })
   })
 
   it('acepta filtros undefined', async () => {

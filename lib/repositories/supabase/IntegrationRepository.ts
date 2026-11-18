@@ -77,12 +77,14 @@ async function callIntegration<T>(
 function toAnalyticsFilters(f: OpportunityFilters): Record<string, unknown> {
   return {
     owner_id:              f.ownerId,
+    seller_id:             f.sellerId,
     business_unit:         f.businessUnit,
     stages:                f.stages ?? (f.stage ? [f.stage] : undefined),
     created_from:          f.createdFrom,
     created_before:        f.createdBefore,
     closed_from:           f.closedFrom,
     closed_before:         f.closedBefore,
+    include_open:          f.includeOpen,
     next_activity_missing: f.nextActivityMissing,
     next_activity_before:  f.nextActivityBefore,
     stale:                 f.stale,
