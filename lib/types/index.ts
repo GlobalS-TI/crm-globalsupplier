@@ -166,7 +166,7 @@ export const INTEGRATION_ADMIN_ROLES: UserRole[] = ['director_general', 'adminis
 
 export const LEADS_ROLES: UserRole[] = ['marketing', 'director_general', 'direccion_comercial', 'administracion']
 
-export const LEADS_EXPORT_ROLES: UserRole[] = ['director_general', 'marketing', 'administracion']
+export const LEADS_EXPORT_ROLES: UserRole[] = ['director_general', 'marketing', 'administracion', 'direccion_comercial']
 
 // Quién puede filtrar el pipeline de oportunidades por vendedor (gating de UI —
 // RLS es la seguridad real, ver ADR-003).

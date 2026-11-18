@@ -8,6 +8,7 @@ import { LeadService } from '@/lib/services/LeadService'
 import { LeadSectionNav } from '@/components/crm/LeadSectionNav'
 import { LeadTable } from '@/components/crm/LeadTable'
 import { CreateSectionButton } from '@/components/crm/LeadSectionModal'
+import { LeadExportAllButton } from '@/components/crm/LeadExportAllButton'
 import { SearchInput } from '@/components/crm/SearchInput'
 import type { AssignableUser } from '@/components/crm/LeadModal'
 import { LEADS_ROLES, LEADS_EXPORT_ROLES } from '@/lib/types'
@@ -79,7 +80,10 @@ export default async function LeadsPage({ searchParams }: PageProps) {
       <div className="flex-1 overflow-y-auto p-4 md:p-8 space-y-6">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <h1 className="text-2xl font-bold">Leads</h1>
-          {isLeadsManager && <CreateSectionButton />}
+          <div className="flex items-center gap-2">
+            {canExportLeads && <LeadExportAllButton />}
+            {isLeadsManager && <CreateSectionButton />}
+          </div>
         </div>
 
         {!sec ? (
