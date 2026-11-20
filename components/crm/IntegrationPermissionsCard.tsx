@@ -60,23 +60,28 @@ export function IntegrationPermissionsCard({ client }: IntegrationPermissionsCar
   const [isPending, startTransition] = useTransition()
   const [analytics, setAnalytics] = useState(client.canReadAnalytics)
   const [contactPii, setContactPii] = useState(client.canReadContactPii)
+  const [history, setHistory] = useState(client.canReadHistory)
 
-  function save(next: { analytics: boolean; contactPii: boolean }) {
-    const previous = { analytics, contactPii }
-    // Apagar análisis apaga también los datos de contacto (misma regla que el servicio).
-    const effectivePii = next.analytics && next.contactPii
+  function save(next: { analytics: boolean; contactPii: boolean; history: boolean }) {
+    const previous = { analytics, contactPii, history }
+    // Apagar análisis apaga también contacto e historial (misma regla que el servicio y la DB).
+    const effectivePii     = next.analytics && next.contactPii
+    const effectiveHistory = next.analytics && next.history
     setAnalytics(next.analytics)
     setContactPii(effectivePii)
+    setHistory(effectiveHistory)
 
     startTransition(async () => {
       const result = await updateIntegrationPermissions({
         client_id:            client.id,
         can_read_analytics:   next.analytics,
         can_read_contact_pii: effectivePii,
+        can_read_history:     effectiveHistory,
       })
       if (result.error) {
         setAnalytics(previous.analytics)
         setContactPii(previous.contactPii)
+        setHistory(previous.history)
         toast({ title: 'No se guardó el cambio', description: result.error, variant: 'destructive' })
       } else {
         toast({ title: 'Permisos actualizados', description: client.nombre })
@@ -91,6 +96,7 @@ export function IntegrationPermissionsCard({ client }: IntegrationPermissionsCar
           <CardTitle className="text-base">{client.nombre}</CardTitle>
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="text-xs">{BRAND_LABELS[client.businessUnit]}</Badge>
+            {!client.canWrite && <Badge variant="outline" className="text-xs">Sólo lectura</Badge>}
             <Badge variant={client.activa ? 'secondary' : 'destructive'} className="text-xs">
               {client.activa ? 'Key activa' : 'Sin key activa'}
             </Badge>
@@ -109,15 +115,23 @@ export function IntegrationPermissionsCard({ client }: IntegrationPermissionsCar
           description="Puede leer oportunidades e indicadores de todas las unidades, sólo lectura. No modifica nada ni envía mensajes."
           checked={analytics}
           disabled={isPending}
-          onChange={v => save({ analytics: v, contactPii })}
+          onChange={v => save({ analytics: v, contactPii, history })}
+        />
+        <PermissionToggle
+          id={`history-${client.id}`}
+          label="Historial comercial"
+          description="Puede leer las actividades registradas por los vendedores (con su descripción), notas, empresas y contactos de todas las unidades. Sólo lectura."
+          checked={history}
+          disabled={isPending || !analytics}
+          onChange={v => save({ analytics, contactPii, history: v })}
         />
         <PermissionToggle
           id={`pii-${client.id}`}
           label="Ver email y teléfono de contactos"
-          description="Incluye email, teléfono y celular en el acceso de análisis. Apagado, esos campos se envían vacíos."
+          description="Incluye email, teléfono y celular de contactos (y el teléfono de empresas en el historial). Apagado, esos campos se envían vacíos."
           checked={contactPii}
           disabled={isPending || !analytics}
-          onChange={v => save({ analytics, contactPii: v })}
+          onChange={v => save({ analytics, contactPii: v, history })}
         />
         {client.permissionsUpdatedAt && (
           <p className="pt-3 text-xs text-muted-foreground">

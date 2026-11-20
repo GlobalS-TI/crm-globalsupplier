@@ -406,6 +406,8 @@ export type Database = {
           business_unit: Database["public"]["Enums"]["business_unit"]
           can_read_analytics: boolean
           can_read_contact_pii: boolean
+          can_read_history: boolean
+          can_write: boolean
           created_at: string
           etiqueta: string
           id: string
@@ -426,6 +428,8 @@ export type Database = {
           business_unit: Database["public"]["Enums"]["business_unit"]
           can_read_analytics?: boolean
           can_read_contact_pii?: boolean
+          can_read_history?: boolean
+          can_write?: boolean
           created_at?: string
           etiqueta: string
           id?: string
@@ -446,6 +450,8 @@ export type Database = {
           business_unit?: Database["public"]["Enums"]["business_unit"]
           can_read_analytics?: boolean
           can_read_contact_pii?: boolean
+          can_read_history?: boolean
+          can_write?: boolean
           created_at?: string
           etiqueta?: string
           id?: string
@@ -1817,6 +1823,8 @@ export type Database = {
           business_unit: Database["public"]["Enums"]["business_unit"]
           can_read_analytics: boolean
           can_read_contact_pii: boolean
+          can_read_history: boolean
+          can_write: boolean
           created_at: string
           etiqueta: string
           id: string
@@ -1860,7 +1868,15 @@ export type Database = {
         Args: { p_data: Json; p_key_hash: string }
         Returns: Json
       }
+      integration_create_activity_impl: {
+        Args: { p_data: Json; p_key_hash: string }
+        Returns: Json
+      }
       integration_create_company: {
+        Args: { p_data: Json; p_key_hash: string }
+        Returns: Json
+      }
+      integration_create_company_impl: {
         Args: { p_data: Json; p_key_hash: string }
         Returns: Json
       }
@@ -1868,7 +1884,15 @@ export type Database = {
         Args: { p_data: Json; p_key_hash: string }
         Returns: Json
       }
+      integration_create_contact_impl: {
+        Args: { p_data: Json; p_key_hash: string }
+        Returns: Json
+      }
       integration_create_opportunity: {
+        Args: { p_data: Json; p_key_hash: string }
+        Returns: Json
+      }
+      integration_create_opportunity_impl: {
         Args: { p_data: Json; p_key_hash: string }
         Returns: Json
       }
@@ -1882,6 +1906,111 @@ export type Database = {
       }
       integration_get_opportunity: {
         Args: { p_key_hash: string; p_opp_id: string }
+        Returns: Json
+      }
+      integration_history_activities: {
+        Args: {
+          p_filters?: Json
+          p_key_hash: string
+          p_limit?: number
+          p_offset?: number
+        }
+        Returns: Json
+      }
+      integration_history_activity_json: {
+        Args: { a: Database["public"]["Tables"]["activities"]["Row"] }
+        Returns: Json
+      }
+      integration_history_activity_match: {
+        Args: {
+          a: Database["public"]["Tables"]["activities"]["Row"]
+          o: Database["public"]["Tables"]["opportunities"]["Row"]
+          p: Json
+        }
+        Returns: boolean
+      }
+      integration_history_check_page: {
+        Args: { p_limit: number; p_offset: number }
+        Returns: undefined
+      }
+      integration_history_client: {
+        Args: { p_key_hash: string }
+        Returns: {
+          business_unit: Database["public"]["Enums"]["business_unit"]
+          can_read_analytics: boolean
+          can_read_contact_pii: boolean
+          can_read_history: boolean
+          can_write: boolean
+          created_at: string
+          etiqueta: string
+          id: string
+          key_hash: string | null
+          key_issued_at: string | null
+          key_prefix: string | null
+          last_used_at: string | null
+          max_calls_per_day: number
+          max_calls_per_minute: number
+          nombre: string
+          owner_id: string
+          permissions_updated_at: string | null
+          permissions_updated_by: string | null
+          revoked_at: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "integration_clients"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      integration_history_companies: {
+        Args: {
+          p_key_hash: string
+          p_limit?: number
+          p_offset?: number
+          p_q?: string
+        }
+        Returns: Json
+      }
+      integration_history_company: {
+        Args: { p_company_id: string; p_key_hash: string }
+        Returns: Json
+      }
+      integration_history_company_json: {
+        Args: {
+          co: Database["public"]["Tables"]["companies"]["Row"]
+          p_pii: boolean
+        }
+        Returns: Json
+      }
+      integration_history_contact: {
+        Args: { p_contact_id: string; p_key_hash: string }
+        Returns: Json
+      }
+      integration_history_contact_json: {
+        Args: {
+          ct: Database["public"]["Tables"]["contacts"]["Row"]
+          p_pii: boolean
+        }
+        Returns: Json
+      }
+      integration_history_contacts: {
+        Args: {
+          p_company_id?: string
+          p_key_hash: string
+          p_limit?: number
+          p_offset?: number
+          p_q?: string
+        }
+        Returns: Json
+      }
+      integration_history_opportunity: {
+        Args: { p_key_hash: string; p_opp_id: string }
+        Returns: Json
+      }
+      integration_history_opportunity_refs: {
+        Args: { p_company_id: string; p_contact_id: string }
         Returns: Json
       }
       integration_issue_key: { Args: { p_client_id: string }; Returns: string }
@@ -1917,6 +2046,10 @@ export type Database = {
         Args: { p_opp_id: string }
         Returns: Json
       }
+      integration_require_write: {
+        Args: { p_key_hash: string }
+        Returns: undefined
+      }
       integration_revoke_key: {
         Args: { p_client_id: string }
         Returns: undefined
@@ -1929,6 +2062,15 @@ export type Database = {
         }
         Returns: undefined
       }
+      integration_set_read_permissions: {
+        Args: {
+          p_can_read_analytics: boolean
+          p_can_read_contact_pii: boolean
+          p_can_read_history: boolean
+          p_client_id: string
+        }
+        Returns: undefined
+      }
       integration_stage_allowed: {
         Args: { p_etapa: Database["public"]["Enums"]["opportunity_stage"] }
         Returns: boolean
@@ -1937,7 +2079,15 @@ export type Database = {
         Args: { p_activity_id: string; p_data: Json; p_key_hash: string }
         Returns: Json
       }
+      integration_update_activity_impl: {
+        Args: { p_activity_id: string; p_data: Json; p_key_hash: string }
+        Returns: Json
+      }
       integration_update_opportunity: {
+        Args: { p_data: Json; p_key_hash: string; p_opp_id: string }
+        Returns: Json
+      }
+      integration_update_opportunity_impl: {
         Args: { p_data: Json; p_key_hash: string; p_opp_id: string }
         Returns: Json
       }

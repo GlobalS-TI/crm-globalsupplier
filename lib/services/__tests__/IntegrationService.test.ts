@@ -19,6 +19,12 @@ function makeMockRepo(overrides: Partial<IIntegrationRepository> = {}): IIntegra
     createActivity:    vi.fn().mockResolvedValue({}),
     updateActivity:    vi.fn().mockResolvedValue({}),
     findAnalyticsOpportunities: vi.fn().mockResolvedValue({ total: 0, rows: [] }),
+    findHistoryOpportunity: vi.fn().mockResolvedValue({}),
+    findHistoryActivities:  vi.fn().mockResolvedValue({ total: 0, rows: [] }),
+    findHistoryCompanies:   vi.fn().mockResolvedValue({ total: 0, rows: [] }),
+    findHistoryCompany:     vi.fn().mockResolvedValue({}),
+    findHistoryContacts:    vi.fn().mockResolvedValue({ total: 0, rows: [] }),
+    findHistoryContact:     vi.fn().mockResolvedValue({}),
     ...overrides,
   }
 }

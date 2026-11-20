@@ -7,7 +7,7 @@ import type { IntegrationPermissionsInput } from '@/lib/validations/integration'
 
 const SUMMARY_COLUMNS = `
   id, nombre, etiqueta, business_unit, key_prefix, revoked_at, last_used_at,
-  can_read_analytics, can_read_contact_pii, permissions_updated_at,
+  can_read_analytics, can_read_contact_pii, can_read_history, can_write, permissions_updated_at,
   updated_by:profiles!integration_clients_permissions_updated_by_fkey(full_name)
 `
 
@@ -31,6 +31,8 @@ export class IntegrationAdminRepository implements IIntegrationAdminRepository {
       lastUsedAt:           c.last_used_at,
       canReadAnalytics:     c.can_read_analytics,
       canReadContactPii:    c.can_read_contact_pii,
+      canReadHistory:       c.can_read_history,
+      canWrite:             c.can_write,
       permissionsUpdatedAt: c.permissions_updated_at,
       permissionsUpdatedBy: (c.updated_by as { full_name: string } | null)?.full_name ?? null,
     }))
@@ -38,10 +40,11 @@ export class IntegrationAdminRepository implements IIntegrationAdminRepository {
 
   async updatePermissions(data: IntegrationPermissionsInput): Promise<void> {
     const supabase = await createClient()
-    const { error } = await supabase.rpc('integration_set_permissions', {
+    const { error } = await supabase.rpc('integration_set_read_permissions', {
       p_client_id:            data.client_id,
       p_can_read_analytics:   data.can_read_analytics,
       p_can_read_contact_pii: data.can_read_contact_pii,
+      p_can_read_history:     data.can_read_history,
     })
     if (error) throw error
   }

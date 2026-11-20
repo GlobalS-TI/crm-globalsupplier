@@ -9,6 +9,16 @@ import {
   type IntegrationOpportunity,
   type IntegrationAnalyticsQuery,
   type IntegrationAnalyticsPage,
+  type IntegrationPage,
+  type IntegrationHistoryOpportunitySource,
+  type IntegrationHistoryActivityQuery,
+  type IntegrationHistoryActivityRow,
+  type IntegrationHistoryCompanyQuery,
+  type IntegrationHistoryCompany,
+  type IntegrationHistoryCompanyDetail,
+  type IntegrationHistoryContactQuery,
+  type IntegrationHistoryContact,
+  type IntegrationHistoryContactDetail,
 } from '@/lib/repositories/interfaces/IIntegrationRepository'
 import type { OpportunityFilters } from '@/lib/repositories/interfaces/IOpportunityRepository'
 import type {
@@ -147,5 +157,54 @@ export class IntegrationRepository implements IIntegrationRepository {
       p_limit:     query.limit ?? null,
       p_offset:    query.offset ?? 0,
     })
+  }
+
+  findHistoryOpportunity(keyHash: string, id: string): Promise<IntegrationHistoryOpportunitySource> {
+    return callIntegration(keyHash, 'history_opportunity', { p_opp_id: id })
+  }
+
+  // Llaves que entiende integration_history_activity_match(); undefined = sin filtro.
+  findHistoryActivities(keyHash: string, query: IntegrationHistoryActivityQuery): Promise<IntegrationPage<IntegrationHistoryActivityRow>> {
+    const f = query.filters
+    return callIntegration(keyHash, 'history_activities', {
+      p_filters: {
+        opportunity_id: f.opportunityId,
+        company_id:     f.companyId,
+        contact_id:     f.contactId,
+        business_unit:  f.businessUnit,
+        tipo:           f.tipo,
+        estatus:        f.estatus,
+        date_field:     f.dateField,
+        date_from:      f.dateFrom,
+        date_before:    f.dateBefore,
+      },
+      p_limit:  query.limit,
+      p_offset: query.offset,
+    })
+  }
+
+  findHistoryCompanies(keyHash: string, query: IntegrationHistoryCompanyQuery): Promise<IntegrationPage<IntegrationHistoryCompany>> {
+    return callIntegration(keyHash, 'history_companies', {
+      p_q:      query.q ?? null,
+      p_limit:  query.limit,
+      p_offset: query.offset,
+    })
+  }
+
+  findHistoryCompany(keyHash: string, id: string): Promise<IntegrationHistoryCompanyDetail> {
+    return callIntegration(keyHash, 'history_company', { p_company_id: id })
+  }
+
+  findHistoryContacts(keyHash: string, query: IntegrationHistoryContactQuery): Promise<IntegrationPage<IntegrationHistoryContact>> {
+    return callIntegration(keyHash, 'history_contacts', {
+      p_company_id: query.companyId ?? null,
+      p_q:          query.q ?? null,
+      p_limit:      query.limit,
+      p_offset:     query.offset,
+    })
+  }
+
+  findHistoryContact(keyHash: string, id: string): Promise<IntegrationHistoryContactDetail> {
+    return callIntegration(keyHash, 'history_contact', { p_contact_id: id })
   }
 }
