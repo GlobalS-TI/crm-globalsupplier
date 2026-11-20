@@ -5,7 +5,14 @@ import type {
   IntegrationContact,
   IntegrationOpportunity,
   IntegrationAnalyticsSource,
+  IntegrationHistoryActivity,
+  IntegrationHistoryActivityRow,
+  IntegrationHistoryCompany,
+  IntegrationHistoryCompanyDetail,
+  IntegrationHistoryContact,
+  IntegrationHistoryContactDetail,
 } from '@/lib/repositories/interfaces/IIntegrationRepository'
+import { businessDayStartISO, nextDayKey } from '@/lib/utils/date'
 import type { BusinessUnit, Currency, LeadSource, OpportunityStage } from '@/lib/types'
 import type { ReportStatus } from '@/lib/validations/report'
 import type { FollowUpStatus } from '@/lib/utils/followUp'
@@ -27,6 +34,9 @@ import {
   integrationUpdateActivitySchema,
   integrationAnalyticsFiltersSchema,
   integrationAnalyticsListSchema,
+  integrationHistoryActivitiesSchema,
+  integrationHistoryCompaniesSchema,
+  integrationHistoryContactsSchema,
 } from '@/lib/validations/integration'
 
 // Forma pública de una oportunidad en la lectura de análisis (snake_case, como el resto
@@ -74,6 +84,41 @@ export interface IntegrationAnalyticsIndicators {
   total:       number
   indicadores: OpportunityReportIndicators
 }
+
+// Detalle de historial: la misma forma que una fila de análisis más los ids para navegar a
+// empresa/contacto y todas sus actividades en orden cronológico.
+export type IntegrationHistoryOpportunity = IntegrationAnalyticsOpportunity & {
+  company_id:  string | null
+  contact_id:  string | null
+  actividades: IntegrationHistoryActivity[]
+}
+
+export interface IntegrationHistoryActivityList {
+  total:       number
+  limit:       number
+  offset:      number
+  actividades: IntegrationHistoryActivityRow[]
+}
+
+export interface IntegrationHistoryCompanyList {
+  total:    number
+  limit:    number
+  offset:   number
+  empresas: IntegrationHistoryCompany[]
+}
+
+export interface IntegrationHistoryContactList {
+  total:     number
+  limit:     number
+  offset:    number
+  contactos: IntegrationHistoryContact[]
+}
+
+const ACTIVITY_DATE_COLUMN = {
+  programada: 'fecha',
+  completada: 'completed_at',
+  registro:   'created_at',
+} as const
 
 function toAnalyticsOpportunity(opp: IntegrationAnalyticsSource, now: Date): IntegrationAnalyticsOpportunity {
   const row = toReportRow(opp, now)
@@ -196,5 +241,58 @@ export class IntegrationService {
       total:       page.total,
       indicadores: computeIndicators(page.rows.map(o => toReportRow(o, now))),
     }
+  }
+
+  // ── Historial comercial: sólo lectura, todas las unidades ──
+
+  async getHistoryOpportunity(keyHash: string, id: string, now: Date = new Date()): Promise<IntegrationHistoryOpportunity> {
+    const opp = await this.repo.findHistoryOpportunity(keyHash, integrationIdSchema.parse(id))
+    return {
+      ...toAnalyticsOpportunity(opp, now),
+      company_id:  opp.company_id,
+      contact_id:  opp.contact_id,
+      actividades: opp.actividades,
+    }
+  }
+
+  // desde/hasta son días de México inclusivos, igual que en análisis.
+  async listHistoryActivities(keyHash: string, raw: unknown): Promise<IntegrationHistoryActivityList> {
+    const { limit, offset, fecha, desde, hasta, ...f } = integrationHistoryActivitiesSchema.parse(raw)
+    const page = await this.repo.findHistoryActivities(keyHash, {
+      filters: {
+        opportunityId: f.opportunity_id,
+        companyId:     f.company_id,
+        contactId:     f.contact_id,
+        businessUnit:  f.unit,
+        tipo:          f.tipo,
+        estatus:       f.estatus,
+        dateField:     ACTIVITY_DATE_COLUMN[fecha],
+        dateFrom:      desde ? businessDayStartISO(desde) : undefined,
+        dateBefore:    hasta ? businessDayStartISO(nextDayKey(hasta)) : undefined,
+      },
+      limit,
+      offset,
+    })
+    return { total: page.total, limit, offset, actividades: page.rows }
+  }
+
+  async listHistoryCompanies(keyHash: string, raw: unknown): Promise<IntegrationHistoryCompanyList> {
+    const { q, limit, offset } = integrationHistoryCompaniesSchema.parse(raw)
+    const page = await this.repo.findHistoryCompanies(keyHash, { q, limit, offset })
+    return { total: page.total, limit, offset, empresas: page.rows }
+  }
+
+  async getHistoryCompany(keyHash: string, id: string): Promise<IntegrationHistoryCompanyDetail> {
+    return this.repo.findHistoryCompany(keyHash, integrationIdSchema.parse(id))
+  }
+
+  async listHistoryContacts(keyHash: string, raw: unknown): Promise<IntegrationHistoryContactList> {
+    const { company_id, q, limit, offset } = integrationHistoryContactsSchema.parse(raw)
+    const page = await this.repo.findHistoryContacts(keyHash, { companyId: company_id, q, limit, offset })
+    return { total: page.total, limit, offset, contactos: page.rows }
+  }
+
+  async getHistoryContact(keyHash: string, id: string): Promise<IntegrationHistoryContactDetail> {
+    return this.repo.findHistoryContact(keyHash, integrationIdSchema.parse(id))
   }
 }

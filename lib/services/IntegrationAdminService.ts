@@ -11,14 +11,15 @@ export class IntegrationAdminService {
     return this.repo.findClients()
   }
 
-  // Los datos de contacto sólo se leen a través del acceso de análisis: si éste se apaga,
-  // el switch de contacto se apaga con él, para que al volver a encender análisis no
-  // reaparezcan email/teléfono sin que nadie lo decida de nuevo.
+  // Datos de contacto e historial sólo se leen a través del acceso de análisis: si éste se
+  // apaga, se apagan con él, para que al volver a encender análisis no reaparezcan sin que
+  // nadie lo decida de nuevo. La DB aplica la misma regla (integration_set_read_permissions).
   async updatePermissions(raw: unknown): Promise<void> {
     const data = integrationPermissionsSchema.parse(raw)
     await this.repo.updatePermissions({
       ...data,
       can_read_contact_pii: data.can_read_analytics && data.can_read_contact_pii,
+      can_read_history:     data.can_read_analytics && data.can_read_history,
     })
   }
 }

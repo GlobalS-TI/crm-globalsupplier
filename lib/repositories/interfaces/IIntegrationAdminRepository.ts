@@ -13,6 +13,8 @@ export interface IntegrationClientSummary {
   lastUsedAt:             string | null
   canReadAnalytics:       boolean
   canReadContactPii:      boolean
+  canReadHistory:         boolean
+  canWrite:               boolean   // false = sólo lectura (lo define TI desde el SQL editor)
   permissionsUpdatedAt:   string | null
   permissionsUpdatedBy:   string | null   // nombre de quien hizo el último cambio
 }

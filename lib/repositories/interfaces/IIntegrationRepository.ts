@@ -105,6 +105,114 @@ export interface IntegrationAnalyticsPage {
   rows:  IntegrationAnalyticsSource[]
 }
 
+// ── Historial comercial (sólo lectura, todas las unidades; requiere can_read_history) ──
+// Formas tal como las devuelven las funciones integration_history_*. email/telefono/celular
+// de contactos vienen null si el cliente no tiene can_read_contact_pii.
+
+export interface IntegrationHistoryActivity {
+  id:                     string
+  tipo:                   Enums['activity_type']
+  estatus:                Enums['activity_status']
+  titulo:                 string
+  descripcion:            string | null
+  fecha:                  string          // cuándo estaba programada
+  completed_at:           string | null
+  created_at:             string          // cuándo se registró en el CRM
+  vendedor:               { id: string; nombre: string | null }   // quien la registró
+  creada_por_integracion: boolean
+}
+
+export interface IntegrationHistoryActivityRow extends IntegrationHistoryActivity {
+  opportunity_id: string
+  oportunidad:    string
+  business_unit:  Enums['business_unit']
+  etapa:          Enums['opportunity_stage']
+  company_id:     string | null
+  contact_id:     string | null
+}
+
+export type IntegrationHistoryOpportunitySource = IntegrationAnalyticsSource & {
+  company_id:  string | null
+  contact_id:  string | null
+  actividades: IntegrationHistoryActivity[]
+}
+
+export interface IntegrationHistoryCompany {
+  id:         string
+  nombre:     string
+  rfc:        string | null
+  industria:  string | null
+  sitio_web:  string | null
+  telefono:   string | null
+  ciudad:     string | null
+  estado:     string | null
+  notas:      string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface IntegrationHistoryContact {
+  id:         string
+  company_id: string | null
+  nombre:     string
+  apellido:   string | null
+  puesto:     string | null
+  email:      string | null
+  telefono:   string | null
+  celular:    string | null
+  notas:      string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface IntegrationHistoryOpportunityRef {
+  id:            string
+  nombre:        string
+  business_unit: Enums['business_unit']
+  etapa:         Enums['opportunity_stage']
+  updated_at:    string
+}
+
+export interface IntegrationHistoryCompanyDetail extends IntegrationHistoryCompany {
+  contactos:     Pick<IntegrationHistoryContact, 'id' | 'nombre' | 'apellido' | 'puesto'>[]
+  oportunidades: IntegrationHistoryOpportunityRef[]
+}
+
+export interface IntegrationHistoryContactDetail extends IntegrationHistoryContact {
+  oportunidades: IntegrationHistoryOpportunityRef[]
+}
+
+export interface IntegrationPage<T> {
+  total: number
+  rows:  T[]
+}
+
+export interface IntegrationHistoryActivityQuery {
+  filters: {
+    opportunityId?: string
+    companyId?:     string
+    contactId?:     string
+    businessUnit?:  Enums['business_unit']
+    tipo?:          Enums['activity_type']
+    estatus?:       Enums['activity_status']
+    dateField:      'fecha' | 'completed_at' | 'created_at'
+    dateFrom?:      string   // ISO, inclusivo
+    dateBefore?:    string   // ISO, exclusivo
+  }
+  limit:  number
+  offset: number
+}
+
+export interface IntegrationHistoryCompanyQuery {
+  q?:     string
+  limit:  number
+  offset: number
+}
+
+export interface IntegrationHistoryContactQuery extends IntegrationHistoryCompanyQuery {
+  companyId?: string
+}
+
 // Todas las operaciones reciben el hash SHA-256 de la API key; la DB resuelve el cliente
 // y su alcance. No hay operaciones de borrado.
 export interface IIntegrationRepository {
@@ -121,4 +229,11 @@ export interface IIntegrationRepository {
   updateActivity(keyHash: string, id: string, data: IntegrationUpdateActivityInput): Promise<IntegrationOpportunity>
   // Sólo lectura, todas las unidades; requiere can_read_analytics (lo valida la DB).
   findAnalyticsOpportunities(keyHash: string, query: IntegrationAnalyticsQuery): Promise<IntegrationAnalyticsPage>
+  // Historial: sólo lectura, todas las unidades; requiere can_read_history (lo valida la DB).
+  findHistoryOpportunity(keyHash: string, id: string): Promise<IntegrationHistoryOpportunitySource>
+  findHistoryActivities(keyHash: string, query: IntegrationHistoryActivityQuery): Promise<IntegrationPage<IntegrationHistoryActivityRow>>
+  findHistoryCompanies(keyHash: string, query: IntegrationHistoryCompanyQuery): Promise<IntegrationPage<IntegrationHistoryCompany>>
+  findHistoryCompany(keyHash: string, id: string): Promise<IntegrationHistoryCompanyDetail>
+  findHistoryContacts(keyHash: string, query: IntegrationHistoryContactQuery): Promise<IntegrationPage<IntegrationHistoryContact>>
+  findHistoryContact(keyHash: string, id: string): Promise<IntegrationHistoryContactDetail>
 }

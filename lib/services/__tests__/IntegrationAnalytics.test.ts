@@ -167,23 +167,23 @@ describe('IntegrationAdminService.updatePermissions', () => {
     return { repo, updatePermissions }
   }
 
-  it('guarda ambos permisos', async () => {
+  it('guarda los tres permisos', async () => {
     const { repo, updatePermissions } = makeAdminRepo()
     await new IntegrationAdminService(repo).updatePermissions({
-      client_id: CLIENT_ID, can_read_analytics: true, can_read_contact_pii: true,
+      client_id: CLIENT_ID, can_read_analytics: true, can_read_contact_pii: true, can_read_history: true,
     })
     expect(updatePermissions).toHaveBeenCalledWith({
-      client_id: CLIENT_ID, can_read_analytics: true, can_read_contact_pii: true,
+      client_id: CLIENT_ID, can_read_analytics: true, can_read_contact_pii: true, can_read_history: true,
     })
   })
 
-  it('apagar análisis apaga también los datos de contacto', async () => {
+  it('apagar análisis apaga también los datos de contacto y el historial', async () => {
     const { repo, updatePermissions } = makeAdminRepo()
     await new IntegrationAdminService(repo).updatePermissions({
-      client_id: CLIENT_ID, can_read_analytics: false, can_read_contact_pii: true,
+      client_id: CLIENT_ID, can_read_analytics: false, can_read_contact_pii: true, can_read_history: true,
     })
     expect(updatePermissions).toHaveBeenCalledWith({
-      client_id: CLIENT_ID, can_read_analytics: false, can_read_contact_pii: false,
+      client_id: CLIENT_ID, can_read_analytics: false, can_read_contact_pii: false, can_read_history: false,
     })
   })
 

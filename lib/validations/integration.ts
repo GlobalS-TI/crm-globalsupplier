@@ -2,7 +2,7 @@ import { z } from 'zod'
 import { createCompanySchema } from './company'
 import { createContactSchema } from './contact'
 import { businessUnitSchema, createOpportunitySchema, opportunityStageSchema, updateOpportunitySchema } from './opportunity'
-import { activityStatusSchema, createActivitySchema, updateActivitySchema } from './activity'
+import { activityStatusSchema, activityTypeSchema, createActivitySchema, updateActivitySchema } from './activity'
 import { dayKeySchema, reportAlertSchema, reportDateFieldSchema, reportStatusSchema } from './report'
 
 // ----------------------------------------------------------------
@@ -108,6 +108,47 @@ export const integrationAnalyticsListSchema = z
   .strict()
   .refine(rangeIsOrdered, rangeMessage)
 
+// ── Historial comercial (sólo lectura, todas las unidades; requiere can_read_history) ──
+// Mismo criterio estricto que análisis: un parámetro desconocido responde 422.
+const historyPageShape = {
+  limit:  z.coerce.number().int().min(1).max(500).default(100),
+  offset: z.coerce.number().int().min(0).default(0),
+}
+
+const historySearchSchema = z.string().trim().min(2).max(100)
+
+// Qué fecha de la actividad filtra desde/hasta: cuándo estaba programada, cuándo se
+// completó o cuándo se registró en el CRM.
+export const historyActivityDateFieldSchema = z.enum(['programada', 'completada', 'registro'])
+
+export const integrationHistoryActivitiesSchema = z
+  .object({
+    opportunity_id: z.string().uuid().optional(),
+    company_id:     z.string().uuid().optional(),
+    contact_id:     z.string().uuid().optional(),
+    unit:           businessUnitSchema.optional(),
+    tipo:           activityTypeSchema.optional(),
+    estatus:        activityStatusSchema.optional(),
+    fecha:          historyActivityDateFieldSchema.default('programada'),
+    desde:          dayKeySchema.optional(),
+    hasta:          dayKeySchema.optional(),
+    ...historyPageShape,
+  })
+  .strict()
+  .refine(rangeIsOrdered, rangeMessage)
+
+export const integrationHistoryCompaniesSchema = z
+  .object({ q: historySearchSchema.optional(), ...historyPageShape })
+  .strict()
+
+export const integrationHistoryContactsSchema = z
+  .object({
+    company_id: z.string().uuid().optional(),
+    q:          historySearchSchema.optional(),
+    ...historyPageShape,
+  })
+  .strict()
+
 export type IntegrationLookupInput            = z.infer<typeof integrationLookupSchema>
 export type IntegrationCreateCompanyInput     = z.infer<typeof integrationCreateCompanySchema>
 export type IntegrationCreateContactInput     = z.infer<typeof integrationCreateContactSchema>
@@ -118,12 +159,16 @@ export type IntegrationCreateActivityInput    = z.infer<typeof integrationCreate
 export type IntegrationUpdateActivityInput    = z.infer<typeof integrationUpdateActivitySchema>
 export type IntegrationAnalyticsFiltersInput  = z.infer<typeof integrationAnalyticsFiltersSchema>
 export type IntegrationAnalyticsListInput     = z.infer<typeof integrationAnalyticsListSchema>
+export type IntegrationHistoryActivitiesInput = z.infer<typeof integrationHistoryActivitiesSchema>
+export type IntegrationHistoryCompaniesInput  = z.infer<typeof integrationHistoryCompaniesSchema>
+export type IntegrationHistoryContactsInput   = z.infer<typeof integrationHistoryContactsSchema>
 
 // Switch de permisos desde /integraciones (director_general / administracion)
 export const integrationPermissionsSchema = z.object({
   client_id:            z.string().uuid(),
   can_read_analytics:   z.boolean(),
   can_read_contact_pii: z.boolean(),
+  can_read_history:     z.boolean(),
 })
 
 export type IntegrationPermissionsInput = z.infer<typeof integrationPermissionsSchema>
